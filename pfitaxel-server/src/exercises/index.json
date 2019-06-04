@@ -1,0 +1,6 @@
+{ "learnocaml_version": "1",
+  "groups":
+  { "demo":
+    { "title": "Démo de l'environnement learn-ocaml",
+      "exercises": [ "demo" ] }
+  } }
