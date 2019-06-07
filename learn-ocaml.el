@@ -15,6 +15,7 @@
 (require 'cl)
 (require 'cl-lib)
 
+
 (cl-defun learn-ocaml-command-constructor (&key token server fetch id set-options no-html print-token dont-submit file)
   (let* ((token-option (if token
 			  (concat "--token=" token)
@@ -63,10 +64,8 @@
   )
 
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
-  "enables the user to upload a file to the server"
+  "Grade a .ml file, optionally submitting the code and the note to the server."
   (interactive)
-  (set-buffer learn-ocaml-log-buffer)
-  (delete-region (point-min) (point-max))
   (write-region "" nil learn-ocaml-temp )
   (make-process
        :name (concat "upload-" id)
@@ -79,6 +78,7 @@
 		 )
        :stderr learn-ocaml-log-buffer
        :filter #'learn-ocaml-file-writter-filter
-       :sentinel (lambda (proc string) "" (interactive)
-		   (if (string-equal string "finished\n")
-		       (browse-url-of-file learn-ocaml-temp )))))
+       :sentinel #'(lambda (proc string) "" (interactive)
+		     (if (string-equal string "finished\n")
+		       (browse-url-firefox learn-ocaml-temp )))))
+

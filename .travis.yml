@@ -18,16 +18,15 @@ services:
 install:
 - docker pull ${LEARNOCAML_SERVER_IMAGE}
 - docker pull ${LEARNOCAML_CLIENT_IMAGE} 
-- docker run -d -i --name=LEARNOCAML_SERVER -v learn-ocaml-sync-demo:/sync -v $PWD/pfitaxel-server/src:/repository:ro ${LEARNOCAML_SERVER_IMAGE}
-- docker run -d -i --link LEARNOCAML_SERVER:LEARNOCAML_SERVER --name=LEARNOCAML_CLIENT -v ${TRAVIS_BUILD_DIR}/tests.sh:/tests.sh ${LEARNOCAML_CLIENT_IMAGE}
+- docker run -d -i --net=learnocaml--name=LEARNOCAML_SERVER -v learn-ocaml-sync-demo:/sync -v $PWD/pfitaxel-server/src:/repository:ro ${LEARNOCAML_SERVER_IMAGE}
+- docker run -d -i --net=learnocaml LEARNOCAML_SERVER:LEARNOCAML_SERVER --name=LEARNOCAML_CLIENT -v ${TRAVIS_BUILD_DIR}/test-directory/tests.sh:/tests.sh ${LEARNOCAML_CLIENT_IMAGE}
 - docker ps -a
-- chmod a+x ${TRAVIS_BUILD_DIR}/tests.sh
 
 script:
 - echo -e "${ANSI_YELLOW}Executing tests... ${ANSI_RESET}" && echo -en 'travis_fold:start:script\\r' 
 - docker exec -it LEARNOCAML_CLIENT sh /tests.sh
 - docker exec -it LEARNOCAML_SERVER touch demo.ml
-- docker exec -it LEARNOCAML_SERVER learn-ocaml-client --id=demo --server=http://localhost:8080 --token=ZCB-3LZ-AC4-3O4 demo.ml 
+- docker exec -it LEARNOCAML_SERVER bash -c "echo -ne \"\ntest\n\" | learn-ocaml-client --id=demo --server=http://localhost:8080  demo.ml " 
 - docker stop LEARNOCAML_SERVER  # optional
 - docker stop LEARNOCAML_CLIENT
 - echo -en 'travis_fold:end:script\\r'
