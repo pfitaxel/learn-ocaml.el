@@ -8,7 +8,7 @@
 
 (defconst learn-ocaml-temp "~/.learnocaml-temp.html")
 
-(setq learn-ocaml-log-buffer (get-buffer-create "*log*"))
+(defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
 
 (require 'browse-url )
