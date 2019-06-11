@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (defgroup learn-ocaml nil
   "learn-ocaml  in Emacs "
   :prefix "learn-ocaml-")
@@ -10,11 +11,9 @@
 
 (defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
-
-(require 'browse-url )
 (require 'cl)
 (require 'cl-lib)
-
+(require 'browse-url )
 
 (cl-defun learn-ocaml-command-constructor (&key token server fetch id set-options no-html print-token dont-submit file)
   (let* ((token-option (if token
@@ -61,7 +60,8 @@
 
 (defun learn-ocaml-file-writter-filter (proc string)
   (write-region string nil learn-ocaml-temp t)
-  )
+  )  
+
 
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
   "Grade a .ml file, optionally submitting the code and the note to the server."
@@ -78,7 +78,21 @@
 		 )
        :stderr learn-ocaml-log-buffer
        :filter #'learn-ocaml-file-writter-filter
-       :sentinel #'(lambda (proc string) "" (interactive)
+       :sentinel (lambda (proc string)
+		     ""
+		     (interactive)
 		     (if (string-equal string "finished\n")
-		       (browse-url-firefox learn-ocaml-temp )))))
+			 (browse-url-firefox learn-ocaml-temp )))))
+
+     
+(defun learn-ocaml-give-token (callback)
+  "Gives the current token"
+  (make-process
+   :name "give-token"
+   :command (learn-ocaml-command-constructor
+	     :print-token t
+	     )
+   :stderr learn-ocaml-log-buffer
+   :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
+
 
