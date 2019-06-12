@@ -22,7 +22,7 @@
 			    (concat "--server=" server)
 			  nil))
 	 (token-option (if token
-			   (concat "--token=" server)
+			   (concat "--token=" token)
 			 nil))
 	 (id-option (if id
 			(concat "--id=" id)
@@ -98,5 +98,18 @@
    :stderr learn-ocaml-log-buffer
    :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
 
+
+
+(defun learn-ocaml-use-metadata (token server )
+  (interactive "sEnter your token please \nsDefault Enter the server :http://localhost  : \n")
+    (make-process
+     :name "use-metadata"
+     :command (learn-ocaml-command-constructor
+	       :token token
+	       :server server  
+	       :command "set-options" 
+	       )
+     :stderr learn-ocaml-log-buffer
+     ))
 
 
