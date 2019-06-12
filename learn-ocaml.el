@@ -17,7 +17,7 @@
 (require 'cl-lib)
 (require 'browse-url )
 
-(cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file)
+(cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file nickname secret )
   (let* ((server-option (if server
 			    (concat "--server=" server)
 			  nil))
@@ -34,7 +34,7 @@
 				 "-n"
 			       nil))
 	 
-	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file)))
+	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file nickname secret)))
     (cl-remove-if-not 'stringp list)))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id)
@@ -112,4 +112,21 @@
      :stderr learn-ocaml-log-buffer
      ))
 
+(defun learn-ocaml-create-and-use-new-token (nickname secret)
+  "Creates a new token"
+  (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? ")
+  (make-process
+   :name  "create-token"
+   :command (learn-ocaml-command-constructor
+	     :command "create-token"
+	     :nickname nickname
+	     :secret secret
+	     :server learn-ocaml-server  ;;temporary fix to remove when issue 271 is solved
+	     )
+   :stderr learn-ocaml-log-buffer
+   :filter (lambda (proc string) (interactive) 
+	     (message-box "Token was created for nickname %s with secret %s : %s" nickname secret string)
+	     (message-box "Using this new token now")
+	     (funcall-interactively #'learn-ocaml-use-metadata string nil)
+	     )))
 
