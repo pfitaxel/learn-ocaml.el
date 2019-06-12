@@ -88,6 +88,15 @@
    :stderr learn-ocaml-log-buffer
    :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
 
+(defun learn-ocaml-give-server (callback)
+  "Gives the current server"
+  (make-process
+   :name "give-server"
+   :command (learn-ocaml-command-constructor
+	     :command "print-server"
+	     )
+   :stderr learn-ocaml-log-buffer
+   :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
 
 
 
