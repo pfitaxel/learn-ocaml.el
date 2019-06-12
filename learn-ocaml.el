@@ -11,52 +11,44 @@
 
 (defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
+(defvar learn-ocaml-server "http://localhost")
+
 (require 'cl)
 (require 'cl-lib)
 (require 'browse-url )
 
-(cl-defun learn-ocaml-command-constructor (&key token server fetch id set-options no-html print-token dont-submit file)
-  (let* ((token-option (if token
-			  (concat "--token=" token)
+(cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file)
+  (let* ((server-option (if server
+			    (concat "--server=" server)
+			  nil))
+	 (token-option (if token
+			   (concat "--token=" server)
+			 nil))
+	 (id-option (if id
+			(concat "--id=" id)
+		      nil))
+	 (html-option (if html
+			  "--html"
 			nil))
-	(server-option (if server
-			   (concat "--server=" server)
-			 nil))
-	(fetch-option (if fetch
-			  "--fetch"
-			nil))	
-	(id-option (if id
-		       (concat "--id=" id)
-		     nil))
-		   
-	(set-options-option (if set-options
-			   "--set-options"
-			 nil))
-	(no-html-option (if no-html
-			   nil
-			 "--html"))
-	(dont-submit-option (if dont-submit
-			   "-n"
-			 nil))
-	(print-token-option (if print-token
-			   "--print-token"
-			   nil))
-	
-	(list (list learn-ocaml-command-name token-option server-option fetch-option id-option set-options-option no-html-option print-token-option dont-submit-option file)))
+	 (dont-submit-option (if dont-submit
+				 "-n"
+			       nil))
+	 
+	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file)))
     (cl-remove-if-not 'stringp list)))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"
-      (make-process
-       :name (concat "download-" id)
-       :command (learn-ocaml-command-constructor
-		 :token token
-		 :server server
-		 :id id
-		 :fetch t)
-       :stderr learn-ocaml-log-buffer
-       :buffer learn-ocaml-log-buffer ))
+  (make-process
+   :name (concat "download-" id)
+   :command (learn-ocaml-command-constructor
+	     :token token
+	     :server server
+	     :id id
+	     :command "fetch")
+   :stderr learn-ocaml-log-buffer
+   :buffer learn-ocaml-log-buffer ))
 
 (defun learn-ocaml-file-writter-filter (proc string)
   (write-region string nil learn-ocaml-temp t)
@@ -68,31 +60,34 @@
   (interactive)
   (write-region "" nil learn-ocaml-temp )
   (make-process
-       :name (concat "upload-" id)
-       :command (learn-ocaml-command-constructor
-		 :token token
-		 :server server
-		 :id id
-		 :dont-submit dont-submit
-		 :file file
-		 )
-       :stderr learn-ocaml-log-buffer
-       :filter #'learn-ocaml-file-writter-filter
-       :sentinel (lambda (proc string)
-		     ""
-		     (interactive)
-		     (if (string-equal string "finished\n")
-			 (browse-url-firefox learn-ocaml-temp )))))
+   :name (concat "upload-" id)
+   :command (learn-ocaml-command-constructor
+	     :token token
+	     :server server
+	     :id id
+	     :dont-submit dont-submit
+	     :file file
+	     :html
+	     )
+   :stderr learn-ocaml-log-buffer
+   :filter #'learn-ocaml-file-writter-filter
+   :sentinel (lambda (proc string)
+	       ""
+	       (interactive)
+	       (if (string-equal string "finished\n")
+		   (browse-url-firefox learn-ocaml-temp )))))
 
-     
+
 (defun learn-ocaml-give-token (callback)
   "Gives the current token"
   (make-process
    :name "give-token"
    :command (learn-ocaml-command-constructor
-	     :print-token t
+	     :command "print-token"
 	     )
    :stderr learn-ocaml-log-buffer
    :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
+
+
 
 
