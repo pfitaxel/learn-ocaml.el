@@ -11,7 +11,11 @@
 
 (defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
+(defvar learn-ocaml-warning-message
+  "An error occured when executing the last command, please see the log  for more information")
+
 (defvar learn-ocaml-server "http://localhost")
+
 
 (require 'cl)
 (require 'cl-lib)
@@ -33,9 +37,13 @@
 	 (dont-submit-option (if dont-submit
 				 "-n"
 			       nil))
-	 
 	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file nickname secret)))
     (cl-remove-if-not 'stringp list)))
+
+(defun learn-ocaml-error-handler (callback proc string)
+  (if (not (= (process-exit-status proc) 0))
+      (message-box learn-ocaml-warning-message)
+    (when callback (funcall callback string))))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
@@ -48,12 +56,12 @@
 	     :id id
 	     :command "fetch")
    :stderr learn-ocaml-log-buffer
-   :buffer learn-ocaml-log-buffer ))
+   :buffer learn-ocaml-log-buffer
+   :sentinel (apply-partially #'learn-ocaml-error-handler
+			      (lambda (s) (message-box "File downloaded correctly")))))
 
 (defun learn-ocaml-file-writter-filter (proc string)
-  (write-region string nil learn-ocaml-temp t)
-  )  
-
+  (write-region string nil learn-ocaml-temp t))  
 
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
   "Grade a .ml file, optionally submitting the code and the note to the server."
@@ -71,12 +79,11 @@
 	     )
    :stderr learn-ocaml-log-buffer
    :filter #'learn-ocaml-file-writter-filter
-   :sentinel (lambda (proc string)
-	       ""
-	       (interactive)
-	       (if (string-equal string "finished\n")
-		   (browse-url-firefox learn-ocaml-temp )))))
-
+   :sentinel (apply-partially
+	      #'learn-ocaml-error-handler
+	      (lambda (proc string)
+		(if (string-equal string "finished\n")
+		    (browse-url-firefox learn-ocaml-temp ))))))
 
 (defun learn-ocaml-give-token (callback)
   "Gives the current token"
@@ -86,7 +93,12 @@
 	     :command "print-token"
 	     )
    :stderr learn-ocaml-log-buffer
-   :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
+   :filter (lambda (proc string)
+	     (when (= (process-exit-status proc) 0)
+	       (funcall-interactively callback string )))
+   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))  
+
+(learn-ocaml-give-token (lambda (x) (message-box x)))
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
@@ -96,21 +108,22 @@
 	     :command "print-server"
 	     )
    :stderr learn-ocaml-log-buffer
-   :filter (lambda (proc string) (interactive) (funcall-interactively callback string ))))  
-
-
+   :filter (lambda (proc string)
+	     (when (= (process-exit-status proc) 0)
+	       (funcall-interactively callback string )))
+   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))  
 
 (defun learn-ocaml-use-metadata (token server )
   (interactive "sEnter your token please \nsDefault Enter the server :http://localhost  : \n")
-    (make-process
-     :name "use-metadata"
-     :command (learn-ocaml-command-constructor
-	       :token token
-	       :server server  
-	       :command "set-options" 
-	       )
-     :stderr learn-ocaml-log-buffer
-     ))
+  (make-process
+   :name "use-metadata"
+   :command (learn-ocaml-command-constructor
+	     :token token
+	     :server server  
+	     :command "set-options" 
+	     )
+   :stderr learn-ocaml-log-buffer
+   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))
 
 (defun learn-ocaml-create-and-use-new-token (nickname secret)
   "Creates a new token"
@@ -121,12 +134,11 @@
 	     :command "create-token"
 	     :nickname nickname
 	     :secret secret
-	     :server learn-ocaml-server  ;;temporary fix to remove when issue 271 is solved
 	     )
    :stderr learn-ocaml-log-buffer
    :filter (lambda (proc string) (interactive) 
-	     (message-box "Token was created for nickname %s with secret %s : %s" nickname secret string)
-	     (message-box "Using this new token now")
-	     (funcall-interactively #'learn-ocaml-use-metadata string nil)
-	     )))
+	     (when (= (process-exit-status proc) 0)
+	       (message-box "Token was created for nickname %s with secret %s : %s" nickname secret string)
+	       (message-box "Using this new token now")
+	       (funcall-interactively #'learn-ocaml-use-metadata string nil)))))
 
