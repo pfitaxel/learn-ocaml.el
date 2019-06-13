@@ -95,10 +95,8 @@
    :stderr learn-ocaml-log-buffer
    :filter (lambda (proc string)
 	     (when (= (process-exit-status proc) 0)
-	       (funcall-interactively callback string )))
+	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
    :sentinel (apply-partially #'learn-ocaml-error-handler nil)))  
-
-(learn-ocaml-give-token (lambda (x) (message-box x)))
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
@@ -110,7 +108,7 @@
    :stderr learn-ocaml-log-buffer
    :filter (lambda (proc string)
 	     (when (= (process-exit-status proc) 0)
-	       (funcall-interactively callback string )))
+	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
    :sentinel (apply-partially #'learn-ocaml-error-handler nil)))  
 
 (defun learn-ocaml-use-metadata (token server )
@@ -141,4 +139,3 @@
 	       (message-box "Token was created for nickname %s with secret %s : %s" nickname secret string)
 	       (message-box "Using this new token now")
 	       (funcall-interactively #'learn-ocaml-use-metadata string nil)))))
-
