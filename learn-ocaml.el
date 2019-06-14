@@ -49,6 +49,7 @@
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"
+  
   (make-process
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
@@ -101,18 +102,18 @@
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
-  ;;(make-process
-  ;; :name "give-server"
-  ;; :command (learn-ocaml-command-constructor
-;;	     :command "print-server"
-;;	     )
-  ;; :stderr learn-ocaml-log-buffer
-   ;;:filter (lambda (proc string)
-;;	     (when (= (process-exit-status proc) 0)
-;;	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
-  ;; :sentinel (apply-partially #'learn-ocaml-error-handler nil)))
-  ;; to uncomment when pr merged
-  (funcall callback "http://localhost")) 
+  (make-process
+   :name "give-server"
+   :command (learn-ocaml-command-constructor
+	     :command "print-server"
+	     )
+   :stderr learn-ocaml-log-buffer
+   :filter (lambda (proc string)
+	     (when (= (process-exit-status proc) 0)
+	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
+   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))
+ 
+   
 
 (defun learn-ocaml-use-metadata (token server callback)
   (make-process
@@ -186,4 +187,3 @@
 	(learn-ocaml-on-load-to-wrap token server))))))
 
   
-
