@@ -41,15 +41,21 @@
 	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file nickname secret)))
     (cl-remove-if-not 'stringp list)))
 
-(defun learn-ocaml-error-handler (callback proc string)
-  (if (not (= (process-exit-status proc) 0))
+(defun learn-ocaml-error-handler (buffer callback proc string)
+  (if (not (string-equal string "finished\n"))
       (message-box learn-ocaml-warning-message)
-    (when callback (funcall callback string))))
+    (when callback
+      (let ((result (if buffer
+			(progn
+			  (set-buffer buffer)
+			  (buffer-string))
+		      "")))
+	(when buffer (kill-buffer buffer))
+      (funcall callback result)))))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
-`id` should be valid"
-  
+`id` should be valid"  
   (make-process
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
@@ -59,7 +65,8 @@
 	     :command "fetch")
    :stderr learn-ocaml-log-buffer
    :buffer learn-ocaml-log-buffer
-   :sentinel (apply-partially #'learn-ocaml-error-handler
+   :sentinel (apply-partially #'learn-ocaml-error-handler 
+			      nil
 			      (lambda (s) (message-box "File downloaded correctly")))))
 
 (defun learn-ocaml-file-writter-filter (proc string)
@@ -72,48 +79,48 @@
   (make-process
    :name (concat "upload-" id)
    :command (learn-ocaml-command-constructor
-	     :token token
+	     :token token 
 	     :server server
 	     :id id
 	     :dont-submit dont-submit
 	     :file file
-	     :html
+	     :html t
 	     )
    :stderr learn-ocaml-log-buffer
    :filter #'learn-ocaml-file-writter-filter
    :sentinel (apply-partially
 	      #'learn-ocaml-error-handler
-	      (lambda (proc string)
-		(if (string-equal string "finished\n")
-		    (browse-url-firefox learn-ocaml-temp ))))))
+	      nil
+	      (lambda (string)	
+		    (browse-url-firefox learn-ocaml-temp )))))
 
 (defun learn-ocaml-give-token (callback)
   "Gives the current token"
-  (make-process
-   :name "give-token"
-   :command (learn-ocaml-command-constructor
-	     :command "print-token"
-	     )
-   :stderr learn-ocaml-log-buffer
-   :filter (lambda (proc string)
-	     (when (= (process-exit-status proc) 0)
-	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
-   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))  
-
+ (let ((buffer (generate-new-buffer "give-token")))
+    (make-process
+     :name "give-token"
+     :command (learn-ocaml-command-constructor
+	       :command "print-token"
+	       )
+     :stderr learn-ocaml-log-buffer
+     :buffer buffer
+     :sentinel (apply-partially #'learn-ocaml-error-handler 
+				buffer
+				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
+ 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
-  (make-process
-   :name "give-server"
-   :command (learn-ocaml-command-constructor
-	     :command "print-server"
-	     )
-   :stderr learn-ocaml-log-buffer
-   :filter (lambda (proc string)
-	     (when (= (process-exit-status proc) 0)
-	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
-   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))
- 
-   
+  (let ((buffer (generate-new-buffer "give-server")))
+    (make-process
+     :name "give-server"
+     :command (learn-ocaml-command-constructor
+	       :command "print-server"
+	       )
+     :stderr learn-ocaml-log-buffer
+     :buffer buffer
+     :sentinel (apply-partially #'learn-ocaml-error-handler
+				buffer
+				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
 
 (defun learn-ocaml-use-metadata (token server callback)
   (make-process
@@ -124,7 +131,7 @@
 	     :command "set-options" 
 	     )
    :stderr learn-ocaml-log-buffer
-   :sentinel (apply-partially #'learn-ocaml-error-handler callback)))
+   :sentinel (apply-partially #'learn-ocaml-error-handler nil callback)))
 
 (defun learn-ocaml-show-metadata ()
   (interactive)
@@ -136,15 +143,20 @@
 
 (defun learn-ocaml-create-token (nickname secret callback)
   "Creates a new token"
-  (make-process
-   :name  "create-token"
-   :command (learn-ocaml-command-constructor
-	     :command "create-token"
-	     :nickname nickname
-	     :secret secret
-	     )
-   :stderr learn-ocaml-log-buffer
-   :filter (apply-partially #'learn-ocaml-error-handler callback)))
+  (let ((buffer (generate-new-buffer "create-token")))
+    (make-process
+     :name "create-token"
+     :command (learn-ocaml-command-constructor
+	       :command "create-token"
+	       :nickname nickname
+	       :secret secret
+	       )
+     :stderr learn-ocaml-log-buffer
+     :buffer buffer
+     :sentinel (apply-partially #'learn-ocaml-error-handler
+				buffer
+				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
+
 
 (defun learn-ocaml-on-load-to-wrap (token server)
   (let ((new-server-value (if (string-equal server "")
@@ -185,5 +197,4 @@
      (learn-ocaml-give-server
       (lambda (server)
 	(learn-ocaml-on-load-to-wrap token server))))))
-
   
