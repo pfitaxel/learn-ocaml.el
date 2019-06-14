@@ -20,6 +20,7 @@
 (require 'cl)
 (require 'cl-lib)
 (require 'browse-url )
+(require 'cl-macs)
 
 (cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file nickname secret )
   (let* ((server-option (if server
@@ -100,19 +101,20 @@
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
-  (make-process
-   :name "give-server"
-   :command (learn-ocaml-command-constructor
-	     :command "print-server"
-	     )
-   :stderr learn-ocaml-log-buffer
-   :filter (lambda (proc string)
-	     (when (= (process-exit-status proc) 0)
-	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
-   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))  
+  ;;(make-process
+  ;; :name "give-server"
+  ;; :command (learn-ocaml-command-constructor
+;;	     :command "print-server"
+;;	     )
+  ;; :stderr learn-ocaml-log-buffer
+   ;;:filter (lambda (proc string)
+;;	     (when (= (process-exit-status proc) 0)
+;;	       (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" string))))
+  ;; :sentinel (apply-partially #'learn-ocaml-error-handler nil)))
+  ;; to uncomment when pr merged
+  (funcall callback "http://localhost")) 
 
-(defun learn-ocaml-use-metadata (token server )
-  (interactive "sEnter your token please \nsDefault Enter the server :http://localhost  : \n")
+(defun learn-ocaml-use-metadata (token server callback)
   (make-process
    :name "use-metadata"
    :command (learn-ocaml-command-constructor
@@ -121,11 +123,18 @@
 	     :command "set-options" 
 	     )
    :stderr learn-ocaml-log-buffer
-   :sentinel (apply-partially #'learn-ocaml-error-handler nil)))
+   :sentinel (apply-partially #'learn-ocaml-error-handler callback)))
 
-(defun learn-ocaml-create-and-use-new-token (nickname secret)
+(defun learn-ocaml-show-metadata ()
+  (interactive)
+  (learn-ocaml-give-token
+   (lambda (token)
+     (learn-ocaml-give-server
+      (lambda (server)
+  (message-box " Current token: %s \n Current server: %s" token server))))))
+
+(defun learn-ocaml-create-token (nickname secret callback)
   "Creates a new token"
-  (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? ")
   (make-process
    :name  "create-token"
    :command (learn-ocaml-command-constructor
@@ -134,8 +143,47 @@
 	     :secret secret
 	     )
    :stderr learn-ocaml-log-buffer
-   :filter (lambda (proc string) (interactive) 
-	     (when (= (process-exit-status proc) 0)
-	       (message-box "Token was created for nickname %s with secret %s : %s" nickname secret string)
-	       (message-box "Using this new token now")
-	       (funcall-interactively #'learn-ocaml-use-metadata string nil)))))
+   :filter (apply-partially #'learn-ocaml-error-handler callback)))
+
+(defun learn-ocaml-on-load-to-wrap (token server)
+  (let ((new-server-value (if (string-equal server "")
+			 (progn
+			   (message-box "No server found please enter the server")
+			   (read-string "Enter server: "))
+			 nil))
+	(new-token-value (cl-destructuring-bind (token-phrase use-found-token use-another-token )
+			     (if (not (string-equal token ""))
+				 `(,(concat "Token found:  " token ) ("Use found token" . 0) ("Use another token" . 1))
+			       '("No token found " "Use found token" ("Use existing token" . 1)))
+			 (case (x-popup-dialog
+				t `(,(concat token-phrase " \n What do you want to do ? \n")
+				    ,use-found-token
+				    ,use-another-token
+				    ("Create-new-token" . 2)))	   
+			   (0 nil) 
+			   (1 (read-string "Enter token: "))
+			   (2 (let ((nickname
+				     (read-string "What nickname you want to use for the token ? "))
+				    (secret
+				     (read-string "What secret do you want to associate to this token? ")))
+				    (learn-ocaml-create-token nickname secret
+							      (lambda (token) (learn-ocaml-use-metadata token server
+													(lambda (x)
+													  (message-box "Token created succesfully")
+													  (learn-ocaml-show-metadata)))))
+				    'creating))))))
+    (when (not (eq new-token-value 'creating))
+    (learn-ocaml-use-metadata new-token-value new-server-value
+			      (lambda (x) (learn-ocaml-show-metadata))))))
+
+
+(defun learn-ocaml-on-load-wrapped ()
+  "Function to execute when loading the mode"
+  (learn-ocaml-give-token
+   (lambda (token)
+     (learn-ocaml-give-server
+      (lambda (server)
+	(learn-ocaml-on-load-to-wrap token server))))))
+
+  
+
