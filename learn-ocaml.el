@@ -164,10 +164,30 @@
 			    (lambda (token) (learn-ocaml-use-metadata token nil
 								      (lambda (x)
 									(message-box "Token created succesfully")
-									(learn-ocaml-show-metadata))))))
+									  (learn-ocaml-show-metadata))))))
 
+
+(defun learn-ocaml-change-server-wrapper()
+  (interactive)
+  (learn-ocaml-give-server (lambda (s)
+			     (if (x-popup-dialog
+				  t
+				  `(,(concat "The current configured server is: " s "\n Do you want to change it ?" )
+				    ("Yes" . t)
+				    ("No" . nil)))
+				 (let ((server (read-string "Enter server: "))) 
+				   (learn-ocaml-use-metadata nil
+							     server
+							     (lambda (_)
+							       (message-box "Server changed succesfully")
+							       (learn-ocaml-show-metadata))))))))
+    
 (defun learn-ocaml-on-load-to-wrap (token server)
-  (let (
+  (let ((new-server-value (if (string-equal server "")
+			 (progn
+			   (message-box "No server found please enter the server")
+			   (read-string "Enter server: "))
+			 nil))
 	(new-token-value (cl-destructuring-bind (token-phrase use-found-token use-another-token )
 			     (if (not (string-equal token ""))
 				 `(,(concat "Token found:  " token ) ("Use found token" . 0) ("Use another token" . 1))
