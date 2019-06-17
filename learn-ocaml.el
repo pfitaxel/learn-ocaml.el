@@ -16,6 +16,7 @@
 
 (defvar learn-ocaml-server "http://localhost")
 
+(defvar learn-ocaml-current-exercise-id nil)
 
 (require 'cl)
 (require 'cl-lib)
@@ -198,3 +199,35 @@
       (lambda (server)
 	(learn-ocaml-on-load-to-wrap token server))))))
   
+(defun learn-ocaml-exercise-id-initializer ()
+  buffer-file-name)
+
+
+(defvar learn-ocaml-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\C-as" #'learn-ocaml-show-metadata)
+    map))
+
+;;;###autoload
+(easy-menu-define
+  learn-ocaml-mode-menu learn-ocaml-mode-map
+  "Learnocaml Mode Menu."
+  '("Learnocaml"
+    ["Show metadata" learn-ocaml-show-metadata]))
+
+
+;;;###autoload
+(define-minor-mode learn-ocaml-mode
+  "learn-ocaml  in Emacs"
+  :lighter " Learnocaml"
+  :keymap learn-ocaml-mode-map
+  (if (and (not learn-ocaml-mode) (not 'tuareg-mode)
+      (make-local-variable 'learn-ocaml-current-exercise-id)
+    (learn-ocaml-on-load-wrapped)
+    (easy-menu-add learn-ocaml-mode-menu)))
+
+;;;###autoload
+(add-hook 'text-mode-hook 'learn-ocaml-mode)
+
+(provide 'learn-ocaml-mode)
+
