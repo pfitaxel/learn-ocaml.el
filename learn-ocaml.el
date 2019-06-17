@@ -158,13 +158,16 @@
 				buffer
 				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
 
+(defun learn-ocaml-create-token-wrapper (nickname secret)
+  (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? " )
+  (learn-ocaml-create-token nickname secret
+			    (lambda (token) (learn-ocaml-use-metadata token nil
+								      (lambda (x)
+									(message-box "Token created succesfully")
+									(learn-ocaml-show-metadata))))))
 
 (defun learn-ocaml-on-load-to-wrap (token server)
-  (let ((new-server-value (if (string-equal server "")
-			 (progn
-			   (message-box "No server found please enter the server")
-			   (read-string "Enter server: "))
-			 nil))
+  (let (
 	(new-token-value (cl-destructuring-bind (token-phrase use-found-token use-another-token )
 			     (if (not (string-equal token ""))
 				 `(,(concat "Token found:  " token ) ("Use found token" . 0) ("Use another token" . 1))
@@ -176,16 +179,8 @@
 				    ("Create-new-token" . 2)))	   
 			   (0 nil) 
 			   (1 (read-string "Enter token: "))
-			   (2 (let ((nickname
-				     (read-string "What nickname you want to use for the token ? "))
-				    (secret
-				     (read-string "What secret do you want to associate to this token? ")))
-				    (learn-ocaml-create-token nickname secret
-							      (lambda (token) (learn-ocaml-use-metadata token server
-													(lambda (x)
-													  (message-box "Token created succesfully")
-													  (learn-ocaml-show-metadata)))))
-				    'creating))))))
+			   (2 (call-interactively #'learn-ocaml-create-token-wrapper)
+			      'creating)))))
     (when (not (eq new-token-value 'creating))
     (learn-ocaml-use-metadata new-token-value new-server-value
 			      (lambda (x) (learn-ocaml-show-metadata))))))
@@ -199,9 +194,9 @@
       (lambda (server)
 	(learn-ocaml-on-load-to-wrap token server))))))
   
-(defun learn-ocaml-exercise-id-initializer ()
-  buffer-file-name)
-
+(defun learn-ocaml-exercise-id-initializer()
+  (setq learn-ocaml-current-exercise-id
+  (file-name-sans-extension(file-name-base  buffer-file-name))))
 
 (defvar learn-ocaml-mode-map
   (let ((map (make-sparse-keymap)))
@@ -215,7 +210,7 @@
   '("Learnocaml"
     ["Show metadata" learn-ocaml-show-metadata]))
 
-
+(easy-menu-define learn-ocaml-token-status
 ;;;###autoload
 (define-minor-mode learn-ocaml-mode
   "learn-ocaml  in Emacs"
@@ -223,7 +218,8 @@
   :keymap learn-ocaml-mode-map
   (if (and (not learn-ocaml-mode) (not 'tuareg-mode)
       (make-local-variable 'learn-ocaml-current-exercise-id)
-    (learn-ocaml-on-load-wrapped)
+      (learn-ocaml-on-load-wrapped)
+      (learn-ocaml-exercise-id-initializer)
     (easy-menu-add learn-ocaml-mode-menu)))
 
 ;;;###autoload
