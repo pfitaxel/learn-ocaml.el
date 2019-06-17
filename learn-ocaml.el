@@ -44,7 +44,10 @@
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
   (if (not (string-equal string "finished\n"))
-      (message-box learn-ocaml-warning-message)
+      (when (not (string-equal string "run\n"))
+	(progn
+	  (when buffer (kill-buffer buffer))
+	  (message-box learn-ocaml-warning-message)))
     (when callback
       (let ((result (if buffer
 			(progn
@@ -52,7 +55,7 @@
 			  (buffer-string))
 		      "")))
 	(when buffer (kill-buffer buffer))
-      (funcall callback result)))))
+	(funcall callback result)))))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
