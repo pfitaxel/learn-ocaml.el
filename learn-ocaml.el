@@ -23,6 +23,8 @@
 (require 'browse-url )
 (require 'cl-macs)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;core functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file nickname secret )
   (let* ((server-option (if server
 			    (concat "--server=" server)
@@ -137,14 +139,6 @@
    :stderr learn-ocaml-log-buffer
    :sentinel (apply-partially #'learn-ocaml-error-handler nil callback)))
 
-(defun learn-ocaml-show-metadata ()
-  (interactive)
-  (learn-ocaml-give-token
-   (lambda (token)
-     (learn-ocaml-give-server
-      (lambda (server)
-  (message-box " Current token: %s \n Current server: %s" token server))))))
-
 (defun learn-ocaml-create-token (nickname secret callback)
   "Creates a new token"
   (let ((buffer (generate-new-buffer "create-token")))
@@ -160,6 +154,19 @@
      :sentinel (apply-partially #'learn-ocaml-error-handler
 				buffer
 				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;wrappers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun learn-ocaml-show-metadata ()
+  (interactive)
+  (learn-ocaml-give-token
+   (lambda (token)
+     (learn-ocaml-give-server
+      (lambda (server)
+  (message-box " Current token: %s \n Current server: %s" token server))))))
+
 
 (defun learn-ocaml-create-token-wrapper (nickname secret)
   (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? " )
@@ -184,7 +191,10 @@
 							     (lambda (_)
 							       (message-box "Server changed succesfully")
 							       (learn-ocaml-show-metadata))))))))
-    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;on load management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun learn-ocaml-on-load-to-wrap (token server)
   (let ((new-server-value (if (string-equal server "")
 			 (progn
@@ -217,11 +227,12 @@
       (lambda (server)
 	(learn-ocaml-on-load-to-wrap token server))))))
 
+
+;;;;id management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar learn-ocaml-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-as" #'learn-ocaml-show-metadata)
     map))
-
 
 (defun learn-ocaml-update-exercise-id-view ()
   (define-key-after
@@ -250,7 +261,9 @@
   (interactive "sEnter new id : ")
   (setq learn-ocaml-exercise-id new-id)
   (learn-ocaml-update-exercise-id-view))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;definition of the mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (easy-menu-define learn-ocaml-mode-menu
   learn-ocaml-mode-map
   "Learnocaml Mode Menu."
