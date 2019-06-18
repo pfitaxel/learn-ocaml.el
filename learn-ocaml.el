@@ -247,16 +247,26 @@
 	(learn-ocaml-on-load-to-wrap token server))))))
 
 
-;;;;id management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;; menu definition ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar learn-ocaml-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-as" #'learn-ocaml-show-metadata)
+    (define-key map [menu-bar] nil )
     map))
 
+(easy-menu-define learn-ocaml-mode-menu
+  learn-ocaml-mode-map
+  "Learnocaml Mode Menu."
+  '("Learnocaml"
+    ["Show metadata" learn-ocaml-show-metadata]))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;id management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun learn-ocaml-update-exercise-id-view ()
   (define-key-after
     learn-ocaml-mode-map
-    [menu-bar exercise-id ]
+    [menu-bar exercise-id]
      `(,(concat "exercise-id: " learn-ocaml-exercise-id) .
 	  ,(make-sparse-keymap "Exercise-id"))
      )
@@ -268,7 +278,7 @@
     learn-ocaml-mode-map
     [menu-bar exercise-id change]
     '("Change id" . learn-ocaml-change-exercise-id ))
-  nil) ;; to update menu bar
+  (force-mode-line-update)) ;; a random instruction is needed to update menu bar
 
 (defun learn-ocaml-exercise-id-initializer()
   (interactive)
@@ -283,11 +293,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;definition of the mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(easy-menu-define learn-ocaml-mode-menu
-  learn-ocaml-mode-map
-  "Learnocaml Mode Menu."
-  '("Learnocaml"
-    ["Show metadata" learn-ocaml-show-metadata]))
 
 (define-minor-mode learn-ocaml-mode
   "learn-ocaml  in Emacs"
@@ -298,22 +303,7 @@
 	(make-local-variable 'learn-ocaml-exercise-id)
 	(learn-ocaml-on-load-wrapped)
 	(easy-menu-add learn-ocaml-mode-menu)
-	(learn-ocaml-exercise-id-initializer)
-	)
-    (progn
-      (define-key
-	global-map
-	[menu-bar exercise-id reset]
-	nil)
-      (define-key 
-	global-map
-	[menu-bar exercise-id change]
-	nil)
-      (define-key 
-	global-map
-	  [menu-bar exercise-id]
-	  nil)	  
-    )))
-
+	(learn-ocaml-exercise-id-initializer))))
+learn-ocaml-mode-map
 
 (provide 'learn-ocaml-mode)
