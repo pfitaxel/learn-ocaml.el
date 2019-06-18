@@ -59,6 +59,8 @@
 	(when buffer (kill-buffer buffer))
 	(funcall callback result)))))
 
+;;todo add more verbosity to this function , return value 0 if
+;;there was not a file to download
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"  
@@ -67,13 +69,13 @@
    :command (learn-ocaml-command-constructor
 	     :token token
 	     :server server
-	     :id id
+	     ;;:id id rework this once th e pr is merged
 	     :command "fetch")
    :stderr learn-ocaml-log-buffer
    :buffer learn-ocaml-log-buffer
    :sentinel (apply-partially #'learn-ocaml-error-handler 
 			      nil
-			      (lambda (s) (message-box "File downloaded correctly")))))
+			      (lambda (s) (message-box "File(s) downloaded correctly")))))
 
 (defun learn-ocaml-file-writter-filter (proc string)
   (write-region string nil learn-ocaml-temp t))  
@@ -207,8 +209,19 @@
 							       (message-box "Token changed succesfully")
 							       (learn-ocaml-show-metadata))))))))
 
-(defun learn-ocaml-download-server-file-wrapper ()
-  (interactive))
+(defun learn-ocaml-download-server-file-wrapper (id)
+  (interactive `(,(let ((input (read-string(concat
+					    "Enter the id of the exercise [default "
+					    learn-ocaml-exercise-id
+					    " ]: "))))
+		    (if (string-equal "" input)
+			learn-ocaml-exercise-id
+		      input
+		      ))))
+  (learn-ocaml-download-server-file
+   :id id)
+
+  )
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
