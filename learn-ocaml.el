@@ -16,7 +16,7 @@
 
 (defvar learn-ocaml-server "http://localhost")
 
-(defvar learn-ocaml-current-exercise-id nil)
+(defvar learn-ocaml-exercise-id nil)
 
 (require 'cl)
 (require 'cl-lib)
@@ -216,37 +216,72 @@
      (learn-ocaml-give-server
       (lambda (server)
 	(learn-ocaml-on-load-to-wrap token server))))))
-  
-(defun learn-ocaml-exercise-id-initializer()
-  (setq learn-ocaml-current-exercise-id
-  (file-name-sans-extension(file-name-base  buffer-file-name))))
 
 (defvar learn-ocaml-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-as" #'learn-ocaml-show-metadata)
     map))
 
-;;;###autoload
-(easy-menu-define
-  learn-ocaml-mode-menu learn-ocaml-mode-map
+
+(defun learn-ocaml-update-exercise-id-view ()
+  (define-key-after
+    global-map
+    [menu-bar exercise-id ]
+     `(,(concat "exercise-id: " learn-ocaml-exercise-id) .
+	  ,(make-sparse-keymap "Exercise-id"))
+     'tools)
+  (define-key
+    global-map
+    [menu-bar exercise-id reset]
+    '("Reset id" . learn-ocaml-exercise-id-initializer))
+  (define-key 
+    global-map
+    [menu-bar exercise-id change]
+    '("Change id" . learn-ocaml-change-exercise-id ))
+  nil) ;; to update menu bar
+
+(defun learn-ocaml-exercise-id-initializer()
+  (interactive)
+  (setq learn-ocaml-exercise-id
+	(file-name-sans-extension(file-name-base  buffer-file-name)))
+  (learn-ocaml-update-exercise-id-view))
+
+(defun learn-ocaml-change-exercise-id (new-id)
+  (interactive "sEnter new id : ")
+  (setq learn-ocaml-exercise-id new-id)
+  (learn-ocaml-update-exercise-id-view))
+
+(easy-menu-define learn-ocaml-mode-menu
+  learn-ocaml-mode-map
   "Learnocaml Mode Menu."
   '("Learnocaml"
     ["Show metadata" learn-ocaml-show-metadata]))
 
-(easy-menu-define learn-ocaml-token-status
-;;;###autoload
 (define-minor-mode learn-ocaml-mode
   "learn-ocaml  in Emacs"
   :lighter " Learnocaml"
   :keymap learn-ocaml-mode-map
-  (if (and (not learn-ocaml-mode) (not 'tuareg-mode)
-      (make-local-variable 'learn-ocaml-current-exercise-id)
-      (learn-ocaml-on-load-wrapped)
-      (learn-ocaml-exercise-id-initializer)
-    (easy-menu-add learn-ocaml-mode-menu)))
+  (if (bound-and-true-p learn-ocaml-mode)
+      (progn
+	(make-local-variable 'learn-ocaml-exercise-id)
+	(learn-ocaml-on-load-wrapped)
+	(easy-menu-add learn-ocaml-mode-menu)
+	(learn-ocaml-exercise-id-initializer)
+	)
+    (progn
+      (define-key
+	global-map
+	[menu-bar exercise-id reset]
+	nil)
+      (define-key 
+	global-map
+	[menu-bar exercise-id change]
+	nil)
+      (define-key 
+	global-map
+	  [menu-bar exercise-id]
+	  nil)	  
+    )))
 
-;;;###autoload
-(add-hook 'text-mode-hook 'learn-ocaml-mode)
 
 (provide 'learn-ocaml-mode)
-
