@@ -177,7 +177,7 @@
 									  (learn-ocaml-show-metadata))))))
 
 
-(defun learn-ocaml-change-server-wrapper()
+(defun learn-ocaml-change-server()
   (interactive)
   (learn-ocaml-give-server (lambda (s)
 			     (if (x-popup-dialog
@@ -191,6 +191,25 @@
 							     (lambda (_)
 							       (message-box "Server changed succesfully")
 							       (learn-ocaml-show-metadata))))))))
+
+(defun learn-ocaml-change-token ()
+  (interactive)
+  (learn-ocaml-give-token (lambda (token)
+			     (if (x-popup-dialog
+				  t
+				  `(,(concat "The current configured token is: " s "\n Do you want to change it ?" )
+				    ("Yes" . t)
+				    ("No" . nil)))
+				 (let ((token (read-string "Enter token: "))) 
+				   (learn-ocaml-use-metadata token
+							     niñ
+							     (lambda (_)
+							       (message-box "Token changed succesfully")
+							       (learn-ocaml-show-metadata))))))))
+
+(defun learn-ocaml-download-server-file-wrapper ()
+  (interactive))
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -236,17 +255,17 @@
 
 (defun learn-ocaml-update-exercise-id-view ()
   (define-key-after
-    global-map
+    learn-ocaml-mode-map
     [menu-bar exercise-id ]
      `(,(concat "exercise-id: " learn-ocaml-exercise-id) .
 	  ,(make-sparse-keymap "Exercise-id"))
-     'tools)
+     )
   (define-key
-    global-map
+    learn-ocaml-mode-map
     [menu-bar exercise-id reset]
     '("Reset id" . learn-ocaml-exercise-id-initializer))
   (define-key 
-    global-map
+    learn-ocaml-mode-map
     [menu-bar exercise-id change]
     '("Change id" . learn-ocaml-change-exercise-id ))
   nil) ;; to update menu bar
