@@ -82,7 +82,6 @@
 
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
   "Grade a .ml file, optionally submitting the code and the note to the server."
-  (interactive)
   (write-region "" nil learn-ocaml-temp )
   (make-process
    :name (concat "upload-" id)
@@ -219,12 +218,24 @@
 		      input
 		      ))))
   (learn-ocaml-download-server-file
-   :id id)
+   :id id))
 
-  )
-    
+(defun learn-ocaml-grade-wrapper()
+  (interactive)
+  (let ((dont-submit  (x-popup-dialog
+			  t
+			  `("Do you want to submit the result to the server? s " 
+			    ("Yes" . nil)
+			    ("No" . t))))
+	(file buffer-file-name))
+    (learn-ocaml-grade-file
+     :id learn-ocaml-exercise-id
+     :file file
+     :dont-submit dont-submit
+     )))
+			 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+			 
 
 ;;;;;;;;;;;;;;;;;;;on load management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun learn-ocaml-on-load-to-wrap (token server)
