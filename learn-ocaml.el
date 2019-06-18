@@ -198,7 +198,7 @@
   (learn-ocaml-give-token (lambda (token)
 			     (if (x-popup-dialog
 				  t
-				  `(,(concat "The current configured token is: "  "\n Do you want to change it ?" )
+				  `(,(concat "The current configured token is: " token "\n Do you want to change it ?" )
 				    ("Yes" . t)
 				    ("No" . nil)))
 				 (let ((token (read-string "Enter token: "))) 
@@ -224,7 +224,7 @@
   (interactive)
   (let ((dont-submit  (x-popup-dialog
 			  t
-			  `("Do you want to submit the result to the server? s " 
+			  `("Do you want to submit the result to the server? " 
 			    ("Yes" . nil)
 			    ("No" . t))))
 	(file buffer-file-name))
@@ -283,7 +283,13 @@
   learn-ocaml-mode-map
   "Learnocaml Mode Menu."
   '("Learnocaml"
-    ["Show metadata" learn-ocaml-show-metadata]))
+    ["Show metadata" learn-ocaml-show-metadata]
+    ["Change server" learn-ocaml-change-server]
+    ["Change token" learn-ocaml-change-token]
+    ["Create token" learn-ocaml-create-token-wrapper]
+    ["Grade" learn-ocaml-grade-wrapper]
+    ["Download server version" learn-ocaml-download-server-file-wrapper]
+    ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;id management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
