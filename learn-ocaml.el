@@ -16,7 +16,7 @@
 
 (defvar learn-ocaml-server "http://localhost")
 
-(defvar learn-ocaml-exercise-id nil)
+(defvar-local learn-ocaml-exercise-id nil)
 
 (require 'cl)
 (require 'cl-lib)
@@ -198,12 +198,12 @@
   (learn-ocaml-give-token (lambda (token)
 			     (if (x-popup-dialog
 				  t
-				  `(,(concat "The current configured token is: " s "\n Do you want to change it ?" )
+				  `(,(concat "The current configured token is: "  "\n Do you want to change it ?" )
 				    ("Yes" . t)
 				    ("No" . nil)))
 				 (let ((token (read-string "Enter token: "))) 
 				   (learn-ocaml-use-metadata token
-							     niñ
+							     nil
 							     (lambda (_)
 							       (message-box "Token changed succesfully")
 							       (learn-ocaml-show-metadata))))))))
@@ -306,14 +306,16 @@
 
 (defun learn-ocaml-exercise-id-initializer()
   (interactive)
-  (setq learn-ocaml-exercise-id
+  (setq-local learn-ocaml-exercise-id
 	(file-name-sans-extension(file-name-base  buffer-file-name)))
   (learn-ocaml-update-exercise-id-view))
 
 (defun learn-ocaml-change-exercise-id (new-id)
   (interactive "sEnter new id : ")
-  (setq learn-ocaml-exercise-id new-id)
+  (setq-local learn-ocaml-exercise-id new-id)
   (learn-ocaml-update-exercise-id-view))
+
+(add-hook 'window-configuration-change-hook #'learn-ocaml-update-exercise-id-view)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;definition of the mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -324,10 +326,8 @@
   :keymap learn-ocaml-mode-map
   (if (bound-and-true-p learn-ocaml-mode)
       (progn
-	(make-local-variable 'learn-ocaml-exercise-id)
 	(learn-ocaml-on-load-wrapped)
 	(easy-menu-add learn-ocaml-mode-menu)
 	(learn-ocaml-exercise-id-initializer))))
-learn-ocaml-mode-map
 
 (provide 'learn-ocaml-mode)
