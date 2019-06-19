@@ -23,7 +23,47 @@
 (require 'browse-url )
 (require 'cl-macs)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;utilitary functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun learn-ocaml-yes-or-no (message)
+  (x-popup-dialog
+   t
+   `(,message
+     ("Yes" . t)
+     ("No" . nil))))
+
+(defun learn-ocaml-print-time-stamp ()
+    (set-buffer learn-ocaml-log-buffer)
+    (end-of-buffer learn-ocaml-log-buffer)
+    (insert (concat
+	     "\n\n\n"
+	     "-----------------------------------------"
+	     (current-time-string)
+	     "----------------------------------------\n"
+	     )))
+
+(defun learn-ocaml-file-writter-filter (proc string)
+  (write-region string nil learn-ocaml-temp t))  
+  
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;core functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun learn-ocaml-error-handler (buffer callback proc string)
+  
+  (let ((result (if buffer
+		    (progn
+		      (set-buffer buffer)
+		      (buffer-string))
+		  "")))
+    (when buffer (kill-buffer buffer))
+    (if (not (string-equal string "finished\n"))
+	(progn
+	  (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
+	    (switch-to-buffer-other-window "*learn-ocaml-log*")))
+      (funcall callback result))))
+
 
 (cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file nickname secret )
   (let* ((server-option (if server
@@ -45,31 +85,13 @@
     (cl-remove-if-not 'stringp list)))
 
 
-(defun learn-ocaml-yes-or-no (message)
-  (x-popup-dialog
-   t
-   `(,message
-     ("Yes" . t)
-     ("No" . nil))))
-  
-(defun learn-ocaml-error-handler (buffer callback proc string)
-  (let ((result (if buffer
-		    (progn
-		      (set-buffer buffer)
-		      (buffer-string))
-		  "")))
-    (when buffer (kill-buffer buffer))
-    (if (not (string-equal string "finished\n"))
-	(progn
-	  (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
-	    (switch-to-buffer-other-window "*learn-ocaml-log*")))
-      (funcall callback result))))
 
 ;;todo add more verbosity to this function , return value 0 if
 ;;there was not a file to download
 (cl-defun learn-ocaml-download-server-file (&key token server id)
   "enables the user to download last version of the exercise submitted to the server
-`id` should be valid"  
+`id` should be valid"
+  (learn-ocaml-print-time-stamp)
   (make-process
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
@@ -83,11 +105,9 @@
 			      nil
 			      (lambda (s) (message-box "File(s) downloaded correctly")))))
 
-(defun learn-ocaml-file-writter-filter (proc string)
-  (write-region string nil learn-ocaml-temp t))  
-
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
   "Grade a .ml file, optionally submitting the code and the note to the server."
+  (learn-ocaml-print-time-stamp)
   (write-region "" nil learn-ocaml-temp )
   (make-process
    :name (concat "upload-" id)
@@ -109,7 +129,8 @@
 
 (defun learn-ocaml-give-token (callback)
   "Gives the current token"
- (let ((buffer (generate-new-buffer "give-token")))
+  (learn-ocaml-print-time-stamp)
+  (let ((buffer (generate-new-buffer "give-token")))
     (make-process
      :name "give-token"
      :command (learn-ocaml-command-constructor
@@ -123,6 +144,7 @@
  
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
+  (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-server")))
     (make-process
      :name "give-server"
@@ -136,6 +158,7 @@
 				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
 
 (defun learn-ocaml-use-metadata (token server callback)
+  (learn-ocaml-print-time-stamp)
   (make-process
    :name "use-metadata"
    :command (learn-ocaml-command-constructor
@@ -148,6 +171,7 @@
 
 (defun learn-ocaml-create-token (nickname secret callback)
   "Creates a new token"
+  (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "create-token")))
     (make-process
      :name "create-token"
