@@ -162,7 +162,7 @@
    (lambda (token)
      (learn-ocaml-give-server
       (lambda (server)
-  (message-box " Current token: %s \n Current server: %s" token server))))))
+  (message-box "Current token: %s\nCurrent server: %s" token server))))))
 
 
 (defun learn-ocaml-create-token-wrapper (nickname secret)
@@ -332,4 +332,4 @@
 	(easy-menu-add learn-ocaml-mode-menu)
 	(learn-ocaml-exercise-id-initializer))))
 
-(provide 'learn-ocaml-mode)
+(provide 'learn-ocaml)
