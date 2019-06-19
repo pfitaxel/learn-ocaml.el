@@ -45,19 +45,15 @@
     (cl-remove-if-not 'stringp list)))
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
-  (if (not (string-equal string "finished\n"))
-      (when (not (string-equal string "run\n"))
-	(progn
-	  (when buffer (kill-buffer buffer))
-	  (message-box learn-ocaml-warning-message)))
-    (when callback
-      (let ((result (if buffer
-			(progn
-			  (set-buffer buffer)
-			  (buffer-string))
-		      "")))
-	(when buffer (kill-buffer buffer))
-	(funcall callback result)))))
+  (let ((result (if buffer
+		    (progn
+		      (set-buffer buffer)
+		      (buffer-string))
+		  "")))
+    (when buffer (kill-buffer buffer))
+    (if (not (string-equal string "finished\n"))
+	(message-box learn-ocaml-warning-message)
+      (funcall callback result))))
 
 ;;todo add more verbosity to this function , return value 0 if
 ;;there was not a file to download
