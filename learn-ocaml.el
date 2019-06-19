@@ -12,7 +12,7 @@
 (defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
 (defvar learn-ocaml-warning-message
-  "An error occured when executing the last command, please see the log  for more information")
+  "An error occured when executing the last command, Do you want to open the log to have more information?")
 
 (defvar learn-ocaml-server "http://localhost")
 
@@ -44,10 +44,11 @@
 	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file nickname secret)))
     (cl-remove-if-not 'stringp list)))
 
+
 (defun learn-ocaml-yes-or-no (message)
   (x-popup-dialog
    t
-   `(message
+   `(,message
      ("Yes" . t)
      ("No" . nil))))
   
@@ -59,7 +60,9 @@
 		  "")))
     (when buffer (kill-buffer buffer))
     (if (not (string-equal string "finished\n"))
-	(message-box learn-ocaml-warning-message)
+	(progn
+	  (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
+	    (switch-to-buffer-other-window "*learn-ocaml-log*")))
       (funcall callback result))))
 
 ;;todo add more verbosity to this function , return value 0 if
