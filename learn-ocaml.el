@@ -44,6 +44,13 @@
 	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file nickname secret)))
     (cl-remove-if-not 'stringp list)))
 
+(defun learn-ocaml-yes-or-no (message)
+  (x-popup-dialog
+   t
+   `(message
+     ("Yes" . t)
+     ("No" . nil))))
+  
 (defun learn-ocaml-error-handler (buffer callback proc string)
   (let ((result (if buffer
 		    (progn
@@ -177,11 +184,8 @@
 (defun learn-ocaml-change-server()
   (interactive)
   (learn-ocaml-give-server (lambda (s)
-			     (if (x-popup-dialog
-				  t
-				  `(,(concat "The current configured server is: " s "\n Do you want to change it ?" )
-				    ("Yes" . t)
-				    ("No" . nil)))
+			     (if (learn-ocaml-yes-or-no
+				  (concat "The current configured server is: " s "\n Do you want to change it ?" ))
 				 (let ((server (read-string "Enter server: "))) 
 				   (learn-ocaml-use-metadata nil
 							     server
@@ -192,17 +196,14 @@
 (defun learn-ocaml-change-token ()
   (interactive)
   (learn-ocaml-give-token (lambda (token)
-			     (if (x-popup-dialog
-				  t
-				  `(,(concat "The current configured token is: " token "\n Do you want to change it ?" )
-				    ("Yes" . t)
-				    ("No" . nil)))
-				 (let ((token (read-string "Enter token: "))) 
-				   (learn-ocaml-use-metadata token
-							     nil
-							     (lambda (_)
-							       (message-box "Token changed succesfully")
-							       (learn-ocaml-show-metadata))))))))
+			    (if (learn-ocaml-yes-or-no
+				 (concat "The current configured token is: " token "\n Do you want to change it ?" ))
+				(let ((token (read-string "Enter token: "))) 
+				  (learn-ocaml-use-metadata token
+							    nil
+							    (lambda (_)
+							      (message-box "Token changed succesfully")
+							      (learn-ocaml-show-metadata))))))))
 
 (defun learn-ocaml-download-server-file-wrapper (id)
   (interactive `(,(let ((input (read-string(concat
@@ -218,11 +219,8 @@
 
 (defun learn-ocaml-grade-wrapper()
   (interactive)
-  (let ((dont-submit  (x-popup-dialog
-			  t
-			  `("Do you want to submit the result to the server? " 
-			    ("Yes" . nil)
-			    ("No" . t))))
+  (let ((dont-submit  (not (learn-ocaml-yes-or-no
+		       "Do you want to submit the result to the server? ")))
 	(file buffer-file-name))
     (learn-ocaml-grade-file
      :id learn-ocaml-exercise-id
