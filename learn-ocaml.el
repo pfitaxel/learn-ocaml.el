@@ -322,8 +322,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;definition of the mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;###autoload
 (define-minor-mode learn-ocaml-mode
-  "learn-ocaml  in Emacs"
+  "learn-ocaml in Emacs"
   :lighter " Learnocaml"
   :keymap learn-ocaml-mode-map
   (if (bound-and-true-p learn-ocaml-mode)
