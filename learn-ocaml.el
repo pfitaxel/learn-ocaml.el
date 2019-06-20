@@ -65,7 +65,7 @@
       (funcall callback result))))
 
 
-(cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit file nickname secret )
+(cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit param1 param2 )
   (let* ((server-option (if server
 			    (concat "--server=" server)
 			  nil))
@@ -81,7 +81,7 @@
 	 (dont-submit-option (if dont-submit
 				 "-n"
 			       nil))
-	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option file nickname secret)))
+	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option param1 param2)))
     (cl-remove-if-not 'stringp list)))
 
 
@@ -97,7 +97,7 @@
    :command (learn-ocaml-command-constructor
 	     :token token
 	     :server server
-	     ;;:id id rework this once th e pr is merged
+	     ;;:param1 id rework this once th e pr is merged
 	     :command "fetch")
    :stderr learn-ocaml-log-buffer
    :buffer learn-ocaml-log-buffer
@@ -116,7 +116,7 @@
 	     :server server
 	     :id id
 	     :dont-submit dont-submit
-	     :file file
+	     :param1 file
 	     :html t
 	     )
    :stderr learn-ocaml-log-buffer
@@ -177,8 +177,8 @@
      :name "create-token"
      :command (learn-ocaml-command-constructor
 	       :command "create-token"
-	       :nickname nickname
-	       :secret secret
+	       :param1 nickname
+	       :param2 secret
 	       )
      :stderr learn-ocaml-log-buffer
      :buffer buffer
