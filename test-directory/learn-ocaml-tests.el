@@ -64,9 +64,24 @@
 		(learn-ocaml-download-server-file
 		 :callback (lambda (s)
 			     (should (= (shell-command "cat demo.ml" 0)))
+			     (shell-command "rm -f demo.ml")			     
 			     (funcall callback))
 		 :id "demo"))))
     (funcall test done)))
-  
+
+(ert-deftest-async learn-ocaml-download-template-test (done)
+  (shell-command "rm -f demo.ml")
+  (let ((test (lambda (callback)
+		(learn-ocaml-download-template
+		 :id "demo"
+		 :callback (lambda (s)
+			     (should
+			      (=
+			       (shell-command "diff demo.ml test-directory/template_demo.ml")
+			       0))
+			     (shell-command "rm demo.ml")
+			     (funcall callback))))))
+  (funcall test done)))
+		      
   
 
