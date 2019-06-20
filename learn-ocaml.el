@@ -32,9 +32,9 @@
      ("No" . nil))))
 
 (defun learn-ocaml-print-time-stamp ()
-    (set-buffer learn-ocaml-log-buffer)
-    (end-of-buffer learn-ocaml-log-buffer)
-    (insert (concat
+  (set-buffer learn-ocaml-log-buffer)
+  (goto-char (point-max))
+  (insert (concat
 	     "\n\n\n"
 	     "-----------------------------------------"
 	     (current-time-string)
@@ -65,12 +65,15 @@
       (funcall callback result))))
 
 
-(cl-defun learn-ocaml-command-constructor (&key command token server id html dont-submit param1 param2 )
+(cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2 )
   (let* ((server-option (if server
 			    (concat "--server=" server)
 			  nil))
 	 (token-option (if token
 			   (concat "--token=" token)
+			 nil))
+	 (local-option (if local
+			   "--local" 
 			 nil))
 	 (id-option (if id
 			(concat "--id=" id)
@@ -104,6 +107,23 @@
    :sentinel (apply-partially #'learn-ocaml-error-handler 
 			      nil
 			      (lambda (s) (message-box "File(s) downloaded correctly")))))
+
+(cl-defun learn-ocaml-download-template (&key id token server local callback)
+  (learn-ocaml-print-time-stamp)
+  (make-process
+   :name (concat "template-" id)
+   :command (learn-ocaml-command-constructor
+	     :command "template"
+	     :token token
+	     :server server
+	     :local local
+	     :param1 id
+	     )
+   :stderr learn-ocaml-log-buffer
+   :sentinel (apply-partially
+	      #'learn-ocaml-error-handler
+	      nil
+	      callback)))
 
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
   "Grade a .ml file, optionally submitting the code and the note to the server."
@@ -244,6 +264,19 @@
   (learn-ocaml-download-server-file
    :id id))
 
+(defun learn-ocaml-download-template-wrapper (id)
+  (interactive `(,(let ((input (read-string(concat
+					    "Enter the id of the exercise [default "
+					    learn-ocaml-exercise-id
+					    " ]: "))))
+		    (if (string-equal "" input)
+			learn-ocaml-exercise-id
+		      input
+		      ))))
+  (learn-ocaml-download-template
+   :id id
+   :callback (lambda (_) (message-box "Template downloaded correctly"))))
+
 (defun learn-ocaml-grade-wrapper()
   (interactive)
   (let ((dont-submit  (not (learn-ocaml-yes-or-no
@@ -310,6 +343,7 @@
     ["Create token" learn-ocaml-create-token-wrapper]
     ["Grade" learn-ocaml-grade-wrapper]
     ["Download server version" learn-ocaml-download-server-file-wrapper]
+    ["Download template" learn-ocaml-download-template-wrapper]
     ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
