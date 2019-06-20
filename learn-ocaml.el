@@ -91,7 +91,7 @@
 
 ;;todo add more verbosity to this function , return value 0 if
 ;;there was not a file to download
-(cl-defun learn-ocaml-download-server-file (&key token server id)
+(cl-defun learn-ocaml-download-server-file (&key token server id callback)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"
   (learn-ocaml-print-time-stamp)
@@ -106,7 +106,7 @@
    :buffer learn-ocaml-log-buffer
    :sentinel (apply-partially #'learn-ocaml-error-handler 
 			      nil
-			      (lambda (s) (message-box "File(s) downloaded correctly")))))
+			      callback))))
 
 (cl-defun learn-ocaml-download-template (&key id token server local callback)
   (learn-ocaml-print-time-stamp)
@@ -262,7 +262,8 @@
 		      input
 		      ))))
   (learn-ocaml-download-server-file
-   :id id))
+   :id id
+   :callback (lambda (s) (message-box "File(s) downloaded correctly")))
 
 (defun learn-ocaml-download-template-wrapper (id)
   (interactive `(,(let ((input (read-string(concat
