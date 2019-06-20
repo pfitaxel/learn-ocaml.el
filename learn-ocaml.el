@@ -106,7 +106,7 @@
    :buffer learn-ocaml-log-buffer
    :sentinel (apply-partially #'learn-ocaml-error-handler 
 			      nil
-			      callback))))
+			      callback)))
 
 (cl-defun learn-ocaml-download-template (&key id token server local callback)
   (learn-ocaml-print-time-stamp)
@@ -125,7 +125,7 @@
 	      nil
 	      callback)))
 
-(cl-defun learn-ocaml-grade-file (&key id token server dont-submit file)
+(cl-defun learn-ocaml-grade-file (&key id token server dont-submit file callback)
   "Grade a .ml file, optionally submitting the code and the note to the server."
   (learn-ocaml-print-time-stamp)
   (write-region "" nil learn-ocaml-temp )
@@ -144,8 +144,7 @@
    :sentinel (apply-partially
 	      #'learn-ocaml-error-handler
 	      nil
-	      (lambda (string)	
-		    (browse-url-firefox learn-ocaml-temp )))))
+	      callback)))
 
 (defun learn-ocaml-give-token (callback)
   "Gives the current token"
@@ -263,7 +262,7 @@
 		      ))))
   (learn-ocaml-download-server-file
    :id id
-   :callback (lambda (s) (message-box "File(s) downloaded correctly")))
+   :callback (lambda (s) (message-box "File(s) downloaded correctly"))))
 
 (defun learn-ocaml-download-template-wrapper (id)
   (interactive `(,(let ((input (read-string(concat
@@ -287,6 +286,8 @@
      :id learn-ocaml-exercise-id
      :file file
      :dont-submit dont-submit
+     :callback (lambda (string)	
+		 (browse-url-firefox learn-ocaml-temp ))
      )))
 			 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
