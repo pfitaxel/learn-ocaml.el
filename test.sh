@@ -51,4 +51,6 @@ echo "---> Entering $DIR:"
 SUBDIR='demo'
 
 # Test
-docker exec -i $SERVERID emacs --batch --eval '(message (pp (+ 2 2)))'
+docker exec -i $SERVERID sh -c "emacs --batch --eval '(message (pp (+ 2 2)))' && \
+emacs --batch -l /learn-ocaml.el && \
+emacs --batch -l ert -l learn-ocaml.el -l test-directory/learn-ocaml-tests.el -f ert-run-tests-batch-and-exit "
