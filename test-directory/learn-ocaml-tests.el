@@ -8,12 +8,12 @@
   (let ((tests (lambda (callback)
 		 (learn-ocaml-use-metadata
 		  nil
-		  "http://localhost"
+		  "http://localhost:8080"
 		  (lambda (_)
 		    (learn-ocaml-give-server
 		   (lambda (given-server)
 		     (should (string-equal
-			      "http://localhost"
+			      "http://localhost:8080"
 			      given-server))
 		     (funcall callback))))))))
     (funcall tests done)))
