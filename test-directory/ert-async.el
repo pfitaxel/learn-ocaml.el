@@ -33,7 +33,7 @@
 
 (require 'ert)
 
-(defvar ert-async-timeout 20
+(defvar ert-async-timeout 60
   "Number of seconds to wait for callbacks before failing.")
 
 (defun ert-async-activate-font-lock-keywords ()

@@ -41,7 +41,7 @@
 	     "----------------------------------------\n"
 	     )))
 
-(defun learn-ocaml-file-writter-filter (proc string)
+(defun learn-ocaml-file-writter-filter (_proc string)
   (write-region string nil learn-ocaml-temp t))  
   
 
@@ -50,19 +50,18 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;core functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun learn-ocaml-error-handler (buffer callback proc string)
+(defun learn-ocaml-error-handler (buffer callback _proc string)
   
-  (let ((result (if buffer
-		    (progn
+  (let ((result (if (not buffer)
+		    ""
 		      (set-buffer buffer)
-		      (buffer-string))
-		  "")))
+		      (buffer-string))))
     (when buffer (kill-buffer buffer))
-    (if (not (string-equal string "finished\n"))
-	(progn
-	  (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
-	    (switch-to-buffer-other-window "*learn-ocaml-log*")))
-      (funcall callback result))))
+    (if  (string-equal string "finished\n")
+	(funcall callback result)
+      (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
+	(switch-to-buffer-other-window "*learn-ocaml-log*")))))
+    
 
 
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2 )
@@ -84,7 +83,7 @@
 	 (dont-submit-option (if dont-submit
 				 "-n"
 			       nil))
-	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option param1 param2)))
+	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option local-option param1 param2)))
     (cl-remove-if-not 'stringp list)))
 
 
@@ -104,9 +103,10 @@
 	     :command "fetch")
    :stderr learn-ocaml-log-buffer
    :buffer learn-ocaml-log-buffer
-   :sentinel (apply-partially #'learn-ocaml-error-handler 
-			      nil
-			      callback)))
+   :sentinel (apply-partially
+	      #'learn-ocaml-error-handler 
+	      nil
+	      callback)))
 
 (cl-defun learn-ocaml-download-template (&key id token server local callback)
   (learn-ocaml-print-time-stamp)
@@ -157,9 +157,13 @@
 	       )
      :stderr learn-ocaml-log-buffer
      :buffer buffer
-     :sentinel (apply-partially #'learn-ocaml-error-handler 
-				buffer
-				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
+     :sentinel (apply-partially
+		#'learn-ocaml-error-handler 
+		buffer
+		(lambda (s)
+		  (funcall-interactively
+		   callback
+		   (replace-regexp-in-string "\n\\'" "" s))))))) 
  
 (defun learn-ocaml-give-server (callback)
   "Gives the current server"
@@ -172,9 +176,13 @@
 	       )
      :stderr learn-ocaml-log-buffer
      :buffer buffer
-     :sentinel (apply-partially #'learn-ocaml-error-handler
-				buffer
-				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
+     :sentinel (apply-partially
+		#'learn-ocaml-error-handler
+		buffer
+		(lambda (s)
+		  (funcall-interactively
+		   callback
+		   (replace-regexp-in-string "\n\\'" "" s))))))) 
 
 (defun learn-ocaml-use-metadata (token server callback)
   (learn-ocaml-print-time-stamp)
@@ -186,7 +194,10 @@
 	     :command "set-options" 
 	     )
    :stderr learn-ocaml-log-buffer
-   :sentinel (apply-partially #'learn-ocaml-error-handler nil callback)))
+   :sentinel (apply-partially
+	      #'learn-ocaml-error-handler
+	      nil
+	      callback)))
 
 (defun learn-ocaml-create-token (nickname secret callback)
   "Creates a new token"
@@ -201,9 +212,13 @@
 	       )
      :stderr learn-ocaml-log-buffer
      :buffer buffer
-     :sentinel (apply-partially #'learn-ocaml-error-handler
-				buffer
-				(lambda (s) (funcall-interactively callback (replace-regexp-in-string "\n\\'" "" s))))))) 
+     :sentinel (apply-partially
+		#'learn-ocaml-error-handler
+		buffer
+		(lambda (s)
+		  (funcall-interactively
+		   callback
+		   (replace-regexp-in-string "\n\\'" "" s))))))) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -220,36 +235,45 @@
 
 (defun learn-ocaml-create-token-wrapper (nickname secret)
   (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? " )
-  (learn-ocaml-create-token nickname secret
-			    (lambda (token) (learn-ocaml-use-metadata token nil
-								      (lambda (x)
-									(message-box "Token created succesfully")
-									  (learn-ocaml-show-metadata))))))
+  (learn-ocaml-create-token
+   nickname
+   secret
+   (lambda (token)
+     (learn-ocaml-use-metadata
+      token
+      nil
+      (lambda (_)
+	(message-box "Token created succesfully")
+	(learn-ocaml-show-metadata))))))
 
 
 (defun learn-ocaml-change-server()
   (interactive)
-  (learn-ocaml-give-server (lambda (s)
-			     (if (learn-ocaml-yes-or-no
-				  (concat "The current configured server is: " s "\n Do you want to change it ?" ))
-				 (let ((server (read-string "Enter server: "))) 
-				   (learn-ocaml-use-metadata nil
-							     server
-							     (lambda (_)
-							       (message-box "Server changed succesfully")
-							       (learn-ocaml-show-metadata))))))))
+  (learn-ocaml-give-server
+   (lambda (s)
+     (if (learn-ocaml-yes-or-no
+	  (concat "The current configured server is: " s "\n Do you want to change it ?" ))
+	 (let ((server (read-string "Enter server: "))) 
+	   (learn-ocaml-use-metadata nil
+				     server
+				     (lambda (_)
+				       (message-box "Server changed succesfully")
+				       (learn-ocaml-show-metadata))))))))
 
 (defun learn-ocaml-change-token ()
   (interactive)
-  (learn-ocaml-give-token (lambda (token)
-			    (if (learn-ocaml-yes-or-no
-				 (concat "The current configured token is: " token "\n Do you want to change it ?" ))
-				(let ((token (read-string "Enter token: "))) 
-				  (learn-ocaml-use-metadata token
-							    nil
-							    (lambda (_)
-							      (message-box "Token changed succesfully")
-							      (learn-ocaml-show-metadata))))))))
+  (learn-ocaml-give-token
+   (lambda (token)
+     (if (learn-ocaml-yes-or-no
+	  (concat "The current configured token is: "
+		  token
+		  "\n Do you want to change it ?" ))
+	 (let ((token (read-string "Enter token: "))) 
+	   (learn-ocaml-use-metadata token
+				     nil
+				     (lambda (_)
+				       (message-box "Token changed succesfully")
+				       (learn-ocaml-show-metadata))))))))
 
 (defun learn-ocaml-download-server-file-wrapper (id)
   (interactive `(,(let ((input (read-string(concat
@@ -262,7 +286,7 @@
 		      ))))
   (learn-ocaml-download-server-file
    :id id
-   :callback (lambda (s) (message-box "File(s) downloaded correctly"))))
+   :callback (lambda (_) (message-box "File(s) downloaded correctly"))))
 
 (defun learn-ocaml-download-template-wrapper (id)
   (interactive `(,(let ((input (read-string(concat
@@ -277,6 +301,7 @@
    :id id
    :callback (lambda (_) (message-box "Template downloaded correctly"))))
 
+;;;###autoload
 (defun learn-ocaml-grade-wrapper()
   (interactive)
   (let ((dont-submit  (not (learn-ocaml-yes-or-no
@@ -286,20 +311,18 @@
      :id learn-ocaml-exercise-id
      :file file
      :dont-submit dont-submit
-     :callback (lambda (string)	
-		 (browse-url-firefox learn-ocaml-temp ))
-     )))
+     :callback (lambda (_)	
+		 (browse-url-firefox learn-ocaml-temp )))))
 			 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			 
 
 ;;;;;;;;;;;;;;;;;;;on load management ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun learn-ocaml-on-load-to-wrap (token server)
-  (let ((new-server-value (if (string-equal server "")
-			 (progn
-			   (message-box "No server found please enter the server")
-			   (read-string "Enter server: "))
-			 nil))
+  (let ((new-server-value (if (not(string-equal server ""))
+			      nil
+			    (message-box "No server found please enter the server")
+			    (read-string "Enter server: ")))
 	(new-token-value (cl-destructuring-bind (token-phrase use-found-token use-another-token )
 			     (if (not (string-equal token ""))
 				 `(,(concat "Token found:  " token ) ("Use found token" . 0) ("Use another token" . 1))
@@ -313,9 +336,9 @@
 			   (1 (read-string "Enter token: "))
 			   (2 (call-interactively #'learn-ocaml-create-token-wrapper)
 			      'creating)))))
-    (when (not (eq new-token-value 'creating))
+    (unless (eq new-token-value 'creating)
     (learn-ocaml-use-metadata new-token-value new-server-value
-			      (lambda (x) (learn-ocaml-show-metadata))))))
+			      (lambda (_) (learn-ocaml-show-metadata))))))
 
 
 (defun learn-ocaml-on-load-wrapped ()
@@ -367,11 +390,13 @@
     '("Change id" . learn-ocaml-change-exercise-id ))
   (force-mode-line-update)) ;; a random instruction is needed to update menu bar
 
+
 (defun learn-ocaml-exercise-id-initializer()
   (interactive)
   (setq-local learn-ocaml-exercise-id
 	(file-name-sans-extension(file-name-base  buffer-file-name)))
   (learn-ocaml-update-exercise-id-view))
+
 
 (defun learn-ocaml-change-exercise-id (new-id)
   (interactive "sEnter new id : ")
@@ -388,10 +413,9 @@
   "learn-ocaml in Emacs"
   :lighter " Learnocaml"
   :keymap learn-ocaml-mode-map
-  (if (bound-and-true-p learn-ocaml-mode)
-      (progn
+  (when (bound-and-true-p learn-ocaml-mode)
 	(learn-ocaml-on-load-wrapped)
 	(easy-menu-add learn-ocaml-mode-menu)
-	(learn-ocaml-exercise-id-initializer))))
+	(learn-ocaml-exercise-id-initializer)))
 
 (provide 'learn-ocaml)
