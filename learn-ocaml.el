@@ -16,7 +16,7 @@
 
 (defvar learn-ocaml-server "http://localhost")
 
-(defvar-local learn-ocaml-exercise-id nil)
+(defvar-local learn-ocaml-exercise-id "")
 
 (require 'cl)
 (require 'cl-lib)
@@ -99,7 +99,7 @@
    :command (learn-ocaml-command-constructor
 	     :token token
 	     :server server
-	     ;;:param1 id rework this once th e pr is merged
+	     :param1 id 
 	     :command "fetch")
    :stderr learn-ocaml-log-buffer
    :buffer learn-ocaml-log-buffer
@@ -377,7 +377,7 @@
   (define-key-after
     learn-ocaml-mode-map
     [menu-bar exercise-id]
-     `(,(concat "exercise-id: " learn-ocaml-exercise-id) .
+     `(,(concat "Exercise-id: " learn-ocaml-exercise-id) .
 	  ,(make-sparse-keymap "Exercise-id"))
      )
   (define-key
