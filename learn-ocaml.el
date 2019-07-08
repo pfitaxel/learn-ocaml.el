@@ -414,8 +414,8 @@
   :lighter " Learnocaml"
   :keymap learn-ocaml-mode-map
   (when (bound-and-true-p learn-ocaml-mode)
-	(learn-ocaml-on-load-wrapped)
-	(easy-menu-add learn-ocaml-mode-menu)
-	(learn-ocaml-exercise-id-initializer)))
+    (learn-ocaml-exercise-id-initializer)
+    (learn-ocaml-on-load-wrapped)
+    (easy-menu-add learn-ocaml-mode-menu)))
 
 (provide 'learn-ocaml)
