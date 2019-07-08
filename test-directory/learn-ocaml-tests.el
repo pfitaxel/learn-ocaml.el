@@ -18,25 +18,24 @@
 		     (funcall callback))))))))
     (funcall tests done)))
 
-;; command broken 		   
-;; (ert-deftest-async 2_learn-ocaml-token-management-test (done)
-;;   (let ((tests (lambda (callback)
-;; 		 (learn-ocaml-create-token
-;; 		  "test"
-;; 		  "test"
-;; 		  (lambda (token)
-;; 		    (learn-ocaml-use-metadata
-;; 		     token
-;; 		     nil
-;; 		     (lambda (_)
-;; 		       (learn-ocaml-give-token
-;; 			(lambda (given_token)
-;; 			  (should
-;; 			   (string-equal
-;; 			    given_token
-;; 			    token ))
-;; 		       (funcall callback))))))))))
-;;     (funcall tests done)))
+(ert-deftest-async 2_learn-ocaml-token-management-test (done)
+  (let ((tests (lambda (callback)
+		 (learn-ocaml-create-token
+		  "test"
+		  "test"
+		  (lambda (token)
+		    (learn-ocaml-use-metadata
+		     token
+		     nil
+		     (lambda (_)
+		       (learn-ocaml-give-token
+			(lambda (given_token)
+			  (should
+			   (string-equal
+			    given_token
+			    token ))
+		       (funcall callback))))))))))
+    (funcall tests done)))
 
 
 (ert-deftest-async 3_learn-ocaml-grade-test(done) 
