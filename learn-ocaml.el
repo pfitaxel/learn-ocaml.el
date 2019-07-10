@@ -20,8 +20,9 @@
 
 (require 'cl)
 (require 'cl-lib)
-(require 'browse-url )
+(require 'browse-url)
 (require 'cl-macs)
+(require 'json)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;utilitary functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun learn-ocaml-yes-or-no (message)
@@ -62,8 +63,6 @@
       (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
 	(switch-to-buffer-other-window "*learn-ocaml-log*")))))
     
-
-
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2 )
   (let* ((server-option (if server
 			    (concat "--server=" server)
@@ -86,10 +85,6 @@
 	 (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option local-option param1 param2)))
     (cl-remove-if-not 'stringp list)))
 
-
-
-;;todo add more verbosity to this function , return value 0 if
-;;there was not a file to download
 (cl-defun learn-ocaml-download-server-file (&key token server id callback)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"
@@ -218,12 +213,40 @@
 		(lambda (s)
 		  (funcall-interactively
 		   callback
-		   (replace-regexp-in-string "\n\\'" "" s))))))) 
+		   (replace-regexp-in-string "\n\\'" "" s)))))))
+
+(defun learn-ocaml-give-exercice-list (callback)
+  "Gives to the callback function a json containing the exercise list"
+  (learn-ocaml-print-time-stamp)
+  (let ((buffer (generate-new-buffer "exercise-list")))
+    (make-process
+     :name "exercise-list"
+     :command (learn-ocaml-command-constructor
+	       :command "exercise-list")
+     :stderr learn-ocaml-log-buffer
+     :buffer buffer
+     :sentinel (apply-partially
+		#'learn-ocaml-error-handler
+		buffer
+		(lambda (s)
+		  (funcall-interactively
+		   callback (json-read-from-string s)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;;;;;;;;;;;;;;;;;;wrappers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun learn-ocaml-show-questions (id)
+  "Display to the default browser the questions concerning
+the exercise with id equal to id"
+  (interactive)
+  (learn-ocaml-give-server
+   (lambda (server)
+     (learn-ocaml-give-token
+      (lambda (token)
+	(browse-url (concat server "/description.html#id=" id "&token=" token)))))))
+			    
 (defun learn-ocaml-show-metadata ()
   (interactive)
   (learn-ocaml-give-token
@@ -313,7 +336,102 @@
      :dont-submit dont-submit
      :callback (lambda (_)	
 		 (browse-url-firefox learn-ocaml-temp )))))
-			 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; exercise list diplay ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'widget)
+(define-widget 'learn-ocaml-button 'push-button ""
+  :button-face 'button)
+
+(define-widget 'learn-ocaml-group-title 'lazy ""
+  :format "%{%t%}"
+  :sample-face 'custom-group-tag)
+
+(define-widget 'learn-ocaml-exercise-title 'lazy ""
+  :format "%{%t%}"
+  :sample-face 'bold)
+
+(defun learn-ocaml-print-exercise-info (indent tuple) 
+  (let* ((id (elt tuple 0))
+	 (exo (elt tuple 1))
+	 (title (assoc-default 'title exo) )
+	 (short_description (assoc-default 'short_description (elt tuple 1)))
+	 (stars (assoc-default 'stars exo)))
+    (widget-insert "\n")
+    (widget-insert indent)
+    (widget-create 'learn-ocaml-exercise-title
+		   :tag title) 
+    (widget-insert " \n")
+    (widget-insert (concat indent " "))
+    (widget-insert (if short_description short_description "No description available"))
+    (widget-insert " \n")
+    (widget-insert (concat indent " "))
+    (widget-insert (concat "Difficulty: " (number-to-string stars) "/4"
+		   "    id: " id)) 		 
+    (widget-insert " \n")
+    (widget-insert (concat indent " "))
+    (widget-create 'learn-ocaml-button
+		   :notify (lambda (&rest ignore)
+			     (learn-ocaml-download-template-wrapper id))
+		   "Download template")
+    (widget-insert " ")
+    (widget-create 'learn-ocaml-button
+		   :notify (lambda (&rest ignore)
+			     (learn-ocaml-download-server-file-wrapper id))
+		   "Download last upladed version")
+    (widget-insert " ")
+    (widget-create 'learn-ocaml-button
+		   :notify (lambda (&rest ignore)
+			     (find-file (concat id ".ml")))
+		   "Open corresponding local file")
+    (widget-insert " ")
+    (widget-create 'learn-ocaml-button
+		   :notify (lambda (&rest ignore)
+			     (learn-ocaml-show-questions id))
+		   "Open questions")
+    (widget-insert "\n"))) 
+
+(defun learn-ocaml-print-groups (indent list)
+       (let ((head (car list))
+	     (queue (cdr list)))
+	 (if (eq 'groups head)
+	     (progn
+	       (seq-do
+		(lambda (group)
+		  (widget-create
+		   'learn-ocaml-group-title
+		   :tag (concat indent 
+			   (cdr(car(cdr group)))
+			   "\n"))
+		  (print (concat indent " ") (car(cdr(cdr group)))))
+		queue))
+	   (seq-do  (lambda (elt)
+		     (print-exercise-info
+		      (concat indent " ") elt))
+		    queue)
+	   (widget-insert "\n")))) 
+
+(defun learn-ocaml-display-exercise-list-to-wrap (json)
+  "Displays the exercise list of the configured server"
+  (switch-to-buffer "*learn-ocaml-exercise-list*")
+  (kill-all-local-variables)
+  (let ((inhibit-read-only t))
+    (erase-buffer))  
+  (remove-overlays)
+  (learn-ocaml-print-groups " " json)
+  (use-local-map widget-keymap)
+  (widget-setup)) 
+
+(defun learn-ocaml-display-exercise-list ()
+  ""
+  (interactive)
+  (learn-ocaml-give-exercice-list
+   (lambda (brut-json)
+     (learn-ocaml-display-exercise-list-to-wrap (elt (elt brut-json 0) 1)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			 
 
