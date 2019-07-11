@@ -271,7 +271,7 @@ the exercise with id equal to id"
   (message-box "Current token: %s\nCurrent server: %s" token server))))))
 
 
-(defun learn-ocaml-create-token-wrapper (nickname secret)
+(cl-defun learn-ocaml-create-token-wrapper (nickname secret)
   (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? ")
   (learn-ocaml-create-token
    nickname
@@ -283,6 +283,7 @@ the exercise with id equal to id"
       (lambda (_)
         (message-box "Token created succesfully")
         (learn-ocaml-show-metadata))))))
+
 
 
 (defun learn-ocaml-change-server()
@@ -454,9 +455,16 @@ the exercise with id equal to id"
 ;; on-load management
 ;;
 
-;;FIXME : creating token and modifying server
 (defun learn-ocaml-on-load-to-wrap (token server callback)
-  (let ((new-server-value (if (not(string-equal server ""))
+  ""
+  (let* ((after-questions (lambda (new-server-value new-token-value )
+			   (learn-ocaml-use-metadata
+			    new-token-value
+			    new-server-value
+			    (lambda (_)
+			      (funcall callback) 
+			      (learn-ocaml-show-metadata)))))
+	(new-server-value (if (not(string-equal server ""))
                               nil
                             (message-box "No server found please enter the server")
                             (read-string "Enter server: ")))
@@ -471,13 +479,16 @@ the exercise with id equal to id"
                                     ("Create-new-token" . 2)))
                            (0 nil)
                            (1 (read-string "Enter token: "))
-                           (2 (call-interactively #'learn-ocaml-create-token-wrapper)
-                              'creating)))))
-    (unless (eq new-token-value 'creating)
-    (learn-ocaml-use-metadata new-token-value new-server-value
-                              (lambda (_)
-				(funcall callback)
-				(learn-ocaml-show-metadata))))))
+                           (2 (let ((nickname (read-string "What nickname you want to use for the token ? "))
+				     (secret (read-string "What secret do you want to associate to this token? ")))
+			       (funcall
+				#'learn-ocaml-create-token
+				nickname
+				secret
+				(apply-partially after-questions new-server-value))
+                              'creating))))))
+	(unless (eq new-token-value 'creating)
+	  (funcall after-questions new-server-value new-token-value))))
 
 
 (defun learn-ocaml-on-load-wrapped (callback)
