@@ -29,7 +29,9 @@
 
 (defvar learn-ocaml-server "http://localhost")
 
-(defvar-local learn-ocaml-exercise-id "")
+(defvar learn-ocaml-loaded nil)
+
+(defvar-local learn-ocaml-exercise-id nil)
 
 ;;
 ;; Utilitary functions
@@ -256,7 +258,9 @@ the exercise with id equal to id"
    (lambda (server)
      (learn-ocaml-give-token
       (lambda (token)
-	(browse-url (concat server "/description.html#id=" id "&token=" token)))))))
+	;;very important if not you risk to open eww
+	(setq browse-url-browser-function 'browse-url-default-browser) 
+	(funcall #'browse-url (concat server "/description.html#id=" id "&token=" token)))))))
 			    
 (defun learn-ocaml-show-metadata ()
   (interactive)
@@ -453,7 +457,7 @@ the exercise with id equal to id"
 ;; on-load management
 ;;
 
-(defun learn-ocaml-on-load-to-wrap (token server)
+(defun learn-ocaml-on-load-to-wrap (token server callback)
   (let ((new-server-value (if (not(string-equal server ""))
                               nil
                             (message-box "No server found please enter the server")
@@ -473,16 +477,17 @@ the exercise with id equal to id"
                               'creating)))))
     (unless (eq new-token-value 'creating)
     (learn-ocaml-use-metadata new-token-value new-server-value
-                              (lambda (_) (learn-ocaml-show-metadata))))))
+                              (lambda (_) (learn-ocaml-show-metadata)
+				(funcall callback))))))
 
 
-(defun learn-ocaml-on-load-wrapped ()
+(defun learn-ocaml-on-load-wrapped (callback)
   "Function to execute when loading the mode."
   (learn-ocaml-give-token
    (lambda (token)
      (learn-ocaml-give-server
       (lambda (server)
-        (learn-ocaml-on-load-to-wrap token server))))))
+        (learn-ocaml-on-load-to-wrap token server callback))))))
 
 
 ;;
@@ -512,7 +517,15 @@ the exercise with id equal to id"
 ;; id management
 ;;
 
+
+(defun learn-ocaml-compute-exercise-id ()
+  (when buffer-file-name
+    (setq-local learn-ocaml-exercise-id
+        (file-name-sans-extension (file-name-base  buffer-file-name)))))
+
 (defun learn-ocaml-update-exercise-id-view ()
+  (unless learn-ocaml-exercise-id
+    (learn-ocaml-compute-exercise-id))
   (define-key-after
     learn-ocaml-mode-map
     [menu-bar exercise-id]
@@ -529,13 +542,10 @@ the exercise with id equal to id"
     '("Change id" . learn-ocaml-change-exercise-id))
   (force-mode-line-update)) ;; a random instruction is needed to update menu bar
 
-
-(defun learn-ocaml-exercise-id-initializer()
+(defun learn-ocaml-exercise-id-initializer ()
   (interactive)
-  (setq-local learn-ocaml-exercise-id
-        (file-name-sans-extension(file-name-base  buffer-file-name)))
+  (setq-local learn-ocaml-exercise-id nil)
   (learn-ocaml-update-exercise-id-view))
-
 
 (defun learn-ocaml-change-exercise-id (new-id)
   (interactive "sEnter new id : ")
@@ -553,10 +563,23 @@ the exercise with id equal to id"
   "learn-ocaml in Emacs"
   :lighter " Learnocaml"
   :keymap learn-ocaml-mode-map
-  (when (bound-and-true-p learn-ocaml-mode)
-    (learn-ocaml-exercise-id-initializer)
-    (learn-ocaml-on-load-wrapped)
-    (easy-menu-add learn-ocaml-mode-menu)))
+  (if (bound-and-true-p learn-ocaml-mode)
+      (progn
+	(learn-ocaml-update-exercise-id-view)
+	(easy-menu-add learn-ocaml-mode-menu)
+	(add-hook 'caml-mode-hook #'learn-ocaml-mode)
+	(add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
+	(unless learn-ocaml-loaded 
+	  (learn-ocaml-on-load-wrapped
+	   (lambda ()  
+	     (when (learn-ocaml-yes-or-no
+		    "Do you want to open the list of exercises available on the server ?")
+	       (learn-ocaml-display-exercise-list))))
+	   (setq learn-ocaml-loaded t)))
+    (setq learn-ocaml-loaded nil)
+    (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
+    (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)
+    ))
 
 (provide 'learn-ocaml)
 
