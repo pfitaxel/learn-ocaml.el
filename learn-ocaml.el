@@ -342,15 +342,12 @@ the exercise with id equal to id"
 ;;;###autoload
 (defun learn-ocaml-grade-wrapper()
   (interactive)
-  (let ((dont-submit  (not (learn-ocaml-yes-or-no
-                       "Do you want to submit the result to the server? ")))
-        (file buffer-file-name))
-    (learn-ocaml-grade-file
-     :id learn-ocaml-exercise-id
-     :file file
-     :dont-submit dont-submit
-     :callback (lambda (_)
-                 (browse-url-firefox learn-ocaml-temp)))))
+  (learn-ocaml-grade-file
+   :id learn-ocaml-exercise-id
+   :file buffer-file-name
+   :callback (lambda (_)
+	       (setq browse-url-browser-function 'browse-url-default-browser) 
+	       (browse-url learn-ocaml-temp))))
 
 ;
 ;exercise list diplay 
@@ -457,6 +454,7 @@ the exercise with id equal to id"
 ;; on-load management
 ;;
 
+;;FIXME : creating token and modifying server
 (defun learn-ocaml-on-load-to-wrap (token server callback)
   (let ((new-server-value (if (not(string-equal server ""))
                               nil
@@ -477,8 +475,9 @@ the exercise with id equal to id"
                               'creating)))))
     (unless (eq new-token-value 'creating)
     (learn-ocaml-use-metadata new-token-value new-server-value
-                              (lambda (_) (learn-ocaml-show-metadata)
-				(funcall callback))))))
+                              (lambda (_)
+				(funcall callback)
+				(learn-ocaml-show-metadata))))))
 
 
 (defun learn-ocaml-on-load-wrapped (callback)
@@ -511,6 +510,7 @@ the exercise with id equal to id"
     ["Grade" learn-ocaml-grade-wrapper]
     ["Download server version" learn-ocaml-download-server-file-wrapper]
     ["Download template" learn-ocaml-download-template-wrapper]
+    ["Show exercise list" learn-ocaml-display-exercise-list]
     ))
 
 ;;
@@ -567,19 +567,20 @@ the exercise with id equal to id"
       (progn
 	(learn-ocaml-update-exercise-id-view)
 	(easy-menu-add learn-ocaml-mode-menu)
-	(add-hook 'caml-mode-hook #'learn-ocaml-mode)
-	(add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
-	(unless learn-ocaml-loaded 
+	(unless learn-ocaml-loaded
+	  (add-hook 'caml-mode-hook #'learn-ocaml-mode)
+	  (add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
 	  (learn-ocaml-on-load-wrapped
 	   (lambda ()  
 	     (when (learn-ocaml-yes-or-no
 		    "Do you want to open the list of exercises available on the server ?")
+	       (setq default-directory
+		(read-string  "Choose your working directory :" default-directory))
 	       (learn-ocaml-display-exercise-list))))
-	   (setq learn-ocaml-loaded t)))
+	  (setq learn-ocaml-loaded t)))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
-    (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)
-    ))
+    (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)))
 
 (provide 'learn-ocaml)
 
