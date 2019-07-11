@@ -356,9 +356,16 @@ the exercise with id equal to id"
 (define-widget 'learn-ocaml-button 'push-button ""
   :button-face 'button)
 
+(defface learn-ocaml-group-title-face
+  '((t (
+	:inherit variable-pitch
+	:foreground "blue1"
+	:underline nil :weight bold :height 1.2))) 
+  "Face group titles.")
+
 (define-widget 'learn-ocaml-group-title 'lazy ""
   :format "%{%t%}"
-  :sample-face 'custom-group-tag)
+  :sample-face 'learn-ocaml-group-title-face)
 
 (define-widget 'learn-ocaml-exercise-title 'lazy ""
   :format "%{%t%}"
@@ -416,10 +423,10 @@ the exercise with id equal to id"
 		   :tag (concat indent 
 			   (cdr(car(cdr group)))
 			   "\n"))
-		  (print (concat indent " ") (car(cdr(cdr group)))))
+		  (learn-ocaml-print-groups (concat indent " ") (car(cdr(cdr group)))))
 		queue))
 	   (seq-do  (lambda (elt)
-		     (print-exercise-info
+		     (learn-ocaml-print-exercise-info
 		      (concat indent " ") elt))
 		    queue)
 	   (widget-insert "\n")))) 
