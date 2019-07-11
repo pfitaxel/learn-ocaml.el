@@ -258,7 +258,7 @@ the exercise with id equal to id"
    (lambda (server)
      (learn-ocaml-give-token
       (lambda (token)
-	;;very important if not you risk to open eww
+	;;very important if you don't do it you risk to open eww
 	(setq browse-url-browser-function 'browse-url-default-browser) 
 	(funcall #'browse-url (concat server "/description.html#id=" id "&token=" token)))))))
 			    
