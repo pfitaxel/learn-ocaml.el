@@ -12,19 +12,15 @@ red () {
 
 # run a server in a docker container
 run_server (){
-    SYNC=$(pwd)/$DIR/sync
     REPO=$(pwd)/$DIR/repo
-
-    mkdir $DIR/sync 2>/dev/null
-    chmod o+w $DIR/sync
 
     # Run the server in background
     SERVERID=$(docker run --entrypoint '' -d \
       -v $(pwd)/$DIR:/home/learn-ocaml/actual \
-      -v $SYNC:/sync -v $REPO:/repository -v $(pwd):/dir \
+      -v $REPO:/repository -v $(pwd):/dir \
       leunam217/learn-ocaml:0.11 /bin/sh \
-        -c "learn-ocaml --sync-dir=/sync --repo=/repository build && 
-learn-ocaml --sync-dir=/sync --repo=/repository build serve")
+        -c "learn-ocaml --repo=/repository build && 
+learn-ocaml --repo=/repository build serve")
 
     # Wait for the server to be initialized
     sleep 2
