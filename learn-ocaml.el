@@ -20,7 +20,7 @@
 
 (defconst learn-ocaml-command-name "learn-ocaml-client")
 
-(defconst learn-ocaml-temp "~/.learnocaml-temp.html")
+(defconst learn-ocaml-temp ".learnocaml-temp.html")
 
 (defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
@@ -348,7 +348,7 @@ the exercise with id equal to id"
    :file buffer-file-name
    :callback (lambda (_)
 	       (setq browse-url-browser-function 'browse-url-default-browser) 
-	       (browse-url learn-ocaml-temp))))
+	       (browse-url-of-file learn-ocaml-temp))))
 
 ;
 ;exercise list diplay 
