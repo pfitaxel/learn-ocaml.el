@@ -233,7 +233,7 @@
                    callback
                    (replace-regexp-in-string "\n\\'" "" s)))))))
 
-(defun learn-ocaml-give-exercice-list (callback)
+(defun learn-ocaml-give-exercise-list (callback)
   "Gives to the callback function a json containing the exercise list"
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "exercise-list")))
@@ -250,6 +250,9 @@
 		  (funcall-interactively
 		   callback (json-read-from-string s)))))))
 
+(defun learn-ocaml-compute-questions-url (server id token)
+  (concat server "/description.html#id=" id "&token=" token))
+ 
 ;;
 ;; Wrappers
 ;;
@@ -263,8 +266,8 @@ the exercise with id equal to id"
      (learn-ocaml-give-token
       (lambda (token)
 	;;very important if you don't do it you risk to open eww
-	(setq browse-url-browser-function 'browse-url-default-browser) 
-	(funcall #'browse-url (concat server "/description.html#id=" id "&token=" token)))))))
+	(setq browse-url-browser-function 'browse-url-default-browser)
+	(browse-url (learn-ocaml-compute-questions-url server id token)))))))
 			    
 (defun learn-ocaml-show-metadata ()
   (interactive)
@@ -451,7 +454,7 @@ the exercise with id equal to id"
 (defun learn-ocaml-display-exercise-list ()
   ""
   (interactive)
-  (learn-ocaml-give-exercice-list
+  (learn-ocaml-give-exercise-list
    (lambda (brut-json)
      (learn-ocaml-display-exercise-list-to-wrap (elt (elt brut-json 0) 1)))))
 
@@ -485,12 +488,14 @@ the exercise with id equal to id"
                            (1 (read-string "Enter token: "))
                            (2 (let ((nickname (read-string "What nickname you want to use for the token ? "))
 				     (secret (read-string "What secret do you want to associate to this token? ")))
-			       (funcall
-				#'learn-ocaml-create-token
-				nickname
-				secret
-				(apply-partially after-questions new-server-value))
-                              'creating))))))
+				(funcall #'learn-ocaml-use-metadata nil server
+					 (lambda ()
+					   (funcall
+					    #'learn-ocaml-create-token
+					    nickname
+					    secret
+					    (apply-partially after-questions nil))
+					 'creating))))))))
 	(unless (eq new-token-value 'creating)
 	  (funcall after-questions new-server-value new-token-value))))
 
@@ -502,7 +507,6 @@ the exercise with id equal to id"
      (learn-ocaml-give-server
       (lambda (server)
         (learn-ocaml-on-load-to-wrap token server callback))))))
-
 
 ;;
 ;; menu definition
