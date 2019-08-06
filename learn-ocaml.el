@@ -99,8 +99,9 @@
          (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option local-option param1 param2)))
     (cl-remove-if-not 'stringp list)))
 
-(defun learn-ocaml-server-version ()
-  (shell-command-to-string "learn-ocaml-client --version"))
+(defun learn-ocaml-client-version ()
+  (shell-command-to-string
+   (concat (shell-quote-argument learn-ocaml-command-name) " --version")))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id callback)
   "enables the user to download last version of the exercise submitted to the server
