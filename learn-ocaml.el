@@ -27,8 +27,6 @@
 (defvar learn-ocaml-warning-message
   "An error occured when executing the last command, Do you want to open the log to have more information?")
 
-(defvar learn-ocaml-server "http://localhost")
-
 (defvar learn-ocaml-loaded nil)
 
 (defvar-local learn-ocaml-exercise-id nil)
@@ -63,14 +61,16 @@
 ;; Core functions
 ;;
 
-(defun learn-ocaml-error-handler (buffer callback _proc string)
+(defun learn-ocaml-error-handler (buffer callback proc string)
 
   (let ((result (if (not buffer)
                     ""
                       (set-buffer buffer)
                       (buffer-string))))
     (when buffer (kill-buffer buffer))
-    (if  (string-equal string "finished\n")
+    (if  (or (string-equal string "finished\n")
+	     (string-match "give-token" (process-name proc))
+	     (string-match "give-server" (process-name proc)))
         (funcall callback result)
       (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
         (switch-to-buffer-other-window "*learn-ocaml-log*")))))
@@ -102,6 +102,23 @@
 (defun learn-ocaml-client-version ()
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name) " --version")))
+
+(cl-defun learn-ocaml-init (&key token server token nickname secret callback)
+  (learn-ocaml-print-time-stamp)
+  (make-process
+   :name "init"
+   :command (learn-ocaml-command-constructor
+             :token token
+             :server server
+	     :param1 nickname
+	     :param2 secret
+	     :command "init"
+             )
+   :stderr learn-ocaml-log-buffer
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback))) 
 
 (cl-defun learn-ocaml-download-server-file (&key token server id callback)
   "enables the user to download last version of the exercise submitted to the server
@@ -462,43 +479,68 @@ the exercise with id equal to id"
 ;; on-load management
 ;;
 
+(cl-defun learn-ocaml-init-function
+    (&key new-server-value new-token-value nickname secret callback)
+  (if (equal new-server-value nil)
+      ;;with config file
+      (progn
+	(if (equal new-token-value nil)
+	    ;;create token
+	    (learn-ocaml-create-token
+	     nickname
+	     secret
+	     (lambda (token)
+	       (learn-ocaml-use-metadata
+		token
+		nil
+		callback)))
+	  ;;use token
+	  (learn-ocaml-use-metadata
+	   new-token-value
+	   nil
+	   callback)))
+    ;;without config file
+    (learn-ocaml-init
+     :server new-server-value
+     :token new-token-value
+     :nickname nickname
+     :callback callback)))
+
+  
 (defun learn-ocaml-on-load-to-wrap (token server callback)
   ""
-  (let* ((after-questions (lambda (new-server-value new-token-value )
-			   (learn-ocaml-use-metadata
-			    new-token-value
-			    new-server-value
-			    (lambda (_)
-			      (funcall callback) 
-			      (learn-ocaml-show-metadata)))))
-	(new-server-value (if (not(string-equal server ""))
+  (let* ((new-server-value (if (not(string-equal server ""))
                               nil
-                            (message-box "No server found please enter the server")
-                            (read-string "Enter server: ")))
-        (new-token-value (cl-destructuring-bind (token-phrase use-found-token use-another-token)
-                             (if (not (string-equal token ""))
-                                 `(,(concat "Token found:  " token) ("Use found token" . 0) ("Use another token" . 1))
-                               '("No token found " "Use found token" ("Use existing token" . 1)))
-                         (case (x-popup-dialog
-                                t `(,(concat token-phrase " \n What do you want to do ? \n")
-                                    ,use-found-token
-                                    ,use-another-token
-                                    ("Create-new-token" . 2)))
-                           (0 nil)
-                           (1 (read-string "Enter token: "))
-                           (2 (let ((nickname (read-string "What nickname you want to use for the token ? "))
-				     (secret (read-string "What secret do you want to associate to this token? ")))
-				(funcall #'learn-ocaml-use-metadata nil server
-					 (lambda ()
-					   (funcall
-					    #'learn-ocaml-create-token
-					    nickname
-					    secret
-					    (apply-partially after-questions nil))
-					 'creating))))))))
-	(unless (eq new-token-value 'creating)
-	  (funcall after-questions new-server-value new-token-value))))
-
+			     (message-box "No server found please enter the server")
+			     (read-string "Enter server: ")))
+	 (rich-callback (lambda (_)
+			  (funcall callback)
+			  (learn-ocaml-show-metadata))))
+    (cl-destructuring-bind (token-phrase use-found-token use-another-token)
+	(if (not (string-equal token ""))
+	    `(,(concat "Token found:  " token) ("Use found token" . 0) ("Use another token" . 1))
+	  '("No token found " "Use found token" ("Use existing token" . 1)))
+      (case (x-popup-dialog
+	     t `(,(concat token-phrase " \n What do you want to do ? \n")
+		 ,use-found-token
+		 ,use-another-token
+		 ("Create-new-token" . 2)))
+	(0 (funcall rich-callback))
+	
+	(1 (let ((token (read-string "Enter token: ")))
+	     (learn-ocaml-init-function
+	      :new-server-value new-server-value
+	      :new-token-value token
+	      :callback rich-callback)))
+	
+	(2 (let ((nickname (read-string "What nickname you want to use for the token ? "))
+		 (secret (read-string "What secret do you want to associate to this token? ")))
+	     (learn-ocaml-init-function
+	      :new-server-value new-server-value
+	      :nickname  nickname
+	      :secret secret
+	      :callback rich-callback)))))))
+	      
 
 (defun learn-ocaml-on-load-wrapped (callback)
   "Function to execute when loading the mode."

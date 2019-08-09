@@ -104,83 +104,58 @@
 	   (should-not (equal nil (string-match expected result)))))
 	  (funcall done))))))
 	       
-;;tests for on-load function
-;;had difficulties testing the change of the metadata after the
-;; execution of the function
-;; so just testing if the onload function ends in all scenarios
 
-(defun void-mock (&rest rest)
-  t)
-(defun read-string-mock (str)
-  (pcase str
-    ("Enter server: " "http://localhost:8080")
-    ("Enter token: " other-token)
-    ("What nickname you want to use for the token ? " "test")
-    ("What secret do you want to associate to this token? " "test")
-    ( _ "impossible")))
+(ert-deftest-async 8_learn-ocaml-init-another-token (done)
+  (learn-ocaml-create-token
+   "test"
+   "test"
+   (lambda (token)
+     (learn-ocaml-init-function
+      :new-server-value nil
+      :new-token-value token
+      :callback (lambda (_)
+		  (learn-ocaml-give-token
+		   (lambda (token2)
+		     (should (equal token token2))
+		     (funcall done))))))))
+   
 
-(defun x-popup-dialog-use-found-token (&rest rest)
-  0)
-
-(defun x-popup-dialog-use-another-token (&rest rest)
-  1)
-
-(defun x-popup-dialog-create-token (&rest rest)
-  2)
-
-(defun mock (number callback)
-  (cl-letf ( ((symbol-function 'read-string) #'read-string-mock)
-	     ((symbol-function 'message-box) #'void-mock)
-	     ((symbol-function 'x-popup-dialog)
-			       (case number
-				 (0 #'x-popup-dialog-use-found-token)
-				 (1 #'x-popup-dialog-use-another-token)
-				 (2 #'x-popup-dialog-create-token)
-				 (_ #'impossible))))
-    (funcall #'learn-ocaml-on-load-wrapped callback)))
-	    
-(defun learn-ocaml-on-load-test-token-found (done)
+(ert-deftest-async 9_learn-ocaml-init-create-token (done)
   (learn-ocaml-give-token
-   (lambda (previuos-token)
-     (mock 0
-	   (lambda ()
-	     (learn-ocaml-give-token
-	      (lambda (token)
-		(should (equal previuos-token token))
-		(funcall done))))))))
-
-(defun learn-ocaml-on-load-test-another-token (done)
-  (setq create-command
-	(apply #'concat
-	       (learn-ocaml-command-constructor
-		:command " create-token"
-		:param1 " test"
-		:param2 " test")))
-  (setq other-token (shell-command-to-string create-command))
-     (mock 1
-	   (lambda ()
-	     (funcall done))))
-
-(defun learn-ocaml-on-load-test-create-token (done)
-  (mock 2
-	(lambda ()
-	  (funcall done))))
-
-(ert-deftest-async 8_learn-ocaml-on-load-test-token-found (done)
-  (learn-ocaml-on-load-test-token-found done))
-
-(ert-deftest-async 9_learn-ocaml-on-load-test-another-token (done)
-  (learn-ocaml-on-load-test-another-token done))
-
-(ert-deftest-async a10_learn-ocaml-on-load-test-create-token (done)
-  (learn-ocaml-on-load-test-create-token done))
-
+   (lambda (previous-token)
+     (learn-ocaml-init-function
+      :new-server-value nil
+      :nickname "test"
+      :secret "test"
+      :callback (lambda (_)
+		  (learn-ocaml-give-token
+		   (lambda (token2)
+		     (should-not (equal previous-token token2))
+		     (funcall done))))))))
+  
 ;; tests without the config file
 
-(ert-deftest-async a11_learn-ocaml-on-load-test-another-token-no-config (done)
+(ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
+  (learn-ocaml-give-token
+   (lambda (token)
+     (shell-command "rm -fr ~/.config/learnocaml/client.json")
+     (learn-ocaml-init-function
+      :new-server-value "http://localhost:8080"
+      :new-token-value token
+      :callback (lambda (_)
+		  (learn-ocaml-give-token
+		   (lambda (token2)
+		     (should (equal token token2))
+		     (funcall done))))))))
+     
+(ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
   (shell-command "rm -fr ~/.config/learnocaml/client.json")
-  (learn-ocaml-on-load-test-another-token done))
-
-(ert-deftest-async a12_learn-ocaml-on-load-test-create-token-no-config (done)
-  (shell-command "rm -fr ~/.config/learnocaml/client.json")
-  (learn-ocaml-on-load-test-create-token done))
+  (learn-ocaml-init-function
+      :new-server-value "http://localhost:8080"
+      :nickname "test"
+      :secret "test"
+      :callback (lambda (_)
+		  (learn-ocaml-give-token
+		   (lambda (token2)
+		     (funcall done))))))
+  
