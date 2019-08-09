@@ -481,10 +481,10 @@ the exercise with id equal to id"
 
 (cl-defun learn-ocaml-init-function
     (&key new-server-value new-token-value nickname secret callback)
-  (if (equal new-server-value nil)
+  (if (not new-server-value)
       ;;with config file
       (progn
-	(if (equal new-token-value nil)
+	(if (not new-token-value)
 	    ;;create token
 	    (learn-ocaml-create-token
 	     nickname
