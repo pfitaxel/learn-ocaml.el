@@ -518,7 +518,7 @@ the exercise with id equal to id"
 			  (learn-ocaml-show-metadata))))
     (cl-destructuring-bind (token-phrase use-found-token use-another-token)
 	(if (not (string-equal token ""))
-	    `(,(concat "Token found:  " token) ("Use found token" . 0) ("Use another token" . 1))
+	    `(,(concat "Token found: " token) ("Use found token" . 0) ("Use another token" . 1))
 	  '("No token found " "Use found token" ("Use existing token" . 1)))
       (case (x-popup-dialog
 	     t `(,(concat token-phrase " \n What do you want to do ? \n")
@@ -533,7 +533,7 @@ the exercise with id equal to id"
 	      :new-token-value token
 	      :callback rich-callback)))
 	
-	(2 (let ((nickname (read-string "What nickname you want to use for the token ? "))
+	(2 (let ((nickname (read-string "What nickname do you want to use for the token? "))
 		 (secret (read-string "What secret do you want to associate to this token? ")))
 	     (learn-ocaml-init-function
 	      :new-server-value new-server-value
