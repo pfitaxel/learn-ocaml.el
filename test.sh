@@ -50,7 +50,7 @@ SUBDIR='demo'
 
 docker exec -i $SERVERID sh -c "emacs --batch --eval '(message (pp (+ 2 2)))' && cd /dir && \
 learn-ocaml-client init --server=http://localhost:8080 test test && \
-emacs --batch -l ert -l test-directory/ert-async.el -l learn-ocaml.el -l test-directory/learn-ocaml-tests.el -f ert-run-tests-batch-and-exit "
+emacs --batch -l ert -l test-directory/init-tests.el -l learn-ocaml.el -l test-directory/learn-ocaml-tests.el -f ert-run-tests-batch-and-exit "
 
 if [ $? != 0 ]; then
     docker exec -i $SERVERID "ls"   
