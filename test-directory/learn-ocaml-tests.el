@@ -1,10 +1,14 @@
 ;; -*- lexical-binding: t; -*-
 
 (require 'ert-async)
-(setq ert-async-timeout 60)
+;(setq ert-async-timeout 2)
 
 (require 'learn-ocaml)
-;;tests for core functions
+
+;; REMARK: unless otherwise noted, the tests assume that we have previously run
+;; $ learn-ocaml-client init --server=http://localhost:8080 test test
+
+;; Tests for core functions
 (ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
   (let ((tests (lambda (callback)
 		 (learn-ocaml-use-metadata
