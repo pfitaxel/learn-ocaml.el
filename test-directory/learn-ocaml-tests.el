@@ -7,18 +7,19 @@
 
 ;; REMARK: unless otherwise noted, the tests assume that we have previously run
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
+(setq learn-ocaml-test-url "http://localhost:8080")
 
 ;; Tests for core functions
 (ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
   (let ((tests (lambda (callback)
 		 (learn-ocaml-use-metadata
 		  nil
-		  "http://localhost:8080"
+		  learn-ocaml-test-url
 		  (lambda (_)
 		    (learn-ocaml-give-server
 		   (lambda (given-server)
 		     (should (string-equal
-			      "http://localhost:8080"
+			      learn-ocaml-test-url
 			      given-server))
 		     (funcall callback))))))))
     (funcall tests done)))
@@ -146,7 +147,7 @@
    (lambda (token)
      (shell-command "rm -fr ~/.config/learnocaml/client.json")
      (learn-ocaml-init-function
-      :new-server-value "http://localhost:8080"
+      :new-server-value learn-ocaml-test-url
       :new-token-value token
       :callback (lambda (_)
 		  (learn-ocaml-give-token
@@ -157,11 +158,10 @@
 (ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
   (shell-command "rm -fr ~/.config/learnocaml/client.json")
   (learn-ocaml-init-function
-      :new-server-value "http://localhost:8080"
+      :new-server-value learn-ocaml-test-url
       :nickname "test"
       :secret "test"
       :callback (lambda (_)
 		  (learn-ocaml-give-token
 		   (lambda (token2)
 		     (funcall done))))))
-  
