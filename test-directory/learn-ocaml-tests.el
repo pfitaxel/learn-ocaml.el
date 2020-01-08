@@ -5,6 +5,9 @@
 
 (require 'learn-ocaml)
 
+;; WARNING: several tests will overwrite ./demo.ml and the following file:
+(setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
+
 ;; REMARK: unless otherwise noted, the tests assume that we have previously run
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
 (setq learn-ocaml-test-url "http://localhost:8080")
@@ -145,7 +148,7 @@
 (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
   (learn-ocaml-give-token
    (lambda (token)
-     (shell-command "rm -fr ~/.config/learnocaml/client.json")
+     (shell-command (concat "rm -f " learn-ocaml-test-client-file))
      (learn-ocaml-init-function
       :new-server-value learn-ocaml-test-url
       :new-token-value token
@@ -156,7 +159,7 @@
 		     (funcall done))))))))
      
 (ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
-  (shell-command "rm -fr ~/.config/learnocaml/client.json")
+  (shell-command (concat "rm -f " learn-ocaml-test-client-file))
   (learn-ocaml-init-function
       :new-server-value learn-ocaml-test-url
       :nickname "test"
