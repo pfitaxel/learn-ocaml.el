@@ -1,6 +1,8 @@
 ;; -*- lexical-binding: t; -*-
 
 (require 'ert-async)
+(setq ert-async-timeout 60)
+
 (require 'learn-ocaml)
 ;;tests for core functions
 (ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
