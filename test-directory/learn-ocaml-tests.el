@@ -5,12 +5,22 @@
 
 (require 'learn-ocaml)
 
-;; WARNING: several tests will overwrite ./demo.ml and the following file:
+;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
+(setq learn-ocaml-test-demo-file "demo.ml")
 
 ;; REMARK: unless otherwise noted, the tests assume that we have previously run
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
 (setq learn-ocaml-test-url "http://localhost:8080")
+
+(defun learn-ocaml-test-remove-demo-file ()
+  (shell-command (concat "rm -f " learn-ocaml-test-demo-file)))
+
+(defun learn-ocaml-test-remove-client-file ()
+  (shell-command (concat "rm -f " learn-ocaml-test-client-file)))
+
+(defun learn-ocaml-test-remove-temp-file ()
+  (shell-command (concat "rm -f " learn-ocaml-temp)))
 
 ;; Tests for core functions
 (ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
@@ -47,8 +57,8 @@
     (funcall tests done)))
 
 
-(ert-deftest-async 3_learn-ocaml-grade-test(done) 
-  (shell-command (concat "rm -f " learn-ocaml-temp))
+(ert-deftest-async 3_learn-ocaml-grade-test(done)
+  (learn-ocaml-test-remove-temp-file)
   (let ((test (lambda(callback)
 		(learn-ocaml-grade-file
 		 :id "demo"
@@ -65,27 +75,29 @@
     (funcall test done)))
 
 (ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
-  (shell-command "rm -f demo.ml")
+  (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda(callback)
 		(learn-ocaml-download-server-file
 		 :callback (lambda (s)
-			     (should (= (shell-command "cat demo.ml" 0)))
-			     (shell-command "rm -f demo.ml")			     
+			     (should (= 0 (shell-command
+					   (concat "cat " learn-ocaml-test-demo-file))))
+			     (learn-ocaml-test-remove-demo-file)
 			     (funcall callback))
 		 :id "demo"))))
     (funcall test done)))
 
 (ert-deftest-async 5_learn-ocaml-download-template-test (done)
-  (shell-command "rm -f demo.ml")
+  (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda (callback)
  		(learn-ocaml-download-template
  		 :id "demo"
  		 :callback (lambda (s)
  			     (should
- 			      (=
- 			       (shell-command "diff demo.ml test-directory/template_demo.ml")
- 			       0))
- 			     (shell-command "rm demo.ml")
+ 			      (= 0 (shell-command
+				    (concat "diff "
+					    learn-ocaml-test-demo-file
+					    " test-directory/template_demo.ml"))))
+			     (learn-ocaml-test-remove-demo-file) ; without "-f" ?
  			     (funcall callback))))))
     (funcall test done)))
 
