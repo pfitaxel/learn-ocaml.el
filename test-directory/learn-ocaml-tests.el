@@ -160,7 +160,7 @@
 (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
   (learn-ocaml-give-token
    (lambda (token)
-     (shell-command (concat "rm -f " learn-ocaml-test-client-file))
+     (learn-ocaml-test-remove-client-file)
      (learn-ocaml-init-function
       :new-server-value learn-ocaml-test-url
       :new-token-value token
@@ -171,7 +171,7 @@
 		     (funcall done))))))))
      
 (ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
-  (shell-command (concat "rm -f " learn-ocaml-test-client-file))
+  (learn-ocaml-test-remove-client-file)
   (learn-ocaml-init-function
       :new-server-value learn-ocaml-test-url
       :nickname "test"
