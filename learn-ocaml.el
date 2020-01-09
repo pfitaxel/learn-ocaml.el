@@ -16,6 +16,10 @@
   "learn-ocaml in Emacs "
   :prefix "learn-ocaml-")
 
+(defvar learn-ocaml-fail-noisely nil
+  "Set `learn-ocaml-fail-noisely' to non-nil for `ert'-testing
+  purposes.")
+
 (defconst learn-ocaml-version "0.0.1")
 
 (defconst learn-ocaml-command-name "learn-ocaml-client")
@@ -72,10 +76,14 @@
 	     (string-match "give-token" (process-name proc))
 	     (string-match "give-server" (process-name proc)))
         (funcall callback result)
-      (when (learn-ocaml-yes-or-no learn-ocaml-warning-message)
-        (switch-to-buffer-other-window "*learn-ocaml-log*")))))
-
-
+      (if (learn-ocaml-yes-or-no learn-ocaml-warning-message)
+	  (switch-to-buffer-other-window "*learn-ocaml-log*")
+	(when learn-ocaml-fail-noisely
+	  (save-excursion
+	    (set-buffer learn-ocaml-log-buffer)
+	    ;; Remark: the log will contain earlier, unrelated info...
+	    (let ((log (buffer-string)))
+	      (error "Process errored. Full log:\n%s" log))))))))
 
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
   (let* ((server-option (if server

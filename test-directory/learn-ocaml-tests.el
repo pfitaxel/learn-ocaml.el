@@ -4,6 +4,7 @@
 ;(setq ert-async-timeout 2)
 
 (require 'learn-ocaml)
+(setq learn-ocaml-fail-noisely t)
 
 ;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
