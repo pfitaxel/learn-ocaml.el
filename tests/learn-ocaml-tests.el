@@ -12,6 +12,7 @@
 (setq learn-ocaml-test-tograde-file (expand-file-name "to_grade.ml"))
 (setq learn-ocaml-test-template-file (expand-file-name "template_demo.ml"))
 (setq learn-ocaml-test-json-file (expand-file-name "exercise_list.json"))
+(setq learn-ocaml-test-description-file (expand-file-name "expected_description.html"))
 
 ;; This fixture is needed because of Travis CI's permission mismatch:
 ;; bind-mount:'uid=2000(travis)' vs. current-user:uid=1000(learn-ocaml)'.
@@ -139,11 +140,11 @@
      (learn-ocaml-give-token
       (lambda (token)
 	(with-temp-buffer
-	  (insert-file-contents "expected_description.html")
+	  (insert-file-contents learn-ocaml-test-description-file)
 	  (let* ((url (learn-ocaml-compute-questions-url server "demo" token))
 		(expected (buffer-string))
 		(result (shell-command-to-string (concat "curl " url )))) 
-	   (should-not (equal nil (string-match expected result)))))
+	   (should (string-match expected result))))
 	  (funcall done))))))
 	       
 
