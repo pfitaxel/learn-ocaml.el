@@ -57,7 +57,7 @@ run_server () {
 }
 
 stop_server () {
-    docker stop "$SERVER_NAME"
+    ( set -x; docker stop "$SERVER_NAME" )
 }
 
 assert () {
