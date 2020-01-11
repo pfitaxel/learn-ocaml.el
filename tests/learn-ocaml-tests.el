@@ -31,6 +31,8 @@
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
 (setq learn-ocaml-test-url "http://localhost:8080")
 
+;; REMARK: some test also relies on the "curl" binary
+
 (defun learn-ocaml-test-remove-demo-file (&optional shouldexist)
   (if shouldexist
       (shell-command (concat "rm " learn-ocaml-test-demo-file))
@@ -149,7 +151,7 @@
 	  (insert-file-contents learn-ocaml-test-description-file)
 	  (let* ((url (learn-ocaml-compute-questions-url server "demo" token))
 		(expected (buffer-string))
-		(result (shell-command-to-string (concat "curl " url )))) 
+		(result (shell-command-to-string (concat "curl -fsS " url ))))
 	   (should (string-match expected result))))
 	  (funcall done))))))
 	       
