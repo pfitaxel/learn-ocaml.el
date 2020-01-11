@@ -72,6 +72,7 @@
 					  " | grep \"Exercise complete\"")
 					 )
 					0))
+                             (learn-ocaml-test-remove-temp-file)
 			     (funcall callback))))))
     (funcall test done)))
 
@@ -169,6 +170,7 @@
 		  (learn-ocaml-give-token
 		   (lambda (token2)
 		     (should (equal token token2))
+                     (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))))
      
 (ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
@@ -180,4 +182,5 @@
       :callback (lambda (_)
 		  (learn-ocaml-give-token
 		   (lambda (token2)
+                     (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))
