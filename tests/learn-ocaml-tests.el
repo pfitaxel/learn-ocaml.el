@@ -8,20 +8,17 @@
 
 ;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
-(setq learn-ocaml-test-demo-file "demo.ml")
 
 (setq learn-ocaml-test-tograde-file (expand-file-name "to_grade.ml"))
 (setq learn-ocaml-test-template-file (expand-file-name "template_demo.ml"))
 (setq learn-ocaml-test-json-file (expand-file-name "exercise_list.json"))
 
-(defun fixture-cd ()
-  "This fixture is needed because of Travis CI's permission mismatch:
-bind-mount:'uid=2000(travis)' vs. current-user:uid=1000(learn-ocaml)'.
-The function `learn-ocaml-temp-dir' auto-creates a temp directory.
-Return the previous value of `default-directory'."
-  (let ((current default-directory))
-    (cd (learn-ocaml-temp-dir))
-    current))
+;; This fixture is needed because of Travis CI's permission mismatch:
+;; bind-mount:'uid=2000(travis)' vs. current-user:uid=1000(learn-ocaml)'.
+;; The function `learn-ocaml-temp-dir' auto-creates a temp directory.
+(setq learn-ocaml-fixture-directory (learn-ocaml-temp-dir))
+(setq learn-ocaml-test-demo-file
+      (learn-ocaml-file-path learn-ocaml-fixture-directory "demo.ml"))
 
 ;; REMARK: unless otherwise noted, the tests assume that we have previously run
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
@@ -94,26 +91,25 @@ Return the previous value of `default-directory'."
     (funcall test done)))
 
 (ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
-  (let ((old (fixture-cd)))             ; Hack
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda(callback)
 		(learn-ocaml-download-server-file
+                 :id "demo"
+                 :directory learn-ocaml-fixture-directory
 		 :callback (lambda (s)
 			     (should (= 0 (shell-command
 					   (concat "cat "
                                                    learn-ocaml-test-demo-file))))
 			     (learn-ocaml-test-remove-demo-file t)
-                             (cd old)   ; Hack
-			     (funcall callback))
-		 :id "demo"))))
-    (funcall test done))))
+			     (funcall callback))))))
+    (funcall test done)))
 
 (ert-deftest-async 5_learn-ocaml-download-template-test (done)
-  (let ((old (fixture-cd)))             ; Hack
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda (callback)
  		(learn-ocaml-download-template
  		 :id "demo"
+                 :directory learn-ocaml-fixture-directory
  		 :callback (lambda (s)
  			     (should
  			      (= 0 (shell-command
@@ -121,10 +117,9 @@ Return the previous value of `default-directory'."
 					    learn-ocaml-test-demo-file
 					    " "
                                             learn-ocaml-test-template-file))))
-                             (cd old)   ; Hack
 			     (learn-ocaml-test-remove-demo-file t)
  			     (funcall callback))))))
-    (funcall test done))))
+    (funcall test done)))
 
   
 (ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)

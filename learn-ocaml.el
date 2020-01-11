@@ -72,6 +72,11 @@
     (setq learn-ocaml-temp-dir result)
     result))
 
+(defun learn-ocaml-cd (directory)
+  (let ((old default-directory))
+    (cd directory)
+    old))
+
 ;;
 ;; Core functions
 ;;
@@ -150,10 +155,11 @@
               nil
               callback))) 
 
-(cl-defun learn-ocaml-download-server-file (&key token server id callback)
+(cl-defun learn-ocaml-download-server-file (&key token server id directory callback)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"
   (learn-ocaml-print-time-stamp)
+  (let ((old (learn-ocaml-cd directory)))
   (make-process
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
@@ -166,10 +172,12 @@
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
-              callback)))
+              callback))
+  (cd old)))
 
-(cl-defun learn-ocaml-download-template (&key id token server local callback)
+(cl-defun learn-ocaml-download-template (&key id token server local directory callback)
   (learn-ocaml-print-time-stamp)
+  (let ((old (learn-ocaml-cd directory)))
   (make-process
    :name (concat "template-" id)
    :command (learn-ocaml-command-constructor
@@ -183,7 +191,8 @@
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
-              callback)))
+              callback))
+  (cd old)))
 
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file callback)
   "Grade a .ml file, optionally submitting the code and the note to the server."
@@ -373,7 +382,7 @@ the exercise with id equal to id"
                                        (message-box "Token changed succesfully")
                                        (learn-ocaml-show-metadata))))))))
 
-(defun learn-ocaml-download-server-file-wrapper (id)
+(defun learn-ocaml-download-server-file-wrapper (id &optional directory)
   (interactive `(,(let ((input (read-string(concat
                                             "Enter the id of the exercise [default "
                                             learn-ocaml-exercise-id
@@ -384,9 +393,10 @@ the exercise with id equal to id"
                       ))))
   (learn-ocaml-download-server-file
    :id id
+   :directory (or directory default-directory)
    :callback (lambda (_) (message-box "File(s) downloaded correctly"))))
 
-(defun learn-ocaml-download-template-wrapper (id)
+(defun learn-ocaml-download-template-wrapper (id &optional directory)
   (interactive `(,(let ((input (read-string(concat
                                             "Enter the id of the exercise [default "
                                             learn-ocaml-exercise-id
@@ -397,6 +407,7 @@ the exercise with id equal to id"
                       ))))
   (learn-ocaml-download-template
    :id id
+   :directory (or directory default-directory)
    :callback (lambda (_) (message-box "Template downloaded correctly"))))
 
 ;;;###autoload
