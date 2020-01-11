@@ -63,7 +63,7 @@
   (let ((test (lambda(callback)
 		(learn-ocaml-grade-file
 		 :id "demo"
-		 :file "test-directory/to_grade.ml"
+		 :file "to_grade.ml"
 		 :callback (lambda (_)
 			     (should (= (shell-command
 					 (concat
@@ -97,7 +97,7 @@
  			      (= 0 (shell-command
 				    (concat "diff "
 					    learn-ocaml-test-demo-file
-					    " test-directory/template_demo.ml"))))
+					    " template_demo.ml"))))
 			     (learn-ocaml-test-remove-demo-file) ; without "-f" ?
  			     (funcall callback))))))
     (funcall test done)))
@@ -106,7 +106,7 @@
 (ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)
   (let ((test (lambda (callback)
 		(with-temp-buffer
-		  (insert-file-contents "test-directory/exercise_list.json")
+		  (insert-file-contents "exercise_list.json")
 		  (let ((expected (json-read-from-string (buffer-string))))
 		  (learn-ocaml-give-exercise-list
 		   (lambda (json)
@@ -120,7 +120,7 @@
      (learn-ocaml-give-token
       (lambda (token)
 	(with-temp-buffer
-	  (insert-file-contents "test-directory/expected_description.html")
+	  (insert-file-contents "expected_description.html")
 	  (let* ((url (learn-ocaml-compute-questions-url server "demo" token))
 		(expected (buffer-string))
 		(result (shell-command-to-string (concat "curl " url )))) 
