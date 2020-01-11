@@ -24,7 +24,14 @@
 
 (defconst learn-ocaml-command-name "learn-ocaml-client")
 
-(defconst learn-ocaml-temp ".learnocaml-temp.html")
+; TODO: upon exit, propose to remove the temporary folder
+(defconst learn-ocaml-temp-prefix "learn-ocaml-mode"
+  "Prefix of the HTML temporary directory given to `make-temp-file'.")
+
+(defconst learn-ocaml-temp-html-file "results.html"
+  "Constant filename created in temporary folder.")
+
+(defvar learn-ocaml-temp-dir nil)
 
 (defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
 
@@ -56,14 +63,29 @@
              "----------------------------------------\n"
              )))
 
-(defun learn-ocaml-file-writter-filter (_proc string)
-  (write-region string nil learn-ocaml-temp t))
+(defun learn-ocaml-file-writter-filter (file _proc string)
+  (write-region string nil file t))
 
-
+(defun learn-ocaml-temp-dir ()
+  (let ((result (or learn-ocaml-temp-dir
+                    (make-temp-file learn-ocaml-temp-prefix t))))
+    (setq learn-ocaml-temp-dir result)
+    result))
 
 ;;
 ;; Core functions
 ;;
+
+(defun learn-ocaml-file-path (dir file)
+  (if (file-name-absolute-p file)
+      file
+    (if (directory-name-p dir)
+        (concat dir file)
+      (concat (file-name-as-directory dir) file))))
+
+; Todo: a small integration test?
+(defun learn-ocaml-temp-html-file ()
+  (learn-ocaml-file-path (learn-ocaml-temp-dir) learn-ocaml-temp-html-file))
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
 
@@ -166,7 +188,7 @@
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file callback)
   "Grade a .ml file, optionally submitting the code and the note to the server."
   (learn-ocaml-print-time-stamp)
-  (write-region "" nil learn-ocaml-temp)
+  (let ((html (learn-ocaml-temp-html-file)))
   (make-process
    :name (concat "upload-" id)
    :command (learn-ocaml-command-constructor
@@ -178,11 +200,16 @@
              :html t
              )
    :stderr learn-ocaml-log-buffer
-   :filter #'learn-ocaml-file-writter-filter
+   :filter (apply-partially
+            #'learn-ocaml-file-writter-filter
+            html)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
-              callback)))
+              (lambda (s)
+                (funcall-interactively
+                 callback
+                 html))))))
 
 (defun learn-ocaml-give-token (callback)
   "Gives the current token."
@@ -201,7 +228,7 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s)))))))
+                   (replace-regexp-in-string "\n\\'" "" s))))))) ;FIXME("\\"="\"|"\\\\")
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server."
@@ -220,7 +247,7 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s)))))))
+                   (replace-regexp-in-string "\n\\'" "" s))))))) ;FIXME("\\"="\"|"\\\\")
 
 (defun learn-ocaml-use-metadata (token server callback)
   (learn-ocaml-print-time-stamp)
@@ -378,10 +405,9 @@ the exercise with id equal to id"
   (learn-ocaml-grade-file
    :id learn-ocaml-exercise-id
    :file buffer-file-name
-   :callback (lambda (_)
+   :callback (lambda (html)
 	       (setq browse-url-browser-function 'browse-url-default-browser) 
-	       (browse-url-of-file learn-ocaml-temp))))
-
+	       (browse-url-of-file html))))
 ;
 ;exercise list diplay 
 ;

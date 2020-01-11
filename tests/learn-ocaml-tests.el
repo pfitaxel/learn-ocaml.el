@@ -21,9 +21,21 @@
   (shell-command (concat "rm -f " learn-ocaml-test-client-file)))
 
 (defun learn-ocaml-test-remove-temp-file ()
-  (shell-command (concat "rm -f " learn-ocaml-temp)))
+  (let ((file (learn-ocaml-temp-html-file)))
+    (shell-command (concat "rm -f " file))))
 
 ;; Tests for core functions
+
+(setq example-file shell-file-name) ; just to get a filename example
+
+(ert-deftest 0_learn-ocaml-file-path ()
+  (let* ((path example-file)
+         (dir (file-name-directory path))
+         (file (file-name-nondirectory path)))
+    (should (string-equal (learn-ocaml-file-path (directory-file-name dir) file) path))
+    (should (string-equal (learn-ocaml-file-path dir file) path))
+    (should (string-equal (learn-ocaml-file-path "/dummy" path) path))))
+
 (ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
   (let ((tests (lambda (callback)
 		 (learn-ocaml-use-metadata
@@ -68,7 +80,7 @@
 			     (should (= (shell-command
 					 (concat
 					  "cat "
-					  learn-ocaml-temp
+					  (learn-ocaml-temp-html-file)
 					  " | grep \"Exercise complete\"")
 					 )
 					0))
