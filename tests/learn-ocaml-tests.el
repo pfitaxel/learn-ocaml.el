@@ -1,10 +1,16 @@
 ;; -*- lexical-binding: t; -*-
 
-(require 'ert-async)
-;(setq ert-async-timeout 2)
+;;;  Eval these lines to run the tests interactively <C-x C-e>
+;;
+;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
+;; (call-interactively #'ert-run-tests-interactively)
 
 (require 'learn-ocaml)
 (setq learn-ocaml-fail-noisely t)
+
+(require 'ert-async)
+;(setq ert-async-timeout 2)
+
 
 ;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
