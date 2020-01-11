@@ -10,6 +10,10 @@
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
 (setq learn-ocaml-test-demo-file "demo.ml")
 
+(setq learn-ocaml-test-tograde-file (expand-file-name "to_grade.ml"))
+(setq learn-ocaml-test-template-file (expand-file-name "template_demo.ml"))
+(setq learn-ocaml-test-json-file (expand-file-name "exercise_list.json"))
+
 (defun fixture-cd ()
   "This fixture is needed because of Travis CI's permission mismatch:
 bind-mount:'uid=2000(travis)' vs. current-user:uid=1000(learn-ocaml)'.
@@ -76,7 +80,7 @@ Return the previous value of `default-directory'."
   (let ((test (lambda(callback)
 		(learn-ocaml-grade-file
 		 :id "demo"
-		 :file "to_grade.ml"
+		 :file learn-ocaml-test-tograde-file
 		 :callback (lambda (_)
 			     (should (= (shell-command
 					 (concat
@@ -115,7 +119,8 @@ Return the previous value of `default-directory'."
  			      (= 0 (shell-command
 				    (concat "diff "
 					    learn-ocaml-test-demo-file
-					    " template_demo.ml"))))
+					    " "
+                                            learn-ocaml-test-template-file))))
                              (cd old)   ; Hack
 			     (learn-ocaml-test-remove-demo-file t)
  			     (funcall callback))))))
@@ -125,7 +130,7 @@ Return the previous value of `default-directory'."
 (ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)
   (let ((test (lambda (callback)
 		(with-temp-buffer
-		  (insert-file-contents "exercise_list.json")
+		  (insert-file-contents learn-ocaml-test-json-file)
 		  (let ((expected (json-read-from-string (buffer-string))))
 		  (learn-ocaml-give-exercise-list
 		   (lambda (json)
@@ -188,7 +193,7 @@ Return the previous value of `default-directory'."
 		  (learn-ocaml-give-token
 		   (lambda (token2)
 		     (should (equal token token2))
-                     (learn-ocaml-test-remove-client-file)
+                     ; (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))))
      
 (ert-deftest-async a111_learn-ocaml-on-load-test-create-token-no-config (done)
@@ -200,7 +205,7 @@ Return the previous value of `default-directory'."
       :callback (lambda (_)
 		  (learn-ocaml-give-token
 		   (lambda (token2)
-                     (learn-ocaml-test-remove-client-file)
+                     ; (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))
 
 ;; misc tests
