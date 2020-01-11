@@ -1,21 +1,18 @@
-dist: xenial
-sudo: required
-language: generic
+dist: bionic
+language: minimal
 
 services:
-- docker
+  - docker
 
 env:
   global:
-  - NJOBS="2"
-  - LEARNOCAML_IMAGE="leunam217/learn-ocaml:0.11"
-  
+  - LEARNOCAML_IMAGE="leunam217/learn-ocaml"
+  - LEARNOCAML_VERSION="0.11"
 
 install:
-- docker pull ${LEARNOCAML_IMAGE}
+- docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
+
 script:
 - echo -e "${ANSI_YELLOW}Executing tests... ${ANSI_RESET}" && echo -en 'travis_fold:start:script\\r'
 - ./test.sh
-
-after_script:
 - echo -en 'travis_fold:end:script\\r'

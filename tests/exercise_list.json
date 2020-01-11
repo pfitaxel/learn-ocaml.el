@@ -1,0 +1,23 @@
+[
+  {
+    "learnocaml_version": "2",
+    "groups": {
+      "demo": {
+        "title": "Démo de l'environnement learn-ocaml",
+        "exercises": [
+          [
+            "demo",
+            {
+              "learnocaml_version": "2",
+              "kind": "exercise",
+              "title": "Démo de l'environnement learn-ocaml",
+              "short_description": "Commencez par consulter cet exercice",
+              "stars": 0
+            }
+          ]
+        ]
+      }
+    }
+  },
+  {}
+]
