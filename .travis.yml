@@ -1,9 +1,8 @@
-dist: xenial
-sudo: required
-language: generic
+dist: bionic
+language: minimal
 
 services:
-- docker
+  - docker
 
 env:
   global:
