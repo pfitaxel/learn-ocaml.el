@@ -10,12 +10,23 @@
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
 (setq learn-ocaml-test-demo-file "demo.ml")
 
+(defun fixture-cd ()
+  "This fixture is needed because of Travis CI's permission mismatch:
+bind-mount:'uid=2000(travis)' vs. current-user:uid=1000(learn-ocaml)'.
+The function `learn-ocaml-temp-dir' auto-creates a temp directory.
+Return the previous value of `default-directory'."
+  (let ((current default-directory))
+    (cd (learn-ocaml-temp-dir))
+    current))
+
 ;; REMARK: unless otherwise noted, the tests assume that we have previously run
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
 (setq learn-ocaml-test-url "http://localhost:8080")
 
-(defun learn-ocaml-test-remove-demo-file ()
-  (shell-command (concat "rm -f " learn-ocaml-test-demo-file)))
+(defun learn-ocaml-test-remove-demo-file (&optional shouldexist)
+  (if shouldexist
+      (shell-command (concat "rm " learn-ocaml-test-demo-file))
+    (shell-command (concat "rm -f " learn-ocaml-test-demo-file))))
 
 (defun learn-ocaml-test-remove-client-file ()
   (shell-command (concat "rm -f " learn-ocaml-test-client-file)))
@@ -25,16 +36,6 @@
     (shell-command (concat "rm -f " file))))
 
 ;; Tests for core functions
-
-(setq example-file shell-file-name) ; just to get a filename example
-
-(ert-deftest 0_learn-ocaml-file-path ()
-  (let* ((path example-file)
-         (dir (file-name-directory path))
-         (file (file-name-nondirectory path)))
-    (should (string-equal (learn-ocaml-file-path (directory-file-name dir) file) path))
-    (should (string-equal (learn-ocaml-file-path dir file) path))
-    (should (string-equal (learn-ocaml-file-path "/dummy" path) path))))
 
 (ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
   (let ((tests (lambda (callback)
@@ -89,18 +90,22 @@
     (funcall test done)))
 
 (ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
+  (let ((old (fixture-cd)))             ; Hack
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda(callback)
 		(learn-ocaml-download-server-file
 		 :callback (lambda (s)
 			     (should (= 0 (shell-command
-					   (concat "cat " learn-ocaml-test-demo-file))))
-			     (learn-ocaml-test-remove-demo-file)
+					   (concat "cat "
+                                                   learn-ocaml-test-demo-file))))
+			     (learn-ocaml-test-remove-demo-file t)
+                             (cd old)   ; Hack
 			     (funcall callback))
 		 :id "demo"))))
-    (funcall test done)))
+    (funcall test done))))
 
 (ert-deftest-async 5_learn-ocaml-download-template-test (done)
+  (let ((old (fixture-cd)))             ; Hack
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda (callback)
  		(learn-ocaml-download-template
@@ -111,9 +116,10 @@
 				    (concat "diff "
 					    learn-ocaml-test-demo-file
 					    " template_demo.ml"))))
-			     (learn-ocaml-test-remove-demo-file) ; without "-f" ?
+                             (cd old)   ; Hack
+			     (learn-ocaml-test-remove-demo-file t)
  			     (funcall callback))))))
-    (funcall test done)))
+    (funcall test done))))
 
   
 (ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)
@@ -185,7 +191,7 @@
                      (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))))
      
-(ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
+(ert-deftest-async a111_learn-ocaml-on-load-test-create-token-no-config (done)
   (learn-ocaml-test-remove-client-file)
   (learn-ocaml-init-function
       :new-server-value learn-ocaml-test-url
@@ -196,3 +202,15 @@
 		   (lambda (token2)
                      (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))
+
+;; misc tests
+
+(setq example-file shell-file-name) ; just to get a filename example
+
+(ert-deftest a12_learn-ocaml-file-path ()
+  (let* ((path example-file)
+         (dir (file-name-directory path))
+         (file (file-name-nondirectory path)))
+    (should (string-equal (learn-ocaml-file-path (directory-file-name dir) file) path))
+    (should (string-equal (learn-ocaml-file-path dir file) path))
+    (should (string-equal (learn-ocaml-file-path "/dummy" path) path))))
