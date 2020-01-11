@@ -81,12 +81,15 @@ $1
 
 ###############################################################################
 
+id
+
 run_server
 
 # assert "emacs --batch --eval '(pp (+ 2 2))'"
 
 assert "
 cd /build/tests
+id
 learn-ocaml-client init --server=http://localhost:8080 test test
 emacs --batch -l ert -l init-tests.el -l /build/learn-ocaml.el -l learn-ocaml-tests.el -f ert-run-tests-batch-and-exit
 "
