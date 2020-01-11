@@ -57,6 +57,7 @@ run_server () {
 }
 
 stop_server () {
+    green "Stopping server..."
     ( set -x && docker logs "$SERVER_NAME" && docker stop "$SERVER_NAME" )
 }
 
@@ -72,7 +73,7 @@ $1
     ret=$?
     if [ "$ret" -ne 0 ]; then
         red "FAILURE, this shell command returned exit status $ret:
-\$ docker exec -i $SERVER_NAME /bin/sh -c '$1'"
+\$ docker exec -i $SERVER_NAME /bin/sh -c '$1'\n"
         stop_server  # optional...
         exit $ret
     fi
