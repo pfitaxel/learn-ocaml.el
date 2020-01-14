@@ -43,7 +43,7 @@ run_server () {
       "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
     ret=$?
     if [ "$ret" -ne 0 ]; then
-        red "PROBLEM, 'docker run -d ...' failed with exit status $ret"
+        red "PROBLEM, 'docker run -d ... $LEARNOCAML_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
         exit $ret
     fi
 
@@ -68,10 +68,10 @@ run_emacs () {
     # Run the server in background
     docker run -d -i --init --rm --name="$EMACS_NAME" \
       -v "$PWD:/build" --network="container:$SERVER_NAME" \
-      "$EMACS_IMAGE:$LEARNOCAML_VERSION" /bin/sh
+      "$EMACS_IMAGE:$LEARNOCAML_VERSION"
     ret=$?
     if [ "$ret" -ne 0 ]; then
-        red "PROBLEM, 'docker run -d ...' failed with exit status $ret"
+        red "PROBLEM, 'docker run -d ... $EMACS_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
         exit $ret
     fi
 }
