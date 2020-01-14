@@ -1,10 +1,16 @@
 ;; -*- lexical-binding: t; -*-
 
-(require 'ert-async)
-;(setq ert-async-timeout 2)
+;;;  Eval these lines to run the tests interactively <C-x C-e>
+;;
+;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
+;; (call-interactively #'ert-run-tests-interactively)
 
 (require 'learn-ocaml)
 (setq learn-ocaml-fail-noisely t)
+
+(require 'ert-async)
+;(setq ert-async-timeout 2)
+
 
 ;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
@@ -12,6 +18,7 @@
 (setq learn-ocaml-test-tograde-file (expand-file-name "to_grade.ml"))
 (setq learn-ocaml-test-template-file (expand-file-name "template_demo.ml"))
 (setq learn-ocaml-test-json-file (expand-file-name "exercise_list.json"))
+(setq learn-ocaml-test-description-file (expand-file-name "expected_description.html"))
 
 ;; This fixture is needed because of Travis CI's permission mismatch:
 ;; bind-mount:'uid=2000(travis)' vs. current-user:uid=1000(learn-ocaml)'.
@@ -23,6 +30,8 @@
 ;; REMARK: unless otherwise noted, the tests assume that we have previously run
 ;; $ learn-ocaml-client init --server=http://localhost:8080 test test
 (setq learn-ocaml-test-url "http://localhost:8080")
+
+;; REMARK: some test also relies on the "curl" binary
 
 (defun learn-ocaml-test-remove-demo-file (&optional shouldexist)
   (if shouldexist
@@ -139,11 +148,11 @@
      (learn-ocaml-give-token
       (lambda (token)
 	(with-temp-buffer
-	  (insert-file-contents "expected_description.html")
+	  (insert-file-contents learn-ocaml-test-description-file)
 	  (let* ((url (learn-ocaml-compute-questions-url server "demo" token))
 		(expected (buffer-string))
-		(result (shell-command-to-string (concat "curl " url )))) 
-	   (should-not (equal nil (string-match expected result)))))
+		(result (shell-command-to-string (concat "curl -fsS " url ))))
+	   (should (string-match expected result))))
 	  (funcall done))))))
 	       
 

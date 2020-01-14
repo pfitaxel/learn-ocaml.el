@@ -5,7 +5,7 @@
 * Install Docker
 * Run `cd .. && sudo ./test.sh`
 
-## Using ert within emacs (hacky)
+## Using ert within emacs
 
 * Install Docker
 * Add `learn-ocaml-client` in the `PATH`  
@@ -16,8 +16,16 @@
 
 ```bash
 cd .../learn-ocaml.el
+docker pull ocamlsf/learn-ocaml:dev
 docker run --name=server -d --rm -p 8080:8080 \
-  -v "$PWD/tests/repo:/repository" ocamlsf/learn-ocaml:0.11 build serve
+  -v "$PWD/tests/repo:/repository" ocamlsf/learn-ocaml:dev build serve
 learn-ocaml-client init -s http://localhost:8080 test test
 emacs tests/learn-ocaml-tests.el &
 ```
+
+* In the `learn-ocaml-tests.el` buffer, eval using <kbd>C-x C-e </kbd>:
+
+```elisp
+;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
+;; (call-interactively #'ert-run-tests-interactively)
+```elisp

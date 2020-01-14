@@ -312,8 +312,8 @@
 		   callback (json-read-from-string s)))))))
 
 (defun learn-ocaml-compute-questions-url (server id token)
-  (concat server "/description.html#id=" id "&token=" token))
- 
+  (concat server "/description/" id "#token=" token))
+
 ;;
 ;; Wrappers
 ;;
