@@ -5,7 +5,7 @@
 * Install Docker
 * Run `cd .. && sudo ./test.sh`
 
-## Using ert within emacs (hacky)
+## Using ert within emacs
 
 * Install Docker
 * Add `learn-ocaml-client` in the `PATH`  
