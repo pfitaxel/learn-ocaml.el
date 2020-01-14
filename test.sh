@@ -14,63 +14,33 @@ red () {
     echo -e "\e[31m$1\e[0m"
 }
 
-green "Beforehand: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE"
-# Default learn-ocaml image
-: ${LEARNOCAML_IMAGE:=ocamlsf/learn-ocaml}
-# Do "export LEARNOCAML_IMAGE=…" before running test.sh to override
-green "Henceforth: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE\n"
-
-green "Beforehand: CLIENT_IMAGE=$CLIENT_IMAGE"
-# Default learn-ocaml-client image
-: ${CLIENT_IMAGE:=ocamlsf/learn-ocaml-client}
-# Do "export CLIENT_IMAGE=…" before running test.sh to override
-green "Henceforth: CLIENT_IMAGE=$CLIENT_IMAGE\n"
-
-green "Beforehand: CLIENT_UID=$CLIENT_UID"
-# Default learn-ocaml-client UID
-: ${CLIENT_UID:=1000}
-# Do "export CLIENT_UID=…" before running test.sh to override
-green "Henceforth: CLIENT_UID=$CLIENT_UID\n"
-
-green "Beforehand: CLIENT_PATH=$CLIENT_PATH"
-# Default learn-ocaml-client final path
-: ${CLIENT_PATH:=/home/coq/.local/bin/learn-ocaml-client}
-# Do "export CLIENT_PATH=…" before running test.sh to override
-green "Henceforth: CLIENT_PATH=$CLIENT_PATH\n"
-
 green "Beforehand: LEARNOCAML_VERSION=$LEARNOCAML_VERSION"
 # Default learn-ocaml version
 : ${LEARNOCAML_VERSION:=dev}
 # Do "export LEARNOCAML_VERSION=…" before running test.sh to override
 green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\n"
 
+green "Beforehand: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE"
+# Default learn-ocaml image
+: ${LEARNOCAML_IMAGE:=ocamlsf/learn-ocaml}
+# Do "export LEARNOCAML_IMAGE=…" before running test.sh to override
+green "Henceforth: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE\n"
+
 green "Beforehand: EMACS_IMAGE=$EMACS_IMAGE"
 # Default emacs image
-: ${EMACS_IMAGE:=opam-emacs}
+: ${EMACS_IMAGE:=pfitaxel/emacs-learn-ocaml-client}
 # Do "export EMACS_IMAGE=…" before running test.sh to override
 green "Henceforth: EMACS_IMAGE=$EMACS_IMAGE\n"
 
 SERVER_NAME="learn-ocaml-server"
 EMACS_NAME="emacs-client"
 
-extract_client () {
-    mkdir -p dist
-    chmod 777 dist
-    # Extract the learn-ocaml-client binary
-    docker run --rm --entrypoint '' -v "$PWD/dist:/dist" \
-      "$CLIENT_IMAGE:$LEARNOCAML_VERSION" /bin/sh -c \
-      "set -ex && exec cp \$(which learn-ocaml-client) /dist/"
-    sudo chown -Rv "$CLIENT_UID:$CLIENT_UID" dist
-    sudo chmod 755 dist
-}
-
 # run a server in a docker container
 run_server () {
     # Run the server in background
-    docker run -d --rm --name="$SERVER_NAME" --entrypoint '' -v "$PWD:/build" \
-      "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION" /bin/sh -c \
-      "learn-ocaml --repo=/build/tests/repo build &&
-       exec learn-ocaml --repo=/build/tests/repo serve"
+    docker run -d --rm --name="$SERVER_NAME" \
+      -v "$PWD/tests/repo:/repository" \
+      "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
     ret=$?
     if [ "$ret" -ne 0 ]; then
         red "PROBLEM, 'docker run -d ...' failed with exit status $ret"
@@ -96,8 +66,9 @@ stop_server () {
 # run an emacs in a docker container
 run_emacs () {
     # Run the server in background
-    docker run -d -i --init --rm --name="$EMACS_NAME" -v "$PWD/dist:/dist" \
-      "$EMACS_IMAGE" /bin/bash
+    docker run -d -i --init --rm --name="$EMACS_NAME" \
+      -v "$PWD:/build" --network="container:$SERVER_NAME" \
+      "$EMACS_IMAGE:$LEARNOCAML_VERSION" /bin/sh
     ret=$?
     if [ "$ret" -ne 0 ]; then
         red "PROBLEM, 'docker run -d ...' failed with exit status $ret"
@@ -116,14 +87,14 @@ assert () {
         red "ERROR, assert expects a single arg (the code to run)"
         exit 1
     fi
-    docker exec -i "$EMACS_NAME" /bin/bash -c "
+    docker exec -i "$EMACS_NAME" /bin/sh -c "
 set -ex
 $1
 "
     ret=$?
     if [ "$ret" -ne 0 ]; then
         red "FAILURE, this shell command returned exit status $ret:
-\$ docker exec -i $EMACS_NAME /bin/bash -c '$1'\n"
+\$ docker exec -i $EMACS_NAME /bin/sh -c '$1'\n"
         stop_emacs
         stop_server
         exit $ret
@@ -133,12 +104,9 @@ $1
 ###############################################################################
 
 run_server
-extract_client
 run_emacs
 
 assert "emacs --batch --eval '(pp (+ 2 2))'"
-
-assert "cp -f /dist/learn-ocaml-client \"$CLIENT_PATH\""
 
 assert "learn-ocaml-client --help"
 
