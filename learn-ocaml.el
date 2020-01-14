@@ -1,6 +1,16 @@
 ;;; learn-ocaml.el --- Emacs frontend for learn-ocaml -*- lexical-binding: t; -*-
 
+;; Copyright (c) 2019-2020  The learn-ocaml.el developers
+
+;; This software is free software; you can redistribute it and/or
+;; modify it under the terms of the MIT License.
+
+;; You should have received a copy of the MIT License along with this
+;; program.  If not, see <https://spdx.org/licenses/MIT>
+
 ;;; Commentary:
+;;
+;; learn-ocaml.el is an Emacs frontend for students using learn-ocaml.
 ;;
 
 (require 'cl)

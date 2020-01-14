@@ -1,4 +1,15 @@
-;; -*- lexical-binding: t; -*-
+;;; learn-ocaml-tests.el --- unit tests -*- lexical-binding: t; -*-
+
+;; Copyright (c) 2019-2020  The learn-ocaml.el developers
+
+;; This software is free software; you can redistribute it and/or
+;; modify it under the terms of the MIT License.
+
+;; You should have received a copy of the MIT License along with this
+;; program.  If not, see <https://spdx.org/licenses/MIT>
+
+;;; Commentary:
+;;
 
 ;;;  Eval these lines to run the tests interactively <C-x C-e>
 ;;
@@ -6,6 +17,8 @@
 ;; (call-interactively #'ert-run-tests-interactively)
 
 (require 'learn-ocaml)
+;;; Code:
+
 (setq learn-ocaml-fail-noisely t)
 
 (require 'ert-async)
@@ -223,3 +236,7 @@
     (should (string-equal (learn-ocaml-file-path (directory-file-name dir) file) path))
     (should (string-equal (learn-ocaml-file-path dir file) path))
     (should (string-equal (learn-ocaml-file-path "/dummy" path) path))))
+
+(provide 'learn-ocaml-tests)
+
+;;; learn-ocaml-tests.el ends here
