@@ -28,4 +28,4 @@ emacs tests/learn-ocaml-tests.el &
 ```elisp
 ;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
 ;; (call-interactively #'ert-run-tests-interactively)
-```elisp
+```
