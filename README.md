@@ -55,6 +55,11 @@ opening **.ml** buffers using `tuareg-mode` and the following
     workaround this **Merlin** issue, which thus occurs if the server
     exercise provides some `prelude.ml` and/or `prepare.ml` code.
 
+## Feedback
+
+Bug reports and suggestions are very welcome: feel free to open a new
+[issue](https://github.com/pfitaxel/learn-ocaml.el/issues/new) or PR.
+
 ## Authors and Acknowledgments
 
 **learn-ocaml.el** has been developed in University Toulouse III by
