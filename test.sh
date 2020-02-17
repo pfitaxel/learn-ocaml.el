@@ -37,20 +37,22 @@ EMACS_NAME="emacs-client"
 
 # run a server in a docker container
 run_server () {
+    local oldopt="$(set +o)"; set -x
     # Run the server in background
-    docker run -d --rm --name="$SERVER_NAME" \
+    sudo docker run -d --rm --name="$SERVER_NAME" \
       -v "$PWD/tests/repo:/repository" \
       "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
     ret=$?
+    set +vx; eval "$oldopt"  # has to be after "ret=$?"
     if [ "$ret" -ne 0 ]; then
-        red "PROBLEM, 'docker run -d ... $LEARNOCAML_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
+        red "PROBLEM, 'sudo docker run -d ... $LEARNOCAML_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
         exit $ret
     fi
 
     # Wait for the server to be initialized
     sleep 2
 
-    if [ -z "$(docker ps -q)" ]; then
+    if [ -z "$(sudo docker ps -q)" ]; then
         red "PROBLEM, server is not running"
         exit 1
     fi
@@ -59,19 +61,21 @@ run_server () {
 stop_server () {
     green "Stopping server..."
     ( set -x && \
-      # docker logs "$SERVER_NAME"
-      docker stop "$SERVER_NAME" )
+      # sudo docker logs "$SERVER_NAME"
+      sudo docker stop "$SERVER_NAME" )
 }
 
 # run an emacs in a docker container
 run_emacs () {
+    local oldopt="$(set +o)"; set -x
     # Run the server in background
-    docker run -d -i --init --rm --name="$EMACS_NAME" \
+    sudo docker run -d -i --init --rm --name="$EMACS_NAME" \
       -v "$PWD:/build" --network="container:$SERVER_NAME" \
       "$EMACS_IMAGE:$LEARNOCAML_VERSION"
     ret=$?
+    set +vx; eval "$oldopt"  # has to be after "ret=$?"
     if [ "$ret" -ne 0 ]; then
-        red "PROBLEM, 'docker run -d ... $EMACS_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
+        red "PROBLEM, 'sudo docker run -d ... $EMACS_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
         exit $ret
     fi
 }
@@ -79,7 +83,7 @@ run_emacs () {
 stop_emacs () {
     green "Stopping emacs..."
     ( set -x && \
-      docker stop "$EMACS_NAME" )
+      sudo docker stop "$EMACS_NAME" )
 }
 
 assert () {
@@ -87,14 +91,14 @@ assert () {
         red "ERROR, assert expects a single arg (the code to run)"
         exit 1
     fi
-    docker exec -i "$EMACS_NAME" /bin/sh -c "
+    sudo docker exec -i "$EMACS_NAME" /bin/sh -c "
 set -ex
 $1
 "
     ret=$?
     if [ "$ret" -ne 0 ]; then
         red "FAILURE, this shell command returned exit status $ret:
-\$ docker exec -i $EMACS_NAME /bin/sh -c '$1'\n"
+\$ sudo docker exec -i $EMACS_NAME /bin/sh -c '$1'\n"
         stop_emacs
         stop_server
         exit $ret
@@ -108,7 +112,9 @@ run_emacs
 
 assert "emacs --batch --eval '(pp (+ 2 2))'"
 
-assert "learn-ocaml-client --help"
+echo
+
+assert "learn-ocaml-client --version"
 
 assert "
 cd /build/tests

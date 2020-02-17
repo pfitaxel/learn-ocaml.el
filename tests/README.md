@@ -3,7 +3,7 @@
 ## Using the Travis CI wrapper
 
 * Install Docker
-* Run `cd .. && sudo ./test.sh`
+* Run `cd .. && ./test.sh`
 
 ## Using ert within emacs
 
