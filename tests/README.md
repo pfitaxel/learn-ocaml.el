@@ -8,17 +8,23 @@
 ## Using ert within emacs
 
 * Install Docker
-* Add `learn-ocaml-client` in the `PATH`  
-  e.g. by installing OPAM dependencies and compiling `learn-ocaml`
-  (`make && make opaminstall`), then doing:  
-  `export PATH=$PATH:$HOME/forge/git/learn-ocaml/_opam/bin`
-* Finally run:
+* Install `learn-ocaml` using OPAM (`make && make opaminstall`)
+* Add `learn-ocaml-client` in the `PATH`, e.g. run in a terminal:
+	
+		export PATH=$PATH:$HOME/forge/git/learn-ocaml/_opam/bin
+
+* Remark: the Elisp equivalent would be:
+
+		(add-to-list 'exec-path (expand-file-name "~/forge/git/learn-ocaml/_opam/bin"))
+		
+* Run then:
 
 ```bash
 cd .../learn-ocaml.el
-docker pull ocamlsf/learn-ocaml:dev
+export LOVERSION=dev
+docker pull ocamlsf/learn-ocaml:$LOVERSION
 docker run --name=server -d --rm -p 8080:8080 \
-  -v "$PWD/tests/repo:/repository" ocamlsf/learn-ocaml:dev build serve
+  -v "$PWD/tests/repo:/repository" ocamlsf/learn-ocaml:$LOVERSION build serve
 learn-ocaml-client init -s http://localhost:8080 test test
 emacs tests/learn-ocaml-tests.el &
 ```
