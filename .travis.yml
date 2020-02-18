@@ -1,5 +1,6 @@
+os: linux
 dist: bionic
-language: minimal
+language: shell
 
 services:
   - docker
@@ -8,7 +9,7 @@ env:
   global:
   - EMACS_IMAGE="pfitaxel/emacs-learn-ocaml-client"
   - LEARNOCAML_IMAGE="ocamlsf/learn-ocaml"
-  matrix:
+  jobs:
   - LEARNOCAML_VERSION="dev"
 
 install:
