@@ -60,7 +60,7 @@
 
 ;; Tests for core functions
 
-(ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
+(ert-deftest-async 1_learn-ocaml-server-management-test (done)
   (let ((tests (lambda (callback)
 		 (learn-ocaml-use-metadata
 		  nil
@@ -94,7 +94,7 @@
     (funcall tests done)))
 
 
-(ert-deftest-async 3_learn-ocaml-grade-test(done)
+(ert-deftest-async 3_learn-ocaml-grade-test (done)
   (learn-ocaml-test-remove-temp-file)
   (let ((test (lambda(callback)
 		(learn-ocaml-grade-file
