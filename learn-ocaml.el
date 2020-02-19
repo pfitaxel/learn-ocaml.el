@@ -743,8 +743,13 @@ the exercise with id equal to id"
 	   (lambda ()  
 	     (when (learn-ocaml-yes-or-no
 		    "Do you want to open the list of exercises available on the server ?")
-	       (setq default-directory
-		(read-string  "Choose your working directory :" default-directory))
+               (let ((dir
+                      (read-directory-name "Choose your working directory: "
+                                           default-directory
+                                           default-directory
+                                           nil "")))
+                     (make-directory dir t)
+                     (setq default-directory dir))
 	       (learn-ocaml-display-exercise-list))))
 	  (setq learn-ocaml-loaded t)))
     (setq learn-ocaml-loaded nil)
