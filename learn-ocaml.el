@@ -617,8 +617,8 @@ the exercise with id equal to id"
 
 (easy-menu-define learn-ocaml-mode-menu
   learn-ocaml-mode-map
-  "Learnocaml Mode Menu."
-  '("Learnocaml"
+  "LearnOCaml Mode Menu."
+  '("LearnOCaml"
     ["Show metadata" learn-ocaml-show-metadata]
     ["Change server" learn-ocaml-change-server]
     ["Change token" learn-ocaml-change-token]
@@ -677,7 +677,7 @@ the exercise with id equal to id"
 ;;;###autoload
 (define-minor-mode learn-ocaml-mode
   "learn-ocaml in Emacs"
-  :lighter " Learnocaml"
+  :lighter " LearnOCaml"
   :keymap learn-ocaml-mode-map
   (if (bound-and-true-p learn-ocaml-mode)
       (progn
