@@ -56,6 +56,9 @@
 ;; Utilitary functions
 ;;
 
+(defun learn-ocaml--rstrip (str)
+  (replace-regexp-in-string "\n\\'" "" str))
+
 (defun learn-ocaml-yes-or-no (message)
   (x-popup-dialog
    t
@@ -101,6 +104,44 @@
 ; Todo: a small integration test?
 (defun learn-ocaml-temp-html-file ()
   (learn-ocaml-file-path (learn-ocaml-temp-dir) learn-ocaml-temp-html-file))
+
+(defun learn-ocaml-update-exec-path (default-dir)
+  "Propose to add a directory, e.g. DEFAULT-DIR, to `exec-path'."
+  (if noninteractive
+      (if default-dir
+          (add-to-list 'exec-path default-dir)
+        (error "learn-ocaml-update-exec-path: error: no directory selected"))
+    (let ((dir (read-directory-name "Add folder containing learn-ocaml-client: "
+                                    (or default-dir "~/")
+                                    (or default-dir "~/")
+                                    t "")))
+      (add-to-list 'exec-path dir))))
+
+(cl-defun make-process-wrapper (&rest args &key command &allow-other-keys)
+  "Call `make-process' after checking that the program, if the same as
+`learn-ocaml-command-name', is in the `exec-path'. Otherwise query the
+user to add \"opam var bin\" in `exec-path'."
+  (if (and (listp command) (string-equal learn-ocaml-command-name
+                                         (car command))
+           (not (executable-find (car command)))) ; not found
+           (if (executable-find "opam")
+              (progn (message "\"%s\" not found; running \"opam var bin\"..."
+                              learn-ocaml-command-name)
+                     (let ((client-bin
+                            (learn-ocaml--rstrip (shell-command-to-string "opam var bin"))))
+                       (learn-ocaml-update-exec-path client-bin)))
+             (learn-ocaml-update-exec-path nil)))
+  (if (executable-find learn-ocaml-command-name)
+      (apply #'make-process args)
+    (if noninteractive
+        (error "\"%s\" not found!" learn-ocaml-command-name)
+      (message-box "\"%s\" not found.\n\n Current value of exec-path:\n%s"
+                   learn-ocaml-command-name
+                   (concat "(\n" (apply #'concat
+                                      (map 'list (lambda (s) (concat s "\n"))
+                                           exec-path)) ")"))
+      (apply #'make-process-wrapper args) ; this could be a loop
+      )))
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
 
@@ -150,7 +191,7 @@
 
 (cl-defun learn-ocaml-init (&key token server token nickname secret callback)
   (learn-ocaml-print-time-stamp)
-  (make-process
+  (make-process-wrapper
    :name "init"
    :command (learn-ocaml-command-constructor
              :token token
@@ -170,7 +211,7 @@
 `id` should be valid"
   (learn-ocaml-print-time-stamp)
   (let ((old (learn-ocaml-cd directory)))
-  (make-process
+  (make-process-wrapper
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
              :token token
@@ -188,7 +229,7 @@
 (cl-defun learn-ocaml-download-template (&key id token server local directory callback)
   (learn-ocaml-print-time-stamp)
   (let ((old (learn-ocaml-cd directory)))
-  (make-process
+  (make-process-wrapper
    :name (concat "template-" id)
    :command (learn-ocaml-command-constructor
              :command "template"
@@ -208,7 +249,7 @@
   "Grade a .ml file, optionally submitting the code and the note to the server."
   (learn-ocaml-print-time-stamp)
   (let ((html (learn-ocaml-temp-html-file)))
-  (make-process
+  (make-process-wrapper
    :name (concat "upload-" id)
    :command (learn-ocaml-command-constructor
              :token token
@@ -234,7 +275,7 @@
   "Gives the current token."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-token")))
-    (make-process
+    (make-process-wrapper
      :name "give-token"
      :command (learn-ocaml-command-constructor
                :command "print-token"
@@ -247,13 +288,13 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s)))))))
+                   (learn-ocaml--rstrip s)))))))
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-server")))
-    (make-process
+    (make-process-wrapper
      :name "give-server"
      :command (learn-ocaml-command-constructor
                :command "print-server"
@@ -266,11 +307,11 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s)))))))
+                   (learn-ocaml--rstrip s)))))))
 
 (defun learn-ocaml-use-metadata (token server callback)
   (learn-ocaml-print-time-stamp)
-  (make-process
+  (make-process-wrapper
    :name "use-metadata"
    :command (learn-ocaml-command-constructor
              :token token
@@ -287,7 +328,7 @@
   "Creates a new token."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "create-token")))
-    (make-process
+    (make-process-wrapper
      :name "create-token"
      :command (learn-ocaml-command-constructor
                :command "create-token"
@@ -308,7 +349,7 @@
   "Gives to the callback function a json containing the exercise list"
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "exercise-list")))
-    (make-process
+    (make-process-wrapper
      :name "exercise-list"
      :command (learn-ocaml-command-constructor
 	       :command "exercise-list")
