@@ -10,6 +10,7 @@ env:
   - EMACS_IMAGE="pfitaxel/emacs-learn-ocaml-client"
   - LEARNOCAML_IMAGE="ocamlsf/learn-ocaml"
   jobs:
+  - LEARNOCAML_VERSION="0.12"
   - LEARNOCAML_VERSION="dev"
 
 install:

@@ -35,3 +35,11 @@ emacs tests/learn-ocaml-tests.el &
 ;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
 ;; (call-interactively #'ert-run-tests-interactively)
 ```
+
+## Note to learn-ocaml.el's CI maintainers
+
+To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
+
+* Push a new branch in <https://github.com/pfitaxel/docker-emacs-learn-ocaml-client>,
+* Wait for the image in <https://hub.docker.com/r/pfitaxel/emacs-learn-ocaml-client>,
+* Add a new job line (`LEARNOCAML_VERSION="0.xx"`) in this repo's `.travis.yml`.
