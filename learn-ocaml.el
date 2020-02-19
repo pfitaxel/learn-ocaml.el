@@ -580,7 +580,7 @@ the exercise with id equal to id"
 		 ,use-found-token
 		 ,use-another-token
 		 ("Create-new-token" . 2)))
-	(0 (funcall rich-callback))
+	(0 (funcall rich-callback nil))
 	
 	(1 (let ((token (read-string "Enter token: ")))
 	     (learn-ocaml-init-function
