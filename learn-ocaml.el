@@ -611,7 +611,9 @@ the exercise with id equal to id"
 
 (defvar learn-ocaml-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-as" #'learn-ocaml-show-metadata)
+    (define-key map (kbd "C-c C-m C-l") #'learn-ocaml-display-exercise-list)
+    (define-key map (kbd "C-c C-m l") #'learn-ocaml-display-exercise-list)
+    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade-wrapper)
     (define-key map [menu-bar] nil)
     map))
 
@@ -619,16 +621,26 @@ the exercise with id equal to id"
   learn-ocaml-mode-map
   "LearnOCaml Mode Menu."
   '("LearnOCaml"
+    :filter
+    (lambda (list-items)
+      (let ((name (buffer-file-name)))
+        (if (and (<= 3 (length name))  ; nil if (buffer-file-name)=nil
+                 (string-equal ".ml" (substring name -3 nil)))
+            list-items                 ; keep all items for a .ml file
+          (cl-remove-if (lambda (item) ; remove "Grade" otherwise
+                          (and (vectorp item)
+                               (string-equal "Grade" (aref item 0))))
+                        list-items))))
     ["Show metadata" learn-ocaml-show-metadata]
     ["Change server" learn-ocaml-change-server]
     ["Change token" learn-ocaml-change-token]
     ["Create token" learn-ocaml-create-token-wrapper]
-    ["Grade" learn-ocaml-grade-wrapper]
-    ["Download server version" learn-ocaml-download-server-file-wrapper]
-    ["Download template" learn-ocaml-download-template-wrapper]
+    "---"
     ["Show exercise list" learn-ocaml-display-exercise-list]
+    ["Download template" learn-ocaml-download-template-wrapper]
+    ["Download server version" learn-ocaml-download-server-file-wrapper]
+    ["Grade" learn-ocaml-grade-wrapper]
     ))
-
 ;;
 ;; id management
 ;;
