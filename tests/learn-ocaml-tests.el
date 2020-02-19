@@ -16,6 +16,8 @@
 ;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
 ;; (call-interactively #'ert-run-tests-interactively)
 
+;; (setq debug-on-error t)  ; to open the debugger/backtrace on error
+
 (require 'learn-ocaml)
 ;;; Code:
 
