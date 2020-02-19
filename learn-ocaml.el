@@ -68,9 +68,9 @@
   (goto-char (point-max))
   (insert (concat
              "\n\n\n"
-             "-----------------------------------------"
+             "--------------------- "
              (current-time-string)
-             "----------------------------------------\n"
+             " ---------------------\n"
              )))
 
 (defun learn-ocaml-file-writter-filter (file _proc string)
