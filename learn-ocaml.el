@@ -247,7 +247,7 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s))))))) ;FIXME("\\"="\"|"\\\\")
+                   (replace-regexp-in-string "\n\\'" "" s)))))))
 
 (defun learn-ocaml-give-server (callback)
   "Gives the current server."
@@ -266,7 +266,7 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s))))))) ;FIXME("\\"="\"|"\\\\")
+                   (replace-regexp-in-string "\n\\'" "" s)))))))
 
 (defun learn-ocaml-use-metadata (token server callback)
   (learn-ocaml-print-time-stamp)
