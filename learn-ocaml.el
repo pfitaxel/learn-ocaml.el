@@ -435,9 +435,9 @@ the exercise with id equal to id"
 
 (defun learn-ocaml-download-server-file-wrapper (id &optional directory)
   (interactive `(,(let ((input (read-string(concat
-                                            "Enter the id of the exercise [default "
+                                            "Enter the id of the exercise (default "
                                             learn-ocaml-exercise-id
-                                            " ]: "))))
+                                            "): "))))
                     (if (string-equal "" input)
                         learn-ocaml-exercise-id
                       input
@@ -449,9 +449,9 @@ the exercise with id equal to id"
 
 (defun learn-ocaml-download-template-wrapper (id &optional directory)
   (interactive `(,(let ((input (read-string(concat
-                                            "Enter the id of the exercise [default "
+                                            "Enter the id of the exercise (default "
                                             learn-ocaml-exercise-id
-                                            " ]: "))))
+                                            "): "))))
                     (if (string-equal "" input)
                         learn-ocaml-exercise-id
                       input
