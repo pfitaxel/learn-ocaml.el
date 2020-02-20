@@ -68,12 +68,16 @@
 (defun learn-ocaml--rstrip (str)
   (replace-regexp-in-string "\n\\'" "" str))
 
-(defun learn-ocaml-yes-or-no (message)
-  (x-popup-dialog
-   t
-   `(,message
-     ("Yes" . t)
-     ("No" . nil))))
+(defun learn-ocaml-yes-or-no (message &optional dont-trap-quit)
+  "Display MESSAGE in a yes-or-no popup.
+`\\[keyboard-quit]' is seen as nil, unless DONT-TRAP-QUIT is non-nil."
+  (let ((run (lambda ()
+               (x-popup-dialog t `(,message ("Yes" . t) ("No" . nil))))))
+    (if dont-trap-quit
+        (funcall run)
+      (condition-case sig
+          (funcall run)
+        (quit nil)))))
 
 (defun learn-ocaml-print-time-stamp ()
   (set-buffer (learn-ocaml-log-buffer))
