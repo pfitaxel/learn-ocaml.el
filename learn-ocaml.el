@@ -52,6 +52,8 @@
 (defvar learn-ocaml-warning-message
   "An error occured when executing the last command, Do you want to open the log to have more information?")
 
+(defconst learn-ocaml-exo-list-name "*learn-ocaml-exercise-list*")
+
 (defvar learn-ocaml-loaded nil)
 
 (defvar-local learn-ocaml-exercise-id nil)
@@ -501,6 +503,15 @@ Argument CALLBACK will receive the token."
   :format "%{%t%}"
   :sample-face 'bold)
 
+(defface learn-ocaml-header-hint-face
+  '((t (
+	:underline nil :slant italic :height 0.9)))
+  "Face header hint.")
+
+(define-widget 'learn-ocaml-header-hint 'lazy ""
+  :format "%{%t%}"
+  :sample-face 'learn-ocaml-header-hint-face)
+
 (defun learn-ocaml-print-exercise-info (indent tuple)
   (let* ((id (elt tuple 0))
 	 (exo (elt tuple 1))
@@ -563,15 +574,26 @@ Argument CALLBACK will receive the token."
 
 (defun learn-ocaml-display-exercise-list-to-wrap (json)
   "Render the exercise list from the server-provided JSON."
-  (switch-to-buffer "*learn-ocaml-exercise-list*")
+  (switch-to-buffer learn-ocaml-exo-list-name)
   (kill-all-local-variables)
   (let ((inhibit-read-only t))
     (erase-buffer))
   (remove-overlays)
+  (widget-create
+   'learn-ocaml-header-hint
+   :tag "g : Refresh list  |  TAB / S-TAB : Navigate  |  q : Close list\n")
+  (widget-insert "\n")
   (learn-ocaml-print-groups "" json)
   (use-local-map widget-keymap)
   (widget-setup)
-  (goto-char (point-min)))
+  (goto-char (point-min))
+  (learn-ocaml-mode)
+  (read-only-mode 1)
+  (local-set-key "g" (lambda () (interactive)
+                       (message "Refreshing %s..." learn-ocaml-exo-list-name)
+                       (learn-ocaml-display-exercise-list)))
+  (local-set-key "q" #'bury-buffer)
+)
 
 (defun learn-ocaml-display-exercise-list ()
   (interactive)
