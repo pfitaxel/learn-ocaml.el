@@ -736,7 +736,11 @@ Argument CALLBACK will receive the token."
 
 ;;;###autoload
 (define-minor-mode learn-ocaml-mode
-  "learn-ocaml in Emacs"
+  "Minor mode for students using the LearnOCaml platform.
+
+Shortcuts for the learn-ocaml mode:
+\\{learn-ocaml-mode-map}
+"
   :lighter " LearnOCaml"
   :keymap learn-ocaml-mode-map
   (if (bound-and-true-p learn-ocaml-mode)
