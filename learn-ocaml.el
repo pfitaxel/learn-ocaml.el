@@ -92,12 +92,33 @@
   (let ((result (or learn-ocaml-temp-dir
                     (make-temp-file learn-ocaml-temp-prefix t))))
     (setq learn-ocaml-temp-dir result)
+    (add-hook 'kill-emacs-query-functions #'learn-ocaml-delete-temp)
     result))
 
 (defun learn-ocaml-cd (directory)
   (let ((old default-directory))
     (cd directory)
     old))
+
+(defun learn-ocaml-temp-html-glob ()
+  "Generate the glob pattern used by `learn-ocaml-delete-temp'."
+  (learn-ocaml-file-path (learn-ocaml-temp-dir)
+                         (concat "*" learn-ocaml-temp-html-file)))
+
+(defun learn-ocaml-delete-temp ()
+  "Propose to delete temp .html files at exit if not in batch mode.
+Function added in the `kill-emacs-query-functions' hook."
+  (interactive)
+  ;; (unless noninteractive ?)
+  (let ((temp-glob (learn-ocaml-temp-html-glob)))
+    (when (or noninteractive
+              (learn-ocaml-yes-or-no
+               (concat "Automatic cleanup:\n\nDo you want to clear "
+                       temp-glob " ?")))
+      (let ((files (file-expand-wildcards temp-glob)))
+        (mapc (lambda (file) (ignore-errors (delete-file file))) files))
+      (ignore-errors (delete-directory (learn-ocaml-temp-dir)))))
+  t)
 
 ;;
 ;; package.el shortcut
