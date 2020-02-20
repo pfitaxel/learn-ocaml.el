@@ -711,7 +711,7 @@ Argument CALLBACK will receive the token."
 (defun learn-ocaml-on-load-to-wrap (token server callback)
   (let* ((new-server-value (if (not(string-equal server ""))
                               nil
-			     (message-box "No server found please enter the server")
+			     (message-box "No server found.  Please enter the server url.")
 			     (read-string "Enter server: ")))
 	 (rich-callback (lambda (_)
 			  (funcall callback)
