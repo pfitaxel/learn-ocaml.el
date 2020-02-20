@@ -281,7 +281,6 @@ user to add \"opam var bin\" in `exec-path'."
              :param1 id
              :command "fetch")
    :stderr (learn-ocaml-log-buffer)
-   :buffer (learn-ocaml-log-buffer)     ; Todo/Erik: is it OK?
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
