@@ -430,7 +430,8 @@ Argument CALLBACK will receive the token."
    (lambda (token)
      (learn-ocaml-give-server
       (lambda (server)
-  (message-box "Current token: %s\nCurrent server: %s" token server))))))
+        (message "learn-ocaml: token %s @ %s" token server)
+        (message-box "Current token: %s\nCurrent server: %s" token server))))))
 
 (cl-defun learn-ocaml-create-token-wrapper (nickname secret)
   (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? ")
