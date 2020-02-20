@@ -163,11 +163,14 @@ Function added in the `kill-emacs-query-functions' hook."
       (if default-dir
           (add-to-list 'exec-path default-dir)
         (error "No directory selected (in learn-ocaml-update-exec-path)"))
-    (let ((dir (read-directory-name "Add folder containing learn-ocaml-client: "
-                                    (or default-dir "~/")
-                                    (or default-dir "~/")
-                                    t "")))
-      (add-to-list 'exec-path dir))))
+    (let ((dir (condition-case sig
+                   (read-directory-name "Add folder containing learn-ocaml-client: "
+                                        (or default-dir "~/")
+                                        (or default-dir "~/")
+                                        t "")
+                 (quit ""))))
+      (if (and dir (not (string-equal "" dir)))
+          (add-to-list 'exec-path dir)))))
 
 (defun learn-ocaml-change-default-directory (open-exo-list)
   (interactive)
@@ -198,13 +201,14 @@ user to add \"opam var bin\" in `exec-path'."
       (apply #'make-process args)
     (if noninteractive
         (error "\"%s\" not found!" learn-ocaml-command-name)
-      (message-box "\"%s\" not found.\n\n Current value of exec-path:\n%s"
+      (if (learn-ocaml-yes-or-no
+           (format "\"%s\" not found.\n\nCurrent value of exec-path:\n%s\n\nRetry?"
                    learn-ocaml-command-name
                    (concat "(\n" (apply #'concat
-                                      (map 'list (lambda (s) (concat s "\n"))
-                                           exec-path)) ")"))
-      (apply #'make-process-wrapper args) ; this could be a loop
-      )))
+                                        (map 'list (lambda (s) (concat s "\n"))
+                                             exec-path)) ")")))
+          (apply #'make-process-wrapper args) ; this could be a loop
+        nil))))
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
   (let ((result (if (not buffer)
