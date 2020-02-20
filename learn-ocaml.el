@@ -54,6 +54,9 @@
 
 (defconst learn-ocaml-exo-list-name "*learn-ocaml-exercise-list*")
 
+(defconst learn-ocaml-exo-list-doc
+  "g : Refresh list  |  TAB / S-TAB : Navigate  |  q : Close list")
+
 (defvar learn-ocaml-loaded nil)
 
 (defvar-local learn-ocaml-exercise-id nil)
@@ -122,6 +125,17 @@
                                     (or default-dir "~/")
                                     t "")))
       (add-to-list 'exec-path dir))))
+
+(defun learn-ocaml-change-default-directory (open-exo-list)
+  (interactive)
+  (let ((dir
+         (read-directory-name "Choose your working directory: "
+                              default-directory
+                              default-directory
+                              nil "")))
+    (make-directory dir t)
+    (setq default-directory dir))
+  (if open-exo-list (learn-ocaml-display-exercise-list)))
 
 (cl-defun make-process-wrapper (&rest args &key command &allow-other-keys)
   "Call `make-process' after checking that the program, if the same as
@@ -578,11 +592,27 @@ Argument CALLBACK will receive the token."
   (kill-all-local-variables)
   (let ((inhibit-read-only t))
     (erase-buffer))
-  (remove-overlays)
+  (remove-overlays)  (widget-create
+   'learn-ocaml-header-hint
+   :tag learn-ocaml-exo-list-doc)
+  (widget-insert "\n")
   (widget-create
    'learn-ocaml-header-hint
-   :tag "g : Refresh list  |  TAB / S-TAB : Navigate  |  q : Close list\n")
-  (widget-insert "\n")
+   :tag (make-string (length learn-ocaml-exo-list-doc) 45)) ; 45='-'
+  (widget-insert "\n\n")
+  (widget-insert "LearnOCaml ")
+  (widget-create 'learn-ocaml-button
+                 :notify (lambda (&rest ignore)
+                           (find-file default-directory))
+                 "default dir.")
+  (widget-create
+   'learn-ocaml-header-hint
+   :tag (concat " (" default-directory ") "))
+  (widget-create 'learn-ocaml-button
+                 :notify (lambda (&rest ignore)
+                           (learn-ocaml-change-default-directory t))
+                 "Change")
+  (widget-insert "\n\n")
   (learn-ocaml-print-groups "" json)
   (use-local-map widget-keymap)
   (widget-setup)
@@ -776,14 +806,7 @@ Shortcuts for the learn-ocaml mode:
 	   (lambda ()
 	     (when (learn-ocaml-yes-or-no
 		    "Do you want to open the list of exercises available on the server ?")
-               (let ((dir
-                      (read-directory-name "Choose your working directory: "
-                                           default-directory
-                                           default-directory
-                                           nil "")))
-                     (make-directory dir t)
-                     (setq default-directory dir))
-	       (learn-ocaml-display-exercise-list))))
+               (learn-ocaml-change-default-directory t))))
 	  (setq learn-ocaml-loaded t)))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
