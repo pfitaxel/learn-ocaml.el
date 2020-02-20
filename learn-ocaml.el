@@ -42,7 +42,12 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
-(defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
+(defvar learn-ocaml-log-buffer nil)
+
+(defun learn-ocaml-log-buffer ()
+  (unless (buffer-live-p learn-ocaml-log-buffer)
+    (setq learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*")))
+    learn-ocaml-log-buffer)
 
 (defvar learn-ocaml-warning-message
   "An error occured when executing the last command, Do you want to open the log to have more information?")
@@ -66,7 +71,7 @@
      ("No" . nil))))
 
 (defun learn-ocaml-print-time-stamp ()
-  (set-buffer learn-ocaml-log-buffer)
+  (set-buffer (learn-ocaml-log-buffer))
   (goto-char (point-max))
   (insert (concat
              "\n\n\n"
@@ -156,7 +161,7 @@ user to add \"opam var bin\" in `exec-path'."
 	  (switch-to-buffer-other-window "*learn-ocaml-log*")
 	(when learn-ocaml-fail-noisely
 	  (save-excursion
-	    (set-buffer learn-ocaml-log-buffer)
+	    (set-buffer (learn-ocaml-log-buffer))
 	    ;; Remark: the log will contain earlier, unrelated info...
 	    (let ((log (buffer-string)))
 	      (error "Process errored.  Full log:\n%s" log))))))))
@@ -198,7 +203,7 @@ user to add \"opam var bin\" in `exec-path'."
 	     :param2 secret
 	     :command "init"
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
@@ -216,8 +221,8 @@ user to add \"opam var bin\" in `exec-path'."
              :server server
              :param1 id
              :command "fetch")
-   :stderr learn-ocaml-log-buffer
-   :buffer learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
+   :buffer (learn-ocaml-log-buffer)     ; Todo/Erik: is it OK?
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
@@ -236,7 +241,7 @@ user to add \"opam var bin\" in `exec-path'."
              :local local
              :param1 id
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
@@ -257,7 +262,7 @@ user to add \"opam var bin\" in `exec-path'."
              :param1 file
              :html t
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :filter (apply-partially
             #'learn-ocaml-file-writter-filter
             html)
@@ -278,7 +283,7 @@ user to add \"opam var bin\" in `exec-path'."
      :command (learn-ocaml-command-constructor
                :command "print-token"
                )
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
                 #'learn-ocaml-error-handler
@@ -297,7 +302,7 @@ user to add \"opam var bin\" in `exec-path'."
      :command (learn-ocaml-command-constructor
                :command "print-server"
                )
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
                 #'learn-ocaml-error-handler
@@ -316,7 +321,7 @@ user to add \"opam var bin\" in `exec-path'."
              :server server
              :command "set-options"
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
@@ -335,7 +340,7 @@ Argument CALLBACK will receive the token."
                :param1 nickname
                :param2 secret
                )
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
                 #'learn-ocaml-error-handler
@@ -353,7 +358,7 @@ Argument CALLBACK will receive the token."
      :name "exercise-list"
      :command (learn-ocaml-command-constructor
 	       :command "exercise-list")
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
 		#'learn-ocaml-error-handler
