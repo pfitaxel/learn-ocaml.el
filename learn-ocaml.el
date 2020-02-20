@@ -158,7 +158,11 @@ user to add \"opam var bin\" in `exec-path'."
 	     (string-match "give-server" (process-name proc)))
         (funcall callback result)
       (if (learn-ocaml-yes-or-no learn-ocaml-warning-message)
-	  (switch-to-buffer-other-window "*learn-ocaml-log*")
+	  (progn (switch-to-buffer-other-window "*learn-ocaml-log*")
+                 (goto-char (point-max))
+                 ;; Do this to cope with the addition of up-to 3 lines
+                 ;; (... Process upload-demo stderr finished)
+                 (recenter-top-bottom -3))
 	(when learn-ocaml-fail-noisely
 	  (save-excursion
 	    (set-buffer (learn-ocaml-log-buffer))
