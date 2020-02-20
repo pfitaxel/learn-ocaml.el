@@ -566,7 +566,8 @@ Argument CALLBACK will receive the token."
   (remove-overlays)
   (learn-ocaml-print-groups "" json)
   (use-local-map widget-keymap)
-  (widget-setup))
+  (widget-setup)
+  (goto-char (point-min)))
 
 (defun learn-ocaml-display-exercise-list ()
   (interactive)
