@@ -100,6 +100,22 @@
     old))
 
 ;;
+;; package.el shortcut
+;;
+
+(defun learn-ocaml-upgrade-packages ()
+  "Upgrade ELPA packages (using package.el)."
+  (interactive)
+  (if (featurep 'package)
+      (let ((old-async package-menu-async))
+        (setq package-menu-async nil)
+        (package-list-packages)
+        (package-menu-mark-upgrades)
+        (package-menu-execute)
+        (setq package-menu-async old-async))
+    (message "Feature package.el is not loaded.")))
+
+;;
 ;; Core functions
 ;;
 
@@ -413,7 +429,6 @@ Argument CALLBACK will receive the token."
       (lambda (server)
   (message-box "Current token: %s\nCurrent server: %s" token server))))))
 
-
 (cl-defun learn-ocaml-create-token-wrapper (nickname secret)
   (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? ")
   (learn-ocaml-create-token
@@ -426,8 +441,6 @@ Argument CALLBACK will receive the token."
       (lambda (_)
         (message-box "Token created succesfully")
         (learn-ocaml-show-metadata))))))
-
-
 
 (defun learn-ocaml-change-server()
   (interactive)
@@ -494,6 +507,7 @@ Argument CALLBACK will receive the token."
    :callback (lambda (html)
 	       (setq browse-url-browser-function 'browse-url-default-browser)
 	       (browse-url-of-file html))))
+
 ;;
 ;; exercise list display
 ;;
@@ -661,7 +675,6 @@ Argument CALLBACK will receive the token."
      :token new-token-value
      :nickname nickname
      :callback callback)))
-
   
 (defun learn-ocaml-on-load-to-wrap (token server callback)
   (let* ((new-server-value (if (not(string-equal server ""))
@@ -695,7 +708,6 @@ Argument CALLBACK will receive the token."
 	      :nickname  nickname
 	      :secret secret
 	      :callback rich-callback)))))))
-	      
 
 (defun learn-ocaml-on-load-wrapped (callback)
   "Call `learn-ocaml-on-load-to-wrap' and CALLBACK when loading mode."
@@ -735,6 +747,8 @@ Argument CALLBACK will receive the token."
     ["Change server" learn-ocaml-change-server]
     ["Change token" learn-ocaml-change-token]
     ["Create token" learn-ocaml-create-token-wrapper]
+    "---"
+    ["Upgrade Emacs packages..." learn-ocaml-upgrade-packages]
     "---"
     ["Show exercise list" learn-ocaml-display-exercise-list]
     ["Download template" learn-ocaml-download-template-wrapper]
