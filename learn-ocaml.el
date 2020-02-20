@@ -518,23 +518,23 @@ Argument CALLBACK will receive the token."
     (widget-insert (concat indent " "))
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
-			     (learn-ocaml-download-template-wrapper id))
-		   "Download template")
+			     (learn-ocaml-show-questions id))
+		   "Browse subject")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
-			     (learn-ocaml-download-server-file-wrapper id))
-		   "Download last upladed version")
+			     (learn-ocaml-download-template-wrapper id))
+		   "Get template")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
 			     (find-file (concat id ".ml")))
-		   "Open corresponding local file")
+		   "Open .ml")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
-			     (learn-ocaml-show-questions id))
-		   "Open questions")
+			     (learn-ocaml-download-server-file-wrapper id))
+		   "Get last saved version")
     (widget-insert "\n")))
 
 (defun learn-ocaml-print-groups (indent list)
@@ -564,7 +564,7 @@ Argument CALLBACK will receive the token."
   (let ((inhibit-read-only t))
     (erase-buffer))
   (remove-overlays)
-  (learn-ocaml-print-groups " " json)
+  (learn-ocaml-print-groups "" json)
   (use-local-map widget-keymap)
   (widget-setup))
 
