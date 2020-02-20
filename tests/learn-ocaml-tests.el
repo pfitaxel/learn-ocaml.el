@@ -56,8 +56,8 @@
 (defun learn-ocaml-test-remove-client-file ()
   (shell-command (concat "rm -f " learn-ocaml-test-client-file)))
 
-(defun learn-ocaml-test-remove-temp-file ()
-  (let ((file (learn-ocaml-temp-html-file)))
+(defun learn-ocaml-test-remove-temp-file (&optional id)
+  (let ((file (learn-ocaml-temp-html-file id)))
     (shell-command (concat "rm -f " file))))
 
 ;; Tests for core functions
@@ -97,7 +97,7 @@
 
 
 (ert-deftest-async 3_learn-ocaml-grade-test (done)
-  (learn-ocaml-test-remove-temp-file)
+  (learn-ocaml-test-remove-temp-file "demo")
   (let ((test (lambda(callback)
 		(learn-ocaml-grade-file
 		 :id "demo"
@@ -106,11 +106,11 @@
 			     (should (= (shell-command
 					 (concat
 					  "cat "
-					  (learn-ocaml-temp-html-file)
+					  (learn-ocaml-temp-html-file "demo")
 					  " | grep \"Exercise complete\"")
 					 )
 					0))
-                             (learn-ocaml-test-remove-temp-file)
+                             (learn-ocaml-test-remove-temp-file "demo")
 			     (funcall callback))))))
     (funcall test done)))
 

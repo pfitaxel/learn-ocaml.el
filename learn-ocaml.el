@@ -127,8 +127,10 @@
       (concat (file-name-as-directory dir) file))))
 
 ; Todo: a small integration test?
-(defun learn-ocaml-temp-html-file ()
-  (learn-ocaml-file-path (learn-ocaml-temp-dir) learn-ocaml-temp-html-file))
+(defun learn-ocaml-temp-html-file (&optional id)
+  (learn-ocaml-file-path (learn-ocaml-temp-dir)
+                         (if id (concat id "-" learn-ocaml-temp-html-file)
+                           learn-ocaml-temp-html-file)))
 
 (defun learn-ocaml-update-exec-path (default-dir)
   "Propose to add a directory, e.g. DEFAULT-DIR, to `exec-path'."
@@ -287,7 +289,8 @@ user to add \"opam var bin\" in `exec-path'."
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file callback)
   "Grade a .ml file, optionally submitting the code and the note to the server."
   (learn-ocaml-print-time-stamp)
-  (let ((html (learn-ocaml-temp-html-file)))
+  (let ((html (learn-ocaml-temp-html-file id)))
+    (write-region "" nil html nil)      ; erase the html file
   (make-process-wrapper
    :name (concat "upload-" id)
    :command (learn-ocaml-command-constructor
