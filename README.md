@@ -8,6 +8,19 @@ Summary
 **learn-ocaml.el** is an Emacs frontend for students using
 [learn-ocaml](http://ocaml-sf.org/learn-ocaml/).
 
+Known limitations
+-----------------
+
+* When used jointly with [Merlin](https://github.com/ocaml/merlin), if
+    the [learn-ocaml](https://github.com/ocaml-sf/learn-ocaml)
+    exercise contains a nonempty prelude, **Merlin** may trigger
+    errors such as `Unbound value foo` although `foo` is defined in
+    the server exercise.  Note that this issue does not impact the
+    **learn-ocaml.el** *grading* feature which already works in this
+    use case.  But ultimately, we will provide a dedicated support to
+    workaround this **Merlin** issue, which thus occurs if the server
+    exercise provides some `prelude.ml` and/or `prepare.ml` code.
+
 Authors and Acknowledgments
 ---------------------------
 
