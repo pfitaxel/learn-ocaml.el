@@ -604,14 +604,14 @@ Argument CALLBACK will receive the token."
   (widget-create 'learn-ocaml-button
                  :notify (lambda (&rest ignore)
                            (find-file default-directory))
-                 "default dir.")
+                 "directory")
   (widget-create
    'learn-ocaml-header-hint
    :tag (concat " (" default-directory ") "))
   (widget-create 'learn-ocaml-button
                  :notify (lambda (&rest ignore)
                            (learn-ocaml-change-default-directory t))
-                 "Change")
+                 "Change & refresh")
   (widget-insert "\n\n")
   (learn-ocaml-print-groups "" json)
   (use-local-map widget-keymap)
@@ -776,7 +776,7 @@ Argument CALLBACK will receive the token."
   (learn-ocaml-update-exercise-id-view))
 
 (defun learn-ocaml-change-exercise-id (new-id)
-  (interactive "sEnter new id : ")
+  (interactive "sEnter new id: ")
   (setq-local learn-ocaml-exercise-id new-id)
   (learn-ocaml-update-exercise-id-view))
 
