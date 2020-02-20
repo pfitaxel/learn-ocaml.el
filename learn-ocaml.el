@@ -522,14 +522,14 @@ Argument CALLBACK will receive the token."
     (widget-insert indent)
     (widget-create 'learn-ocaml-exercise-title
 		   :tag title)
-    (widget-insert " \n")
+    (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-insert (if short_description short_description "No description available"))
-    (widget-insert " \n")
+    (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-insert (concat "Difficulty: " (number-to-string stars) "/4"
 		   "    id: " id))
-    (widget-insert " \n")
+    (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
