@@ -29,7 +29,7 @@
 (defvar learn-ocaml-fail-noisely nil
   "Set `learn-ocaml-fail-noisely' to non-nil for `ert'-testing purposes.")
 
-(defconst learn-ocaml-version "0.0.1")
+(defconst learn-ocaml-mode-version "1.0.0-git")
 
 (defconst learn-ocaml-command-name "learn-ocaml-client")
 
