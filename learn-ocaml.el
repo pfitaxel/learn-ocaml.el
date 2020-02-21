@@ -33,7 +33,6 @@
 
 (defconst learn-ocaml-command-name "learn-ocaml-client")
 
-; TODO: upon exit, propose to remove the temporary folder
 (defconst learn-ocaml-temp-prefix "learn-ocaml-mode"
   "Prefix of the HTML temporary directory given to `make-temp-file'.")
 
