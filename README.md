@@ -9,7 +9,7 @@
 
 ## Dependencies
 
-* [learn-ocaml-client](https://github.com/ocaml-sf/learn-ocaml/blob/master/learn-ocaml-client.opam) (can be installed with OPAM in an ocaml-4.05.0 switch
+* [learn-ocaml-client](https://github.com/ocaml-sf/learn-ocaml/blob/master/learn-ocaml-client.opam) `0.12+` (can be installed with [opam 2.0](https://opam.ocaml.org/) within an OCaml `4.05.0` switch)
 
 ## Usage (manual installation procedure before MELPA availability)
 
