@@ -30,7 +30,8 @@ Enable the minor mode in any buffer:
 
 <kbd>M-x learn-ocaml-mode RET</kbd>
 
-Follow the instructions regarding the server URL and token.
+Follow the instructions regarding the server URL and token (which will
+automatically be stored in `~/.config/learnocaml/client.json`).
 
 Open the **`LearnOCaml` menu** or directly start an exercise from the
 **\*learn-ocaml-exercise-list\*** buffer.
