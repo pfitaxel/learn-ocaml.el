@@ -27,8 +27,7 @@
   :prefix "learn-ocaml-")
 
 (defvar learn-ocaml-fail-noisely nil
-  "Set `learn-ocaml-fail-noisely' to non-nil for `ert'-testing
-  purposes.")
+  "Set `learn-ocaml-fail-noisely' to non-nil for `ert'-testing purposes.")
 
 (defconst learn-ocaml-version "0.0.1")
 
@@ -43,10 +42,20 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
-(defvar learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*"))
+(defvar learn-ocaml-log-buffer nil)
+
+(defun learn-ocaml-log-buffer ()
+  (unless (buffer-live-p learn-ocaml-log-buffer)
+    (setq learn-ocaml-log-buffer (get-buffer-create "*learn-ocaml-log*")))
+    learn-ocaml-log-buffer)
 
 (defvar learn-ocaml-warning-message
   "An error occured when executing the last command, Do you want to open the log to have more information?")
+
+(defconst learn-ocaml-exo-list-name "*learn-ocaml-exercise-list*")
+
+(defconst learn-ocaml-exo-list-doc
+  "g : Refresh list  |  TAB / S-TAB : Navigate  |  q : Close list")
 
 (defvar learn-ocaml-loaded nil)
 
@@ -56,21 +65,28 @@
 ;; Utilitary functions
 ;;
 
-(defun learn-ocaml-yes-or-no (message)
-  (x-popup-dialog
-   t
-   `(,message
-     ("Yes" . t)
-     ("No" . nil))))
+(defun learn-ocaml--rstrip (str)
+  (replace-regexp-in-string "\n\\'" "" str))
+
+(defun learn-ocaml-yes-or-no (message &optional dont-trap-quit)
+  "Display MESSAGE in a yes-or-no popup.
+`\\[keyboard-quit]' is seen as nil, unless DONT-TRAP-QUIT is non-nil."
+  (let ((run (lambda ()
+               (x-popup-dialog t `(,message ("Yes" . t) ("No" . nil))))))
+    (if dont-trap-quit
+        (funcall run)
+      (condition-case sig
+          (funcall run)
+        (quit nil)))))
 
 (defun learn-ocaml-print-time-stamp ()
-  (set-buffer learn-ocaml-log-buffer)
+  (set-buffer (learn-ocaml-log-buffer))
   (goto-char (point-max))
   (insert (concat
              "\n\n\n"
-             "-----------------------------------------"
+             "--------------------- "
              (current-time-string)
-             "----------------------------------------\n"
+             " ---------------------\n"
              )))
 
 (defun learn-ocaml-file-writter-filter (file _proc string)
@@ -80,12 +96,50 @@
   (let ((result (or learn-ocaml-temp-dir
                     (make-temp-file learn-ocaml-temp-prefix t))))
     (setq learn-ocaml-temp-dir result)
+    (add-hook 'kill-emacs-query-functions #'learn-ocaml-delete-temp)
     result))
 
 (defun learn-ocaml-cd (directory)
   (let ((old default-directory))
     (cd directory)
     old))
+
+(defun learn-ocaml-temp-html-glob ()
+  "Generate the glob pattern used by `learn-ocaml-delete-temp'."
+  (learn-ocaml-file-path (learn-ocaml-temp-dir)
+                         (concat "*" learn-ocaml-temp-html-file)))
+
+(defun learn-ocaml-delete-temp ()
+  "Propose to delete temp .html files at exit if not in batch mode.
+Function added in the `kill-emacs-query-functions' hook."
+  (interactive)
+  ;; (unless noninteractive ?)
+  (let ((temp-glob (learn-ocaml-temp-html-glob)))
+    (when (or noninteractive
+              (learn-ocaml-yes-or-no
+               (concat
+                "learn-ocaml.el automatic cleanup:\n\nDo you want to clear "
+                temp-glob " ?")))
+      (let ((files (file-expand-wildcards temp-glob)))
+        (mapc (lambda (file) (ignore-errors (delete-file file))) files))
+      (ignore-errors (delete-directory (learn-ocaml-temp-dir)))))
+  t)
+
+;;
+;; package.el shortcut
+;;
+
+(defun learn-ocaml-upgrade-packages ()
+  "Upgrade ELPA packages (using package.el)."
+  (interactive)
+  (if (featurep 'package)
+      (let ((old-async package-menu-async))
+        (setq package-menu-async nil)
+        (package-list-packages)
+        (package-menu-mark-upgrades)
+        (package-menu-execute)
+        (setq package-menu-async old-async))
+    (message "Feature package.el is not loaded.")))
 
 ;;
 ;; Core functions
@@ -99,11 +153,65 @@
       (concat (file-name-as-directory dir) file))))
 
 ; Todo: a small integration test?
-(defun learn-ocaml-temp-html-file ()
-  (learn-ocaml-file-path (learn-ocaml-temp-dir) learn-ocaml-temp-html-file))
+(defun learn-ocaml-temp-html-file (&optional id)
+  (learn-ocaml-file-path (learn-ocaml-temp-dir)
+                         (if id (concat id "-" learn-ocaml-temp-html-file)
+                           learn-ocaml-temp-html-file)))
+
+(defun learn-ocaml-update-exec-path (default-dir)
+  "Propose to add a directory, e.g. DEFAULT-DIR, to `exec-path'."
+  (if noninteractive
+      (if default-dir
+          (add-to-list 'exec-path default-dir)
+        (error "No directory selected (in learn-ocaml-update-exec-path)"))
+    (let ((dir (condition-case sig
+                   (read-directory-name "Add folder containing learn-ocaml-client: "
+                                        (or default-dir "~/")
+                                        (or default-dir "~/")
+                                        t "")
+                 (quit ""))))
+      (if (and dir (not (string-equal "" dir)))
+          (add-to-list 'exec-path dir)))))
+
+(defun learn-ocaml-change-default-directory (open-exo-list)
+  (interactive)
+  (let ((dir
+         (read-directory-name "Choose your working directory: "
+                              default-directory
+                              default-directory
+                              nil "")))
+    (make-directory dir t)
+    (setq default-directory dir))
+  (if open-exo-list (learn-ocaml-display-exercise-list)))
+
+(cl-defun make-process-wrapper (&rest args &key command &allow-other-keys)
+  "Call `make-process' after checking that the program, if the same as
+`learn-ocaml-command-name', is in the `exec-path'. Otherwise query the
+user to add \"opam var bin\" in `exec-path'."
+  (if (and (listp command) (string-equal learn-ocaml-command-name
+                                         (car command))
+           (not (executable-find (car command)))) ; not found
+           (if (executable-find "opam")
+              (progn (message "\"%s\" not found; running \"opam var bin\"..."
+                              learn-ocaml-command-name)
+                     (let ((client-bin
+                            (learn-ocaml--rstrip (shell-command-to-string "opam var bin"))))
+                       (learn-ocaml-update-exec-path client-bin)))
+             (learn-ocaml-update-exec-path nil)))
+  (if (executable-find learn-ocaml-command-name)
+      (apply #'make-process args)
+    (if noninteractive
+        (error "\"%s\" not found!" learn-ocaml-command-name)
+      (if (learn-ocaml-yes-or-no
+           (format "\"%s\" not found.\n\nCurrent value of exec-path:\n%s\n\nRetry?"
+                   learn-ocaml-command-name
+                   (concat "(\n" (apply #'concat
+                                        (map 'list (lambda (s) (concat s "\n"))
+                                             exec-path)) ")")))
+          (apply #'make-process-wrapper args) ; this could be a loop
+        nil))))
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
-
   (let ((result (if (not buffer)
                     ""
                       (set-buffer buffer)
@@ -114,13 +222,17 @@
 	     (string-match "give-server" (process-name proc)))
         (funcall callback result)
       (if (learn-ocaml-yes-or-no learn-ocaml-warning-message)
-	  (switch-to-buffer-other-window "*learn-ocaml-log*")
+	  (progn (switch-to-buffer-other-window "*learn-ocaml-log*")
+                 (goto-char (point-max))
+                 ;; Do this to cope with the addition of up-to 3 lines
+                 ;; (... Process upload-demo stderr finished)
+                 (recenter-top-bottom -3))
 	(when learn-ocaml-fail-noisely
 	  (save-excursion
-	    (set-buffer learn-ocaml-log-buffer)
+	    (set-buffer (learn-ocaml-log-buffer))
 	    ;; Remark: the log will contain earlier, unrelated info...
 	    (let ((log (buffer-string)))
-	      (error "Process errored. Full log:\n%s" log))))))))
+	      (error "Process errored.  Full log:\n%s" log))))))))
 
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
   (let* ((server-option (if server
@@ -150,7 +262,7 @@
 
 (cl-defun learn-ocaml-init (&key token server token nickname secret callback)
   (learn-ocaml-print-time-stamp)
-  (make-process
+  (make-process-wrapper
    :name "init"
    :command (learn-ocaml-command-constructor
              :token token
@@ -159,26 +271,25 @@
 	     :param2 secret
 	     :command "init"
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
-              callback))) 
+              callback)))
 
 (cl-defun learn-ocaml-download-server-file (&key token server id directory callback)
   "enables the user to download last version of the exercise submitted to the server
 `id` should be valid"
   (learn-ocaml-print-time-stamp)
   (let ((old (learn-ocaml-cd directory)))
-  (make-process
+  (make-process-wrapper
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
              :token token
              :server server
              :param1 id
              :command "fetch")
-   :stderr learn-ocaml-log-buffer
-   :buffer learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
@@ -188,7 +299,7 @@
 (cl-defun learn-ocaml-download-template (&key id token server local directory callback)
   (learn-ocaml-print-time-stamp)
   (let ((old (learn-ocaml-cd directory)))
-  (make-process
+  (make-process-wrapper
    :name (concat "template-" id)
    :command (learn-ocaml-command-constructor
              :command "template"
@@ -197,7 +308,7 @@
              :local local
              :param1 id
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
@@ -207,8 +318,9 @@
 (cl-defun learn-ocaml-grade-file (&key id token server dont-submit file callback)
   "Grade a .ml file, optionally submitting the code and the note to the server."
   (learn-ocaml-print-time-stamp)
-  (let ((html (learn-ocaml-temp-html-file)))
-  (make-process
+  (let ((html (learn-ocaml-temp-html-file id)))
+    (write-region "" nil html nil)      ; erase the html file
+  (make-process-wrapper
    :name (concat "upload-" id)
    :command (learn-ocaml-command-constructor
              :token token
@@ -218,7 +330,7 @@
              :param1 file
              :html t
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :filter (apply-partially
             #'learn-ocaml-file-writter-filter
             html)
@@ -231,15 +343,15 @@
                  html))))))
 
 (defun learn-ocaml-give-token (callback)
-  "Gives the current token."
+  "Gives the current token to the CALLBACK."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-token")))
-    (make-process
+    (make-process-wrapper
      :name "give-token"
      :command (learn-ocaml-command-constructor
                :command "print-token"
                )
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
                 #'learn-ocaml-error-handler
@@ -247,18 +359,18 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s))))))) ;FIXME("\\"="\"|"\\\\")
+                   (learn-ocaml--rstrip s)))))))
 
 (defun learn-ocaml-give-server (callback)
-  "Gives the current server."
+  "Gives the current server url to the CALLBACK."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-server")))
-    (make-process
+    (make-process-wrapper
      :name "give-server"
      :command (learn-ocaml-command-constructor
                :command "print-server"
                )
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
                 #'learn-ocaml-error-handler
@@ -266,35 +378,37 @@
                 (lambda (s)
                   (funcall-interactively
                    callback
-                   (replace-regexp-in-string "\n\\'" "" s))))))) ;FIXME("\\"="\"|"\\\\")
+                   (learn-ocaml--rstrip s)))))))
 
 (defun learn-ocaml-use-metadata (token server callback)
   (learn-ocaml-print-time-stamp)
-  (make-process
+  (make-process-wrapper
    :name "use-metadata"
    :command (learn-ocaml-command-constructor
              :token token
              :server server
              :command "set-options"
              )
-   :stderr learn-ocaml-log-buffer
+   :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
               callback)))
 
 (defun learn-ocaml-create-token (nickname secret callback)
-  "Creates a new token."
+  "Create a new token for NICKNAME.
+Argument SECRET may be needed by the server.
+Argument CALLBACK will receive the token."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "create-token")))
-    (make-process
+    (make-process-wrapper
      :name "create-token"
      :command (learn-ocaml-command-constructor
                :command "create-token"
                :param1 nickname
                :param2 secret
                )
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
                 #'learn-ocaml-error-handler
@@ -305,14 +419,14 @@
                    (replace-regexp-in-string "\n\\'" "" s)))))))
 
 (defun learn-ocaml-give-exercise-list (callback)
-  "Gives to the callback function a json containing the exercise list"
+  "Gives to the CALLBACK a json containing the exercise list."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "exercise-list")))
-    (make-process
+    (make-process-wrapper
      :name "exercise-list"
      :command (learn-ocaml-command-constructor
 	       :command "exercise-list")
-     :stderr learn-ocaml-log-buffer
+     :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
 		#'learn-ocaml-error-handler
@@ -329,14 +443,13 @@
 ;;
 
 (defun learn-ocaml-show-questions (id)
-  "Display to the default browser the questions concerning
-the exercise with id equal to id"
+  "Open the questions for exercise ID in the default browser."
   (interactive)
   (learn-ocaml-give-server
    (lambda (server)
      (learn-ocaml-give-token
       (lambda (token)
-	;;very important if you don't do it you risk to open eww
+        ;; very important if you don't do it you risk to open eww
 	(setq browse-url-browser-function 'browse-url-default-browser)
 	(browse-url (learn-ocaml-compute-questions-url server id token)))))))
 			    
@@ -346,8 +459,8 @@ the exercise with id equal to id"
    (lambda (token)
      (learn-ocaml-give-server
       (lambda (server)
-  (message-box "Current token: %s\nCurrent server: %s" token server))))))
-
+        (message "learn-ocaml: token %s @ %s" token server)
+        (message-box "Current token: %s\nCurrent server: %s" token server))))))
 
 (cl-defun learn-ocaml-create-token-wrapper (nickname secret)
   (interactive "sWhat nickname you want to use for the token ? \nsWhat secret do you want to associate to this token? ")
@@ -361,8 +474,6 @@ the exercise with id equal to id"
       (lambda (_)
         (message-box "Token created succesfully")
         (learn-ocaml-show-metadata))))))
-
-
 
 (defun learn-ocaml-change-server()
   (interactive)
@@ -394,9 +505,9 @@ the exercise with id equal to id"
 
 (defun learn-ocaml-download-server-file-wrapper (id &optional directory)
   (interactive `(,(let ((input (read-string(concat
-                                            "Enter the id of the exercise [default "
+                                            "Enter the id of the exercise (default "
                                             learn-ocaml-exercise-id
-                                            " ]: "))))
+                                            "): "))))
                     (if (string-equal "" input)
                         learn-ocaml-exercise-id
                       input
@@ -408,9 +519,9 @@ the exercise with id equal to id"
 
 (defun learn-ocaml-download-template-wrapper (id &optional directory)
   (interactive `(,(let ((input (read-string(concat
-                                            "Enter the id of the exercise [default "
+                                            "Enter the id of the exercise (default "
                                             learn-ocaml-exercise-id
-                                            " ]: "))))
+                                            "): "))))
                     (if (string-equal "" input)
                         learn-ocaml-exercise-id
                       input
@@ -427,11 +538,12 @@ the exercise with id equal to id"
    :id learn-ocaml-exercise-id
    :file buffer-file-name
    :callback (lambda (html)
-	       (setq browse-url-browser-function 'browse-url-default-browser) 
+	       (setq browse-url-browser-function 'browse-url-default-browser)
 	       (browse-url-of-file html))))
-;
-;exercise list diplay 
-;
+
+;;
+;; exercise list display
+;;
 
 (require 'widget)
 (define-widget 'learn-ocaml-button 'push-button ""
@@ -441,7 +553,7 @@ the exercise with id equal to id"
   '((t (
 	:inherit variable-pitch
 	:foreground "blue1"
-	:underline nil :weight bold :height 1.2))) 
+	:underline nil :weight bold :height 1.2)))
   "Face group titles.")
 
 (define-widget 'learn-ocaml-group-title 'lazy ""
@@ -452,7 +564,16 @@ the exercise with id equal to id"
   :format "%{%t%}"
   :sample-face 'bold)
 
-(defun learn-ocaml-print-exercise-info (indent tuple) 
+(defface learn-ocaml-header-hint-face
+  '((t (
+	:underline nil :slant italic :height 0.9)))
+  "Face header hint.")
+
+(define-widget 'learn-ocaml-header-hint 'lazy ""
+  :format "%{%t%}"
+  :sample-face 'learn-ocaml-header-hint-face)
+
+(defun learn-ocaml-print-exercise-info (indent tuple)
   (let* ((id (elt tuple 0))
 	 (exo (elt tuple 1))
 	 (title (assoc-default 'title exo) )
@@ -461,36 +582,36 @@ the exercise with id equal to id"
     (widget-insert "\n")
     (widget-insert indent)
     (widget-create 'learn-ocaml-exercise-title
-		   :tag title) 
-    (widget-insert " \n")
+		   :tag title)
+    (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-insert (if short_description short_description "No description available"))
-    (widget-insert " \n")
+    (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-insert (concat "Difficulty: " (number-to-string stars) "/4"
-		   "    id: " id)) 		 
-    (widget-insert " \n")
+		   "    id: " id))
+    (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
-			     (learn-ocaml-download-template-wrapper id))
-		   "Download template")
+			     (learn-ocaml-show-questions id))
+		   "Browse subject")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
-			     (learn-ocaml-download-server-file-wrapper id))
-		   "Download last upladed version")
+			     (learn-ocaml-download-template-wrapper id))
+		   "Get template")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
 			     (find-file (concat id ".ml")))
-		   "Open corresponding local file")
+		   "Open .ml")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest ignore)
-			     (learn-ocaml-show-questions id))
-		   "Open questions")
-    (widget-insert "\n"))) 
+			     (learn-ocaml-download-server-file-wrapper id))
+		   "Get last saved version")
+    (widget-insert "\n")))
 
 (defun learn-ocaml-print-groups (indent list)
        (let ((head (car list))
@@ -501,7 +622,7 @@ the exercise with id equal to id"
 		(lambda (group)
 		  (widget-create
 		   'learn-ocaml-group-title
-		   :tag (concat indent 
+		   :tag (concat indent
 			   (cdr(car(cdr group)))
 			   "\n"))
 		  (learn-ocaml-print-groups (concat indent " ") (car(cdr(cdr group)))))
@@ -510,21 +631,48 @@ the exercise with id equal to id"
 		     (learn-ocaml-print-exercise-info
 		      (concat indent " ") elt))
 		    queue)
-	   (widget-insert "\n")))) 
+	   (widget-insert "\n"))))
 
 (defun learn-ocaml-display-exercise-list-to-wrap (json)
-  "Displays the exercise list of the configured server"
-  (switch-to-buffer "*learn-ocaml-exercise-list*")
+  "Render the exercise list from the server-provided JSON."
+  (switch-to-buffer learn-ocaml-exo-list-name)
   (kill-all-local-variables)
   (let ((inhibit-read-only t))
-    (erase-buffer))  
-  (remove-overlays)
-  (learn-ocaml-print-groups " " json)
+    (erase-buffer))
+  (remove-overlays)  (widget-create
+   'learn-ocaml-header-hint
+   :tag learn-ocaml-exo-list-doc)
+  (widget-insert "\n")
+  (widget-create
+   'learn-ocaml-header-hint
+   :tag (make-string (length learn-ocaml-exo-list-doc) 45)) ; 45='-'
+  (widget-insert "\n\n")
+  (widget-insert "LearnOCaml ")
+  (widget-create 'learn-ocaml-button
+                 :notify (lambda (&rest ignore)
+                           (find-file default-directory))
+                 "directory")
+  (widget-create
+   'learn-ocaml-header-hint
+   :tag (concat " (" default-directory ") "))
+  (widget-create 'learn-ocaml-button
+                 :notify (lambda (&rest ignore)
+                           (learn-ocaml-change-default-directory t))
+                 "Change & refresh")
+  (widget-insert "\n\n")
+  (learn-ocaml-print-groups "" json)
   (use-local-map widget-keymap)
-  (widget-setup)) 
+  (widget-setup)
+  (goto-char (point-min))
+  (learn-ocaml-mode)
+  (read-only-mode 1)
+  (local-set-key "g" (lambda () (interactive)
+                       (message "Refreshing %s..." learn-ocaml-exo-list-name)
+                       (learn-ocaml-display-exercise-list)))
+  (local-set-key "q" #'bury-buffer)
+)
 
 (defun learn-ocaml-display-exercise-list ()
-  ""
   (interactive)
   (learn-ocaml-give-exercise-list
    (lambda (brut-json)
@@ -537,10 +685,10 @@ the exercise with id equal to id"
 (cl-defun learn-ocaml-init-function
     (&key new-server-value new-token-value nickname secret callback)
   (if (not new-server-value)
-      ;;with config file
+      ;; with config file
       (progn
 	(if (not new-token-value)
-	    ;;create token
+	    ;; create token
 	    (learn-ocaml-create-token
 	     nickname
 	     secret
@@ -549,24 +697,22 @@ the exercise with id equal to id"
 		token
 		nil
 		callback)))
-	  ;;use token
+	  ;; use token
 	  (learn-ocaml-use-metadata
 	   new-token-value
 	   nil
 	   callback)))
-    ;;without config file
+    ;; without config file
     (learn-ocaml-init
      :server new-server-value
      :token new-token-value
      :nickname nickname
      :callback callback)))
-
   
 (defun learn-ocaml-on-load-to-wrap (token server callback)
-  ""
   (let* ((new-server-value (if (not(string-equal server ""))
                               nil
-			     (message-box "No server found please enter the server")
+			     (message-box "No server found.  Please enter the server url.")
 			     (read-string "Enter server: ")))
 	 (rich-callback (lambda (_)
 			  (funcall callback)
@@ -580,7 +726,7 @@ the exercise with id equal to id"
 		 ,use-found-token
 		 ,use-another-token
 		 ("Create-new-token" . 2)))
-	(0 (funcall rich-callback))
+	(0 (funcall rich-callback nil))
 	
 	(1 (let ((token (read-string "Enter token: ")))
 	     (learn-ocaml-init-function
@@ -595,10 +741,9 @@ the exercise with id equal to id"
 	      :nickname  nickname
 	      :secret secret
 	      :callback rich-callback)))))))
-	      
 
 (defun learn-ocaml-on-load-wrapped (callback)
-  "Function to execute when loading the mode."
+  "Call `learn-ocaml-on-load-to-wrap' and CALLBACK when loading mode."
   (learn-ocaml-give-token
    (lambda (token)
      (learn-ocaml-give-server
@@ -611,24 +756,38 @@ the exercise with id equal to id"
 
 (defvar learn-ocaml-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-as" #'learn-ocaml-show-metadata)
+    (define-key map (kbd "C-c C-m C-l") #'learn-ocaml-display-exercise-list)
+    (define-key map (kbd "C-c C-m l") #'learn-ocaml-display-exercise-list)
+    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade-wrapper)
     (define-key map [menu-bar] nil)
     map))
 
 (easy-menu-define learn-ocaml-mode-menu
   learn-ocaml-mode-map
-  "Learnocaml Mode Menu."
-  '("Learnocaml"
+  "LearnOCaml Mode Menu."
+  '("LearnOCaml"
+    :filter
+    (lambda (list-items)
+      (let ((name (buffer-file-name)))
+        (if (and (<= 3 (length name))  ; nil if (buffer-file-name)=nil
+                 (string-equal ".ml" (substring name -3 nil)))
+            list-items                 ; keep all items for a .ml file
+          (cl-remove-if (lambda (item) ; remove "Grade" otherwise
+                          (and (vectorp item)
+                               (string-equal "Grade" (aref item 0))))
+                        list-items))))
     ["Show metadata" learn-ocaml-show-metadata]
     ["Change server" learn-ocaml-change-server]
     ["Change token" learn-ocaml-change-token]
     ["Create token" learn-ocaml-create-token-wrapper]
-    ["Grade" learn-ocaml-grade-wrapper]
-    ["Download server version" learn-ocaml-download-server-file-wrapper]
-    ["Download template" learn-ocaml-download-template-wrapper]
+    "---"
+    ["Upgrade Emacs packages..." learn-ocaml-upgrade-packages]
+    "---"
     ["Show exercise list" learn-ocaml-display-exercise-list]
+    ["Download template" learn-ocaml-download-template-wrapper]
+    ["Download server version" learn-ocaml-download-server-file-wrapper]
+    ["Grade" learn-ocaml-grade-wrapper]
     ))
-
 ;;
 ;; id management
 ;;
@@ -656,7 +815,7 @@ the exercise with id equal to id"
     learn-ocaml-mode-map
     [menu-bar exercise-id change]
     '("Change id" . learn-ocaml-change-exercise-id))
-  (force-mode-line-update)) ;; a random instruction is needed to update menu bar
+  (force-mode-line-update)) ; a random instruction is needed to update menu bar
 
 (defun learn-ocaml-exercise-id-initializer ()
   (interactive)
@@ -664,7 +823,7 @@ the exercise with id equal to id"
   (learn-ocaml-update-exercise-id-view))
 
 (defun learn-ocaml-change-exercise-id (new-id)
-  (interactive "sEnter new id : ")
+  (interactive "sEnter new id: ")
   (setq-local learn-ocaml-exercise-id new-id)
   (learn-ocaml-update-exercise-id-view))
 
@@ -676,8 +835,12 @@ the exercise with id equal to id"
 
 ;;;###autoload
 (define-minor-mode learn-ocaml-mode
-  "learn-ocaml in Emacs"
-  :lighter " Learnocaml"
+  "Minor mode for students using the LearnOCaml platform.
+
+Shortcuts for the learn-ocaml mode:
+\\{learn-ocaml-mode-map}
+"
+  :lighter " LearnOCaml"
   :keymap learn-ocaml-mode-map
   (if (bound-and-true-p learn-ocaml-mode)
       (progn
@@ -687,12 +850,10 @@ the exercise with id equal to id"
 	  (add-hook 'caml-mode-hook #'learn-ocaml-mode)
 	  (add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
 	  (learn-ocaml-on-load-wrapped
-	   (lambda ()  
+	   (lambda ()
 	     (when (learn-ocaml-yes-or-no
 		    "Do you want to open the list of exercises available on the server ?")
-	       (setq default-directory
-		(read-string  "Choose your working directory :" default-directory))
-	       (learn-ocaml-display-exercise-list))))
+               (learn-ocaml-change-default-directory t))))
 	  (setq learn-ocaml-loaded t)))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)

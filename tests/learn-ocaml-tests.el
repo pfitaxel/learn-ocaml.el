@@ -16,6 +16,8 @@
 ;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
 ;; (call-interactively #'ert-run-tests-interactively)
 
+;; (setq debug-on-error t)  ; to open the debugger/backtrace on error
+
 (require 'learn-ocaml)
 ;;; Code:
 
@@ -54,13 +56,13 @@
 (defun learn-ocaml-test-remove-client-file ()
   (shell-command (concat "rm -f " learn-ocaml-test-client-file)))
 
-(defun learn-ocaml-test-remove-temp-file ()
-  (let ((file (learn-ocaml-temp-html-file)))
+(defun learn-ocaml-test-remove-temp-file (&optional id)
+  (let ((file (learn-ocaml-temp-html-file id)))
     (shell-command (concat "rm -f " file))))
 
 ;; Tests for core functions
 
-(ert-deftest-async 1_learn-ocaml-server-mangement-test (done)
+(ert-deftest-async 1_learn-ocaml-server-management-test (done)
   (let ((tests (lambda (callback)
 		 (learn-ocaml-use-metadata
 		  nil
@@ -94,8 +96,8 @@
     (funcall tests done)))
 
 
-(ert-deftest-async 3_learn-ocaml-grade-test(done)
-  (learn-ocaml-test-remove-temp-file)
+(ert-deftest-async 3_learn-ocaml-grade-test (done)
+  (learn-ocaml-test-remove-temp-file "demo")
   (let ((test (lambda(callback)
 		(learn-ocaml-grade-file
 		 :id "demo"
@@ -104,11 +106,11 @@
 			     (should (= (shell-command
 					 (concat
 					  "cat "
-					  (learn-ocaml-temp-html-file)
+					  (learn-ocaml-temp-html-file "demo")
 					  " | grep \"Exercise complete\"")
 					 )
 					0))
-                             (learn-ocaml-test-remove-temp-file)
+                             (learn-ocaml-test-remove-temp-file "demo")
 			     (funcall callback))))))
     (funcall test done)))
 
