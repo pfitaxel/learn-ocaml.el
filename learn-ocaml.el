@@ -563,7 +563,7 @@ Argument SECRET may be needed by the server."
    :callback (lambda (_) (message-box "Template downloaded correctly"))))
 
 ;;;###autoload
-(defun learn-ocaml-grade-wrapper ()
+(defun learn-ocaml-grade ()
   "Grade the current .ml buffer."
   (interactive)
   (learn-ocaml-grade-file
@@ -807,7 +807,7 @@ If TOKEN is \"\", interactively ask a token."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-m C-l") #'learn-ocaml-display-exercise-list)
     (define-key map (kbd "C-c C-m l") #'learn-ocaml-display-exercise-list)
-    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade-wrapper)
+    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade)
     (define-key map [menu-bar] nil)
     map))
 
@@ -835,7 +835,7 @@ If TOKEN is \"\", interactively ask a token."
     ["Show exercise list" learn-ocaml-display-exercise-list]
     ["Download template" learn-ocaml-download-template-wrapper]
     ["Download server version" learn-ocaml-download-server-file-wrapper]
-    ["Grade" learn-ocaml-grade-wrapper]
+    ["Grade" learn-ocaml-grade]
     ))
 ;;
 ;; id management
