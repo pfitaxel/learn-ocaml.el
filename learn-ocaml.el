@@ -156,7 +156,7 @@ Function added in the `kill-emacs-query-functions' hook."
         (setq package-menu-async nil)
         (package-list-packages)
         (package-menu-mark-upgrades)
-        (package-menu-execute)
+        (package-menu-execute)     ; TODO: don't call it interactively
         (setq package-menu-async old-async))
     (message "Feature package.el is not loaded.")))
 
