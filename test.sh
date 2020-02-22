@@ -110,6 +110,8 @@ $1
 run_server
 run_emacs
 
+assert "emacs --version"
+
 assert "emacs --batch --eval '(pp (+ 2 2))'"
 
 echo
