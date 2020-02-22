@@ -4,7 +4,7 @@
 
 ;; Authors: (see the AUTHORS file distributed along the sources)
 ;; URL: https://github.com/pfitaxel/learn-ocaml.el
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Requires: ((emacs "25.1"))
 ;; Version: 1.0.0-git
 
 ;; This software is free software; you can redistribute it and/or
@@ -25,10 +25,8 @@
 ;; "tests/learn-ocaml-tests.el" and will often have an associated
 ;; interactive/gui counterpart (untested wrapper).
 
-(require 'cl)
 (require 'cl-lib)
 (require 'browse-url)
-(require 'cl-macs)
 (require 'json)
 
 
@@ -36,6 +34,7 @@
 
 (defgroup learn-ocaml nil
   "learn-ocaml in Emacs "
+  :group 'applications
   :prefix "learn-ocaml-")
 
 (defvar learn-ocaml-fail-noisely nil
@@ -110,8 +109,7 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
              "\n\n\n"
              "--------------------- "
              (current-time-string)
-             " ---------------------\n"
-             )))
+             " ---------------------\n")))
 
 (defun learn-ocaml-file-writter-filter (file _proc string)
   "Write in FILE the given STRING.
@@ -311,8 +309,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
              :server server
 	     :param1 nickname
 	     :param2 secret
-	     :command "init"
-             )
+	     :command "init")
    :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
@@ -349,8 +346,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
              :token token
              :server server
              :local local
-             :param1 id
-             )
+             :param1 id)
    :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
@@ -371,8 +367,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
              :id id
              :dont-submit dont-submit
              :param1 file
-             :html t
-             )
+             :html t)
    :stderr (learn-ocaml-log-buffer)
    :filter (apply-partially
             #'learn-ocaml-file-writter-filter
@@ -392,8 +387,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
     (learn-ocaml-make-process-wrapper
      :name "give-token"
      :command (learn-ocaml-command-constructor
-               :command "print-token"
-               )
+               :command "print-token")
      :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
@@ -411,8 +405,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
     (learn-ocaml-make-process-wrapper
      :name "give-server"
      :command (learn-ocaml-command-constructor
-               :command "print-server"
-               )
+               :command "print-server")
      :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
@@ -431,8 +424,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
    :command (learn-ocaml-command-constructor
              :token token
              :server server
-             :command "set-options"
-             )
+             :command "set-options")
    :stderr (learn-ocaml-log-buffer)
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
@@ -450,8 +442,7 @@ Argument CALLBACK will receive the token."
      :command (learn-ocaml-command-constructor
                :command "create-token"
                :param1 nickname
-               :param2 secret
-               )
+               :param2 secret)
      :stderr (learn-ocaml-log-buffer)
      :buffer buffer
      :sentinel (apply-partially
@@ -563,8 +554,7 @@ Argument SECRET may be needed by the server."
                                              "): "))))
                     (if (string-equal "" input)
                         learn-ocaml-exercise-id
-                      input
-                      ))))
+                      input))))
   (learn-ocaml-download-server-file-cmd
    :id id
    :directory (or directory default-directory)
@@ -578,8 +568,7 @@ Argument SECRET may be needed by the server."
                                              "): "))))
                     (if (string-equal "" input)
                         learn-ocaml-exercise-id
-                      input
-                      ))))
+                      input))))
   (learn-ocaml-download-template-cmd
    :id id
    :directory (or directory default-directory)
@@ -863,8 +852,7 @@ If TOKEN is \"\", interactively ask a token."
     ["Show exercise list" learn-ocaml-display-exercise-list]
     ["Download template" learn-ocaml-download-template]
     ["Download server version" learn-ocaml-download-server-file]
-    ["Grade" learn-ocaml-grade]
-    ))
+    ["Grade" learn-ocaml-grade]))
 ;;
 ;; id management
 ;;
@@ -884,8 +872,7 @@ If TOKEN is \"\", interactively ask a token."
     learn-ocaml-mode-map
     [menu-bar exercise-id]
      `(,(concat "Exercise-id: " learn-ocaml-exercise-id) .
-          ,(make-sparse-keymap "Exercise-id"))
-     )
+          ,(make-sparse-keymap "Exercise-id")))
   (define-key
     learn-ocaml-mode-map
     [menu-bar exercise-id reset]
