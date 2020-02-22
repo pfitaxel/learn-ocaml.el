@@ -501,10 +501,10 @@ Argument CALLBACK will receive the token."
 (defun learn-ocaml-show-metadata ()
   "Display the token and server url in mini-buffer and `message-box'."
   (interactive)
-  (learn-ocaml-give-token-cmd
-   (lambda (token)
-     (learn-ocaml-give-server-cmd
-      (lambda (server)
+  (learn-ocaml-give-server-cmd
+   (lambda (server)
+     (learn-ocaml-give-token-cmd
+      (lambda (token)
         (message "learn-ocaml: token %s @ %s" token server)
         (message-box "Current token: %s\nCurrent server: %s" token server))))))
 
@@ -821,10 +821,10 @@ If TOKEN is \"\", interactively ask a token."
 
 (defun learn-ocaml-on-load (callback)
   "Call `learn-ocaml-on-load-aux' and CALLBACK when loading mode."
-  (learn-ocaml-give-token-cmd
-   (lambda (token)
-     (learn-ocaml-give-server-cmd
-      (lambda (server)
+  (learn-ocaml-give-server-cmd
+   (lambda (server)
+     (learn-ocaml-give-token-cmd
+      (lambda (token)
         (learn-ocaml-on-load-aux token server callback))))))
 
 ;;
