@@ -67,6 +67,15 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
 
 (defconst learn-ocaml-exo-list-name "*learn-ocaml-exercise-list*")
 
+(defvar learn-ocaml-exo-list-buffer nil)
+
+(defun learn-ocaml-exo-list-buffer ()
+  "Return the value of variable `learn-ocaml-exo-list-buffer'.
+Call `get-buffer-create' if need be, to ensure it is a live buffer."
+  (unless (buffer-live-p learn-ocaml-exo-list-buffer)
+    (setq learn-ocaml-exo-list-buffer (get-buffer-create learn-ocaml-exo-list-name)))
+    learn-ocaml-exo-list-buffer)
+
 (defconst learn-ocaml-exo-list-doc
   "g : Refresh list  |  TAB / S-TAB : Navigate  |  q : Close list")
 
@@ -684,7 +693,7 @@ Argument SECRET may be needed by the server."
 
 (defun learn-ocaml-display-exercise-list-aux (json)
   "Render the exercise list from the server-provided JSON."
-  (switch-to-buffer learn-ocaml-exo-list-name)
+  (set-buffer (learn-ocaml-exo-list-buffer))
   (kill-all-local-variables)
   (let ((inhibit-read-only t))
     (erase-buffer))
@@ -713,12 +722,15 @@ Argument SECRET may be needed by the server."
   (use-local-map widget-keymap)
   (widget-setup)
   (goto-char (point-min))
-  (learn-ocaml-mode)
-  (read-only-mode 1)
   (local-set-key "g" (lambda () (interactive)
                        (message "Refreshing %s..." learn-ocaml-exo-list-name)
                        (learn-ocaml-display-exercise-list)))
-  (local-set-key "q" #'bury-buffer))
+  (local-set-key "q" #'bury-buffer)
+  (with-current-buffer learn-ocaml-exo-list-buffer ; just to be safe
+    (read-only-mode 1))
+  ;; should be in the end, after (read-only-mode 1):
+  (learn-ocaml-mode)
+  (switch-to-buffer-other-window learn-ocaml-exo-list-buffer))
 
 ;;;###autoload
 (defun learn-ocaml-display-exercise-list ()
