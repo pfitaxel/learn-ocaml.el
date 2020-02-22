@@ -64,11 +64,11 @@
 
 (ert-deftest-async 1_learn-ocaml-server-management-test (done)
   (let ((tests (lambda (callback)
-		 (learn-ocaml-use-metadata
+		 (learn-ocaml-use-metadata-cmd
 		  nil
 		  learn-ocaml-test-url
 		  (lambda (_)
-		    (learn-ocaml-give-server
+		    (learn-ocaml-give-server-cmd
 		   (lambda (given-server)
 		     (should (string-equal
 			      learn-ocaml-test-url
@@ -78,15 +78,15 @@
 
 (ert-deftest-async 2_learn-ocaml-token-management-test (done)
   (let ((tests (lambda (callback)
-		 (learn-ocaml-create-token
+		 (learn-ocaml-create-token-cmd
 		  "test"
 		  "test"
 		  (lambda (token)
-		    (learn-ocaml-use-metadata
+		    (learn-ocaml-use-metadata-cmd
 		     token
 		     nil
 		     (lambda (_)
-		       (learn-ocaml-give-token
+		       (learn-ocaml-give-token-cmd
 			(lambda (given_token)
 			  (should
 			   (string-equal
@@ -99,7 +99,7 @@
 (ert-deftest-async 3_learn-ocaml-grade-test (done)
   (learn-ocaml-test-remove-temp-file "demo")
   (let ((test (lambda(callback)
-		(learn-ocaml-grade-file
+		(learn-ocaml-grade-file-cmd
 		 :id "demo"
 		 :file learn-ocaml-test-tograde-file
 		 :callback (lambda (_)
@@ -117,7 +117,7 @@
 (ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda(callback)
-		(learn-ocaml-download-server-file
+		(learn-ocaml-download-server-file-cmd
                  :id "demo"
                  :directory learn-ocaml-fixture-directory
 		 :callback (lambda (s)
@@ -131,7 +131,7 @@
 (ert-deftest-async 5_learn-ocaml-download-template-test (done)
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda (callback)
- 		(learn-ocaml-download-template
+ 		(learn-ocaml-download-template-cmd
  		 :id "demo"
                  :directory learn-ocaml-fixture-directory
  		 :callback (lambda (s)
@@ -151,16 +151,16 @@
 		(with-temp-buffer
 		  (insert-file-contents learn-ocaml-test-json-file)
 		  (let ((expected (json-read-from-string (buffer-string))))
-		  (learn-ocaml-give-exercise-list
+		  (learn-ocaml-give-exercise-list-cmd
 		   (lambda (json)
 		     (should (equal json expected))
 		     (funcall callback))))))))
   (funcall test done)))
 		   
 (ert-deftest-async 7_learn-ocaml-compute-questions-url-test (done)
-  (learn-ocaml-give-server
+  (learn-ocaml-give-server-cmd
    (lambda (server)
-     (learn-ocaml-give-token
+     (learn-ocaml-give-token-cmd
       (lambda (token)
 	(with-temp-buffer
 	  (insert-file-contents learn-ocaml-test-description-file)
@@ -172,29 +172,29 @@
 	       
 
 (ert-deftest-async 8_learn-ocaml-init-another-token (done)
-  (learn-ocaml-create-token
+  (learn-ocaml-create-token-cmd
    "test"
    "test"
    (lambda (token)
-     (learn-ocaml-init-function
+     (learn-ocaml-init
       :new-server-value nil
       :new-token-value token
       :callback (lambda (_)
-		  (learn-ocaml-give-token
+		  (learn-ocaml-give-token-cmd
 		   (lambda (token2)
 		     (should (equal token token2))
 		     (funcall done))))))))
    
 
 (ert-deftest-async 9_learn-ocaml-init-create-token (done)
-  (learn-ocaml-give-token
+  (learn-ocaml-give-token-cmd
    (lambda (previous-token)
-     (learn-ocaml-init-function
+     (learn-ocaml-init
       :new-server-value nil
       :nickname "test"
       :secret "test"
       :callback (lambda (_)
-		  (learn-ocaml-give-token
+		  (learn-ocaml-give-token-cmd
 		   (lambda (token2)
 		     (should-not (equal previous-token token2))
 		     (funcall done))))))))
@@ -202,14 +202,14 @@
 ;; tests without the config file
 
 (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
-  (learn-ocaml-give-token
+  (learn-ocaml-give-token-cmd
    (lambda (token)
      (learn-ocaml-test-remove-client-file)
-     (learn-ocaml-init-function
+     (learn-ocaml-init
       :new-server-value learn-ocaml-test-url
       :new-token-value token
       :callback (lambda (_)
-		  (learn-ocaml-give-token
+		  (learn-ocaml-give-token-cmd
 		   (lambda (token2)
 		     (should (equal token token2))
                      ; (learn-ocaml-test-remove-client-file)
@@ -217,12 +217,12 @@
      
 (ert-deftest-async a111_learn-ocaml-on-load-test-create-token-no-config (done)
   (learn-ocaml-test-remove-client-file)
-  (learn-ocaml-init-function
+  (learn-ocaml-init
       :new-server-value learn-ocaml-test-url
       :nickname "test"
       :secret "test"
       :callback (lambda (_)
-		  (learn-ocaml-give-token
+		  (learn-ocaml-give-token-cmd
 		   (lambda (token2)
                      ; (learn-ocaml-test-remove-client-file)
 		     (funcall done))))))

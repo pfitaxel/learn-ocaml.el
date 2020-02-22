@@ -30,7 +30,8 @@ Enable the minor mode in any buffer:
 
 <kbd>M-x learn-ocaml-mode RET</kbd>
 
-Follow the instructions regarding the server URL and token.
+Follow the instructions regarding the server URL and token (which will
+automatically be stored in `~/.config/learnocaml/client.json`).
 
 Open the **`LearnOCaml` menu** or directly start an exercise from the
 **\*learn-ocaml-exercise-list\*** buffer.
@@ -39,7 +40,7 @@ Then, the `learn-ocaml-mode` will automatically be activated when
 opening **.ml** buffers using `tuareg-mode` and the following
 *keybindings* will be available:
 
-* `(learn-ocaml-grade-wrapper)`: <kbd>C-c C-m C-m</kbd> (= <kbd>C-c RET RET</kbd>)
+* `(learn-ocaml-grade)`: <kbd>C-c C-m C-m</kbd> (= <kbd>C-c RET RET</kbd>)
 
 * `(learn-ocaml-display-exercise-list)`: <kbd>C-c C-m C-l</kbd> (= <kbd>C-c RET C-l</kbd>) or <kbd>C-c C-m l</kbd> (= <kbd>C-c RET l</kbd>)
 
