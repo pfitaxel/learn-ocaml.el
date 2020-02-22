@@ -754,17 +754,22 @@ Note: this function will be used by `learn-ocaml-on-load-to-wrap'."
 If SERVER is \"\", interactively ask a server url.
 If TOKEN is \"\", interactively ask a token."
   "Call `learn-ocaml-on-load-to-wrap' and CALLBACK when loading mode."
-  (let* ((new-server-value (if (not (string-equal server "")) ; TODO: bug
-                               nil
-			     (message-box "No server found.  Please enter the server url.")
-			     (read-string "Enter server: ")))
+  (let* ((new-server-value (if (or (not server)
+                                   (string-equal server ""))
+                               (progn
+                                 (message-box "No server found.  Please enter the server url.")
+                                 (read-string "Enter server: "))
+                               nil))
 	 (rich-callback (lambda (_)
 			  (funcall callback)
 			  (learn-ocaml-show-metadata))))
     (cl-destructuring-bind (token-phrase use-found-token use-another-token)
-	(if (not (string-equal token "")) ; TODO: bug if token=nil
-	    `(,(concat "Token found: " token) ("Use found token" . 0) ("Use another token" . 1))
-	  '("No token found" "Use found token" ("Use existing token" . 1)))
+	(if (or (not token)
+                (string-equal token ""))
+            '("No token found"
+              "Use found token" ("Use existing token" . 1))
+          `(,(concat "Token found: " token)
+            ("Use found token" . 0) ("Use another token" . 1)))
       (case (x-popup-dialog
 	     t `(,(concat token-phrase " \n What do you want to do ? \n")
 		 ,use-found-token
