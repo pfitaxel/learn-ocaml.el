@@ -589,6 +589,7 @@ Argument SECRET may be needed by the server."
 (defun learn-ocaml-grade ()
   "Grade the current .ml buffer."
   (interactive)
+  (learn-ocaml-setup nil)
   (learn-ocaml-grade-file-cmd
    :id learn-ocaml-exercise-id
    :file buffer-file-name
@@ -736,6 +737,7 @@ Argument SECRET may be needed by the server."
 (defun learn-ocaml-display-exercise-list ()
   "Get the exercise list and render it in buffer `learn-ocaml-exo-list-name'."
   (interactive)
+  (learn-ocaml-setup nil)               ; nil, otherwise may loop
   (learn-ocaml-give-exercise-list-cmd
    (lambda (brut-json)
      (learn-ocaml-display-exercise-list-aux (elt (elt brut-json 0) 1)))))
@@ -912,6 +914,18 @@ If TOKEN is \"\", interactively ask a token."
 ;; definition of the mode
 ;;
 
+(defun learn-ocaml-setup (&optional open-exo-list)
+  "Initialisation function to check whether a token and server is set.
+Call (`learn-ocaml-change-default-directory' t) if OPEN-EXO-LIST holds.
+Used by `learn-ocaml-mode' and autoloads."
+  (if open-exo-list
+      (learn-ocaml-on-load
+       (lambda ()
+         (when (learn-ocaml-yes-or-no
+                "Do you want to open the list of exercises available on the server?")
+           (learn-ocaml-change-default-directory t))))
+    (learn-ocaml-on-load (lambda () nil))))
+
 ;;;###autoload
 (define-minor-mode learn-ocaml-mode
   "Minor mode for students using the LearnOCaml platform.
@@ -923,17 +937,13 @@ Shortcuts for the learn-ocaml mode:
   :keymap learn-ocaml-mode-map
   (if (bound-and-true-p learn-ocaml-mode)
       (progn
-	(learn-ocaml-update-exercise-id-view)
-	(easy-menu-add learn-ocaml-mode-menu)
-	(unless learn-ocaml-loaded
-	  (add-hook 'caml-mode-hook #'learn-ocaml-mode)
-	  (add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
-	  (learn-ocaml-on-load
-	   (lambda ()
-	     (when (learn-ocaml-yes-or-no
-		    "Do you want to open the list of exercises available on the server?")
-               (learn-ocaml-change-default-directory t))))
-	  (setq learn-ocaml-loaded t)))
+        (learn-ocaml-update-exercise-id-view)
+        (easy-menu-add learn-ocaml-mode-menu)
+        (unless learn-ocaml-loaded
+          (add-hook 'caml-mode-hook #'learn-ocaml-mode)
+          (add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
+          (learn-ocaml-setup t)
+          (setq learn-ocaml-loaded t)))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
     (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)))
