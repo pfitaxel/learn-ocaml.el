@@ -916,15 +916,20 @@ If TOKEN is \"\", interactively ask a token."
 
 (defun learn-ocaml-setup (&optional open-exo-list)
   "Initialisation function to check whether a token and server is set.
+Do nothing if `learn-ocaml-loaded' is non-nil.
 Call (`learn-ocaml-change-default-directory' t) if OPEN-EXO-LIST holds.
 Used by `learn-ocaml-mode' and autoloads."
-  (if open-exo-list
-      (learn-ocaml-on-load
-       (lambda ()
-         (when (learn-ocaml-yes-or-no
-                "Do you want to open the list of exercises available on the server?")
-           (learn-ocaml-change-default-directory t))))
-    (learn-ocaml-on-load (lambda () nil))))
+  (unless learn-ocaml-loaded
+    (if open-exo-list
+        (learn-ocaml-on-load
+         (lambda ()
+           (when (learn-ocaml-yes-or-no
+                  "Do you want to open the list of exercises available on the server?")
+             (learn-ocaml-change-default-directory t))))
+      (learn-ocaml-on-load (lambda () nil)))
+    (add-hook 'caml-mode-hook #'learn-ocaml-mode)
+    (add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
+    (setq learn-ocaml-loaded t)))
 
 ;;;###autoload
 (define-minor-mode learn-ocaml-mode
@@ -939,11 +944,7 @@ Shortcuts for the learn-ocaml mode:
       (progn
         (learn-ocaml-update-exercise-id-view)
         (easy-menu-add learn-ocaml-mode-menu)
-        (unless learn-ocaml-loaded
-          (add-hook 'caml-mode-hook #'learn-ocaml-mode)
-          (add-hook 'tuareg-mode-hook #'learn-ocaml-mode)
-          (learn-ocaml-setup t)
-          (setq learn-ocaml-loaded t)))
+        (learn-ocaml-setup t))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
     (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)))
