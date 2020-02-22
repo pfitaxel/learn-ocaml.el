@@ -97,7 +97,7 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
                (x-popup-dialog t `(,message ("Yes" . t) ("No" . nil))))))
     (if dont-trap-quit
         (funcall run)
-      (condition-case sig
+      (condition-case _sig
           (funcall run)
         (quit nil)))))
 
@@ -196,7 +196,7 @@ Function added in the `kill-emacs-query-functions' hook."
       (if default-dir
           (add-to-list 'exec-path default-dir)
         (error "No directory selected (in learn-ocaml-update-exec-path)"))
-    (let ((dir (condition-case sig
+    (let ((dir (condition-case _sig
                    (read-directory-name "Add folder containing learn-ocaml-client: "
                                         (or default-dir "~/")
                                         (or default-dir "~/")
@@ -265,8 +265,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
                  ;; (... Process upload-demo stderr finished)
                  (recenter-top-bottom -3))
 	(when learn-ocaml-fail-noisely
-	  (save-excursion
-	    (set-buffer (learn-ocaml-log-buffer))
+	  (with-current-buffer (learn-ocaml-log-buffer)
 	    ;; Remark: the log will contain earlier, unrelated info...
 	    (let ((log (buffer-string)))
 	      (error "Process errored.  Full log:\n%s" log))))))))
@@ -299,7 +298,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name) " --version")))
 
-(cl-defun learn-ocaml-init-cmd (&key token server token nickname secret callback)
+(cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
   (learn-ocaml-print-time-stamp)
   (learn-ocaml-make-process-wrapper
@@ -375,7 +374,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
    :sentinel (apply-partially
               #'learn-ocaml-error-handler
               nil
-              (lambda (s)
+              (lambda (_arg)
                 (funcall-interactively
                  callback
                  html))))))
@@ -639,22 +638,22 @@ Argument SECRET may be needed by the server."
     (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-create 'learn-ocaml-button
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (learn-ocaml-show-questions id))
 		   "Browse subject")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (learn-ocaml-download-template id))
 		   "Get template")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (find-file (concat id ".ml")))
 		   "Open .ml")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (learn-ocaml-download-server-file id))
 		   "Get last saved version")
     (widget-insert "\n")))
@@ -697,14 +696,14 @@ Argument SECRET may be needed by the server."
   (widget-insert "\n\n")
   (widget-insert "LearnOCaml ")
   (widget-create 'learn-ocaml-button
-                 :notify (lambda (&rest ignore)
+                 :notify (lambda (&rest _ignore)
                            (find-file default-directory))
                  "directory")
   (widget-create
    'learn-ocaml-header-hint
    :tag (concat " (" default-directory ") "))
   (widget-create 'learn-ocaml-button
-                 :notify (lambda (&rest ignore)
+                 :notify (lambda (&rest _ignore)
                            (learn-ocaml-change-default-directory t))
                  "Change & refresh")
   (widget-insert "\n\n")
