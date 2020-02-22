@@ -490,7 +490,7 @@ Argument CALLBACK will receive the token."
 (cl-defun learn-ocaml-create-token-wrapper (nickname secret)
   "Create a new token for NICKNAME.
 Argument SECRET may be needed by the server."
-  (interactive "sWhat nickname you want to use for the token? \nsWhat secret do you want to associate to this token? ")
+  (interactive "sWhat nickname you want to use for the token? \nsWhat secret does the server require? ")
   (learn-ocaml-create-token
    nickname
    secret
@@ -784,7 +784,7 @@ If TOKEN is \"\", interactively ask a token."
 	      :callback rich-callback)))
 	
 	(2 (let ((nickname (read-string "What nickname do you want to use for the token? "))
-		 (secret (read-string "What secret do you want to associate to this token? ")))
+		 (secret (read-string "What secret does the server require? ")))
 	     (learn-ocaml-init-function
 	      :new-server-value new-server-value
 	      :nickname nickname
