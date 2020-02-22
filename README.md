@@ -9,7 +9,13 @@
 
 ## Dependencies
 
-**learn-ocaml.el** requires [learn-ocaml-client](https://opam.ocaml.org/packages/learn-ocaml-client/) `0.12+`.
+### [Emacs](https://www.gnu.org/software/emacs/)
+
+(version `25.1` or later)
+
+### [learn-ocaml-client](https://opam.ocaml.org/packages/learn-ocaml-client/)
+
+(version `0.12` or later)
 
 It can be installed with opam (the OCaml package manager) in a `4.05.0` switch:
 
