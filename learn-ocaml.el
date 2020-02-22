@@ -720,6 +720,7 @@ Argument SECRET may be needed by the server."
                        (learn-ocaml-display-exercise-list)))
   (local-set-key "q" #'bury-buffer))
 
+;;;###autoload
 (defun learn-ocaml-display-exercise-list ()
   "Get the exercise list and render it in buffer `learn-ocaml-exo-list-name'."
   (interactive)
