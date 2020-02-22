@@ -508,7 +508,7 @@ Argument SECRET may be needed by the server."
   (learn-ocaml-give-server
    (lambda (s)
      (if (learn-ocaml-yes-or-no
-          (concat "The current configured server is: " s "\n Do you want to change it ?"))
+          (concat "The current configured server is: " s "\n Do you want to change it?"))
          (let ((server (read-string "Enter server: ")))
            (learn-ocaml-use-metadata nil
                                      server
@@ -524,7 +524,7 @@ Argument SECRET may be needed by the server."
      (if (learn-ocaml-yes-or-no
           (concat "The current configured token is: "
                   token
-                  "\n Do you want to change it ?"))
+                  "\n Do you want to change it?"))
          (let ((token (read-string "Enter token: ")))
            (learn-ocaml-use-metadata token
                                      nil
@@ -771,7 +771,7 @@ If TOKEN is \"\", interactively ask a token."
           `(,(concat "Token found: " token)
             ("Use found token" . 0) ("Use another token" . 1)))
       (case (x-popup-dialog
-	     t `(,(concat token-phrase " \n What do you want to do ? \n")
+	     t `(,(concat token-phrase "\n What do you want to do?\n")
 		 ,use-found-token
 		 ,use-another-token
 		 ("Create new token" . 2)))
@@ -905,7 +905,7 @@ Shortcuts for the learn-ocaml mode:
 	  (learn-ocaml-on-load-wrapped
 	   (lambda ()
 	     (when (learn-ocaml-yes-or-no
-		    "Do you want to open the list of exercises available on the server ?")
+		    "Do you want to open the list of exercises available on the server?")
                (learn-ocaml-change-default-directory t))))
 	  (setq learn-ocaml-loaded t)))
     (setq learn-ocaml-loaded nil)
