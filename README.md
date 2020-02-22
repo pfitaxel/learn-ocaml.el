@@ -9,7 +9,26 @@
 
 ## Dependencies
 
-* [learn-ocaml-client](https://github.com/ocaml-sf/learn-ocaml/blob/master/learn-ocaml-client.opam) `0.12+` (can be installed with [opam 2.0](https://opam.ocaml.org/) within an OCaml `4.05.0` switch)
+**learn-ocaml.el** requires [learn-ocaml-client](https://github.com/ocaml-sf/learn-ocaml/blob/master/learn-ocaml-client.opam) `0.12+`.
+
+It can be installed with opam (the OCaml package manager) in a `4.05.0` switch:
+
+* If you already have a `.opam` folder, you should just need to type:
+
+        opam update -y
+        opam switch create 4.05.0 ocaml-base-compiler.4.05.0
+        eval $(opam env)
+        opam install -y learn-ocaml-client
+
+* otherwise, make sure you have [opam 2.0](https://opam.ocaml.org/), then run:
+
+        opam init --auto-setup --yes --compiler=ocaml-base-compiler.4.05.0
+        eval $(opam env)
+        opam install -y learn-ocaml-client
+
+**Note:** beyond `learn-ocaml-client`, you may want to install a
+comprehensive OCaml/Emacs environment (with Tuareg, Merlin, Company):
+for details, see <https://github.com/erikmd/tapfa-init.el> (in French)
 
 ## Usage (manual installation procedure before MELPA availability)
 
