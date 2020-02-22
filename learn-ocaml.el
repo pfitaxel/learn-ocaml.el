@@ -2,6 +2,11 @@
 
 ;; Copyright (c) 2019-2020  The learn-ocaml.el developers
 
+;; Authors: (see the AUTHORS file distributed along the sources)
+;; URL: https://github.com/pfitaxel/learn-ocaml.el
+;; Package-Requires: ((emacs "24.4"))
+;; Version: 1.0.0-git
+
 ;; This software is free software; you can redistribute it and/or
 ;; modify it under the terms of the MIT License.
 
