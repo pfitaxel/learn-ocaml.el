@@ -12,10 +12,11 @@
 ;;
 ;; learn-ocaml.el is an Emacs frontend for students using learn-ocaml.
 ;;
-;; Most features rely on the "learn-ocaml-client" binary, run by
-;; `make-process-wrapper'; see also `learn-ocaml-command-constructor'.
-;; By convention, all functions that call `make-process-wrapper' are
-;; named with suffix `-cmd'.  These functions are generally tested in
+;; Most features rely on the "learn-ocaml-client" binary, which is run
+;; by `learn-ocaml-make-process-wrapper'.  See also the function
+;; `learn-ocaml-command-constructor'.  By convention, all functions
+;; that call `learn-ocaml-make-process-wrapper' have suffix `-cmd'.
+;; These functions are generally tested in
 ;; "tests/learn-ocaml-tests.el" and will often have an associated
 ;; interactive/gui counterpart (untested wrapper).
 
@@ -205,7 +206,7 @@ Call `learn-ocaml-display-exercise-list' if OPEN-EXO-LIST is non-nil."
     (setq default-directory dir))
   (if open-exo-list (learn-ocaml-display-exercise-list)))
 
-(cl-defun make-process-wrapper (&rest args &key command &allow-other-keys)
+(cl-defun learn-ocaml-make-process-wrapper (&rest args &key command &allow-other-keys)
   "Call `make-process' after checking the program is in `exec-path'.
 More precisely: if the program is equal to `learn-ocaml-command-name',
 check whether it is in the `exec-path'.  Otherwise, query the user to
@@ -230,7 +231,7 @@ add \"opam var bin\" (or another directory) in `exec-path'."
                    (concat "(\n" (apply #'concat
                                         (map 'list (lambda (s) (concat s "\n"))
                                              exec-path)) ")")))
-          (apply #'make-process-wrapper args) ; this could be a loop
+          (apply #'learn-ocaml-make-process-wrapper args) ; this could be a loop
         nil))))
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
@@ -289,7 +290,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 (cl-defun learn-ocaml-init-cmd (&key token server token nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
   (learn-ocaml-print-time-stamp)
-  (make-process-wrapper
+  (learn-ocaml-make-process-wrapper
    :name "init"
    :command (learn-ocaml-command-constructor
              :token token
@@ -308,7 +309,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   "Download from the SERVER the last version of exercise ID in DIRECTORY."
   (learn-ocaml-print-time-stamp)
   (let ((old (learn-ocaml-cd directory)))
-  (make-process-wrapper
+  (learn-ocaml-make-process-wrapper
    :name (concat "download-" id)
    :command (learn-ocaml-command-constructor
              :token token
@@ -327,7 +328,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   ;; TODO: argument LOCAL is not taken into account in the mode
   (learn-ocaml-print-time-stamp)
   (let ((old (learn-ocaml-cd directory)))
-  (make-process-wrapper
+  (learn-ocaml-make-process-wrapper
    :name (concat "template-" id)
    :command (learn-ocaml-command-constructor
              :command "template"
@@ -348,7 +349,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   (learn-ocaml-print-time-stamp)
   (let ((html (learn-ocaml-temp-html-file id)))
     (write-region "" nil html nil)      ; erase the html file
-  (make-process-wrapper
+  (learn-ocaml-make-process-wrapper
    :name (concat "upload-" id)
    :command (learn-ocaml-command-constructor
              :token token
@@ -374,7 +375,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   "Gives the current token to the CALLBACK."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-token")))
-    (make-process-wrapper
+    (learn-ocaml-make-process-wrapper
      :name "give-token"
      :command (learn-ocaml-command-constructor
                :command "print-token"
@@ -393,7 +394,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   "Give the current server url to the CALLBACK."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "give-server")))
-    (make-process-wrapper
+    (learn-ocaml-make-process-wrapper
      :name "give-server"
      :command (learn-ocaml-command-constructor
                :command "print-server"
@@ -411,7 +412,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 (defun learn-ocaml-use-metadata-cmd (token server callback)
   "Set TOKEN, SERVER, and run CALLBACK."
   (learn-ocaml-print-time-stamp)
-  (make-process-wrapper
+  (learn-ocaml-make-process-wrapper
    :name "use-metadata"
    :command (learn-ocaml-command-constructor
              :token token
@@ -430,7 +431,7 @@ Argument SECRET may be needed by the server.
 Argument CALLBACK will receive the token."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "create-token")))
-    (make-process-wrapper
+    (learn-ocaml-make-process-wrapper
      :name "create-token"
      :command (learn-ocaml-command-constructor
                :command "create-token"
@@ -451,7 +452,7 @@ Argument CALLBACK will receive the token."
   "Give to the CALLBACK a json containing the exercise list."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "exercise-list")))
-    (make-process-wrapper
+    (learn-ocaml-make-process-wrapper
      :name "exercise-list"
      :command (learn-ocaml-command-constructor
 	       :command "exercise-list")
