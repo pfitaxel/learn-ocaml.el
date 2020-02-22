@@ -935,6 +935,8 @@ Used by `learn-ocaml-mode' and autoloads."
 (define-minor-mode learn-ocaml-mode
   "Minor mode for students using the LearnOCaml platform.
 
+Version of learn-ocaml.el: `learn-ocaml-mode-version'
+
 Shortcuts for the learn-ocaml mode:
 \\{learn-ocaml-mode-map}
 "
