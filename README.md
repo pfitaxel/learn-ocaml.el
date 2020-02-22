@@ -9,7 +9,7 @@
 
 ## Dependencies
 
-**learn-ocaml.el** requires [learn-ocaml-client](https://github.com/ocaml-sf/learn-ocaml/blob/master/learn-ocaml-client.opam) `0.12+`.
+**learn-ocaml.el** requires [learn-ocaml-client](https://opam.ocaml.org/packages/learn-ocaml-client/) `0.12+`.
 
 It can be installed with opam (the OCaml package manager) in a `4.05.0` switch:
 
