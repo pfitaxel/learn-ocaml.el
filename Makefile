@@ -1,4 +1,4 @@
-EMACS ?= $(shell if ! command -v emacs; then echo "Emacs binary not found"; exit 1; else echo emacs; fi)
+EMACS ?= emacs
 BATCHEMACS := $(EMACS) --batch -Q
 BYTECOMPILE := $(BATCHEMACS) --eval "(progn (require 'bytecomp) (require 'package) (setq byte-compile-warnings (remove 'cl-functions byte-compile-warning-types)) (setq byte-compile-error-on-warn t) (batch-byte-compile))"
 
