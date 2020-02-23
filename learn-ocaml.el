@@ -729,29 +729,29 @@ Otherwise, call `learn-ocaml-use-metadata-cmd'.
 Finally, run the CALLBACK.
 Note: this function will be used by `learn-ocaml-on-load-aux'."
   (if new-server-value
-    ;; without config file
+      ;; without config file
       (learn-ocaml-init-cmd
        :server new-server-value
        :token new-token-value
        :nickname nickname
        :callback callback)
-      ;; with config file
-    (if (not new-token-value)
-        ;; create token
-        (learn-ocaml-create-token-cmd
-         nickname
-         secret
-         (lambda (token)
-           (learn-ocaml-use-metadata-cmd
-            token
-            nil
-            callback)))
-      ;; use token
-      (learn-ocaml-use-metadata-cmd
-       new-token-value
-       nil
-       callback))))
-  
+    ;; with config file
+    (if new-token-value
+        ;; use token
+        (learn-ocaml-use-metadata-cmd
+         new-token-value
+         nil
+         callback)
+      ;; create token
+      (learn-ocaml-create-token-cmd
+       nickname
+       secret
+       (lambda (token)
+         (learn-ocaml-use-metadata-cmd
+          token
+          nil
+          callback))))))
+
 (defun learn-ocaml-on-load-aux (token server callback)
   "At load time: ensure a TOKEN and SERVER are set, then run CALLBACK.
 If SERVER is \"\", interactively ask a server url.
