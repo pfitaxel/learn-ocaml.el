@@ -42,6 +42,7 @@ Clone the GitHub repo:
 
 ```sh
 git clone https://github.com/pfitaxel/learn-ocaml.el ~/.emacs.d/lisp/learn-ocaml.el
+cd ~/.emacs.d/lisp/learn-ocaml.el && make clean; make  # optional
 ```
 
 Add the following to your `.emacs` and restart Emacs:

@@ -6,7 +6,7 @@ ELFILE := learn-ocaml.el
 
 ELC := $(ELFILE:.el=.elc)
 
-all: help
+all: elc
 
 help:
 	@echo '$$ make elc  # byte-compile $(ELFILE)'
