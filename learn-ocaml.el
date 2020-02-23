@@ -63,7 +63,7 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
     learn-ocaml-log-buffer)
 
 (defvar learn-ocaml-warning-message
-  "An error occured when executing the last command, Do you want to open the log to have more information?")
+  "learn-ocaml.el encountered an error.  Open log?")
 
 (defconst learn-ocaml-exo-list-name "*learn-ocaml-exercise-list*")
 
@@ -84,7 +84,7 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
 (defvar-local learn-ocaml-exercise-id nil)
 
 ;;
-;; Utilitary functions
+;; Utility functions
 ;;
 
 (defun learn-ocaml--rstrip (str)
@@ -271,24 +271,12 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
   "Construct a shell command with `learn-ocaml-command-name' and options."
-  (let* ((server-option (if server
-                            (concat "--server=" server)
-                          nil))
-         (token-option (if token
-                           (concat "--token=" token)
-                         nil))
-         (local-option (if local
-                           "--local"
-                         nil))
-         (id-option (if id
-                        (concat "--id=" id)
-                      nil))
-         (html-option (if html
-                          "--html"
-                        nil))
-         (dont-submit-option (if dont-submit
-                                 "-n"
-                               nil))
+  (let* ((server-option (when server (concat "--server=" server)))
+         (token-option (when token (concat "--token=" token)))
+         (local-option (when local "--local"))
+         (id-option (when id (concat "--id=" id)))
+         (html-option (when html "--html"))
+         (dont-submit-option (when dont-submit "-n"))
          (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option local-option param1 param2)))
     (cl-remove-if-not 'stringp list)))
 
@@ -740,41 +728,38 @@ Otherwise, call `learn-ocaml-create-token-cmd' if NEW-TOKEN-VALUE is nil.
 Otherwise, call `learn-ocaml-use-metadata-cmd'.
 Finally, run the CALLBACK.
 Note: this function will be used by `learn-ocaml-on-load-aux'."
-  (if (not new-server-value)
-      ;; with config file
-      (progn
-	(if (not new-token-value)
-	    ;; create token
-	    (learn-ocaml-create-token-cmd
-	     nickname
-	     secret
-	     (lambda (token)
-	       (learn-ocaml-use-metadata-cmd
-		token
-		nil
-		callback)))
-	  ;; use token
-	  (learn-ocaml-use-metadata-cmd
-	   new-token-value
-	   nil
-	   callback)))
+  (if new-server-value
     ;; without config file
-    (learn-ocaml-init-cmd
-     :server new-server-value
-     :token new-token-value
-     :nickname nickname
-     :callback callback)))
+      (learn-ocaml-init-cmd
+       :server new-server-value
+       :token new-token-value
+       :nickname nickname
+       :callback callback)
+      ;; with config file
+    (if (not new-token-value)
+        ;; create token
+        (learn-ocaml-create-token-cmd
+         nickname
+         secret
+         (lambda (token)
+           (learn-ocaml-use-metadata-cmd
+            token
+            nil
+            callback)))
+      ;; use token
+      (learn-ocaml-use-metadata-cmd
+       new-token-value
+       nil
+       callback))))
   
 (defun learn-ocaml-on-load-aux (token server callback)
   "At load time: ensure a TOKEN and SERVER are set, then run CALLBACK.
 If SERVER is \"\", interactively ask a server url.
 If TOKEN is \"\", interactively ask a token."
-  (let* ((new-server-value (if (or (not server)
-                                   (string-equal server ""))
-                               (progn
-                                 (message-box "No server found.  Please enter the server url.")
-                                 (read-string "Enter server: "))
-                               nil))
+  (let* ((new-server-value (when (or (not server)
+                                     (string-equal server ""))
+                             (message-box "No server found.  Please enter the server url.")
+                             (read-string "Enter server: ")))
 	 (rich-callback (lambda (_)
 			  (funcall callback)
 			  (learn-ocaml-show-metadata))))
@@ -927,7 +912,7 @@ Shortcuts for the learn-ocaml mode:
 "
   :lighter " LearnOCaml"
   :keymap learn-ocaml-mode-map
-  (if (bound-and-true-p learn-ocaml-mode)
+  (if learn-ocaml-mode
       (progn
         (learn-ocaml-update-exercise-id-view)
         (easy-menu-add learn-ocaml-mode-menu)
