@@ -241,8 +241,8 @@ add \"opam var bin\" (or another directory) in `exec-path'."
            (format "\"%s\" not found.\n\nCurrent value of exec-path:\n%s\n\nRetry?"
                    learn-ocaml-command-name
                    (concat "(\n" (apply #'concat
-                                        (map 'list (lambda (s) (concat s "\n"))
-                                             exec-path)) ")")))
+                                        (cl-map 'list (lambda (s) (concat s "\n"))
+                                                exec-path)) ")")))
           (apply #'learn-ocaml-make-process-wrapper args) ; this could be a loop
         nil))))
 
@@ -786,7 +786,7 @@ If TOKEN is \"\", interactively ask a token."
               "Use found token" ("Use existing token" . 1))
           `(,(concat "Token found: " token)
             ("Use found token" . 0) ("Use another token" . 1)))
-      (case (x-popup-dialog
+      (cl-case (x-popup-dialog
 	     t `(,(concat token-phrase "\n What do you want to do?\n")
 		 ,use-found-token
 		 ,use-another-token

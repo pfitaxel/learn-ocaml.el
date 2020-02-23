@@ -1,8 +1,15 @@
+EMACS ?= $(shell if ! command -v emacs; then echo "Emacs binary not found"; exit 1; else echo emacs; fi)
+BATCHEMACS := $(EMACS) --batch -Q
+BYTECOMPILE := $(BATCHEMACS) --eval "(progn (require 'bytecomp) (require 'package) (setq byte-compile-warnings (remove 'cl-functions byte-compile-warning-types)) (setq byte-compile-error-on-warn t) (batch-byte-compile))"
+
 ELFILE := learn-ocaml.el
+
+ELC := $(ELFILE:.el=.elc)
 
 all: help
 
 help:
+	@echo '$$ make elc  # byte-compile $(ELFILE)'
 	@echo '$$ make bump v=1.0.0  # Replace version strings with 1.0.0'
 
 bump:
@@ -11,4 +18,12 @@ bump:
 	! diff -u $(ELFILE).bak $(ELFILE)
 	git commit $(ELFILE) -m "Bump $(ELFILE) to version $(v)" -e
 
-.PHONY: all help bump
+%.elc: %.el
+	$(BYTECOMPILE) $<
+
+elc: $(ELC)
+
+clean:
+	$(RM) $(ELC)
+
+.PHONY: all help bump elc clean
