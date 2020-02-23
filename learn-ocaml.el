@@ -507,7 +507,7 @@ Argument SECRET may be needed by the server."
    (lambda (s)
      (if (learn-ocaml-yes-or-no
           (concat "The current configured server is: " s "\n Do you want to change it?"))
-         (let ((server (read-string "Enter server: ")))
+         (let ((server (read-string "Enter server URL: " "https://")))
            (learn-ocaml-use-metadata-cmd
             nil
             server
@@ -759,7 +759,7 @@ If TOKEN is \"\", interactively ask a token."
   (let* ((new-server-value (when (or (not server)
                                      (string-equal server ""))
                              (message-box "No server found.  Please enter the server url.")
-                             (read-string "Enter server: ")))
+                             (read-string "Enter server URL: " "https://")))
 	 (rich-callback (lambda (_)
 			  (funcall callback)
 			  (learn-ocaml-show-metadata))))
