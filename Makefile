@@ -1,6 +1,6 @@
 EMACS ?= emacs
 BATCHEMACS := $(EMACS) --batch -Q
-BYTECOMPILE := $(BATCHEMACS) --eval "(progn (require 'bytecomp) (require 'package) (setq byte-compile-warnings (remove 'cl-functions byte-compile-warning-types)) (setq byte-compile-error-on-warn t) (batch-byte-compile))"
+BYTECOMPILE := $(BATCHEMACS) --eval "(progn (require 'bytecomp) (setq byte-compile-error-on-warn t) (batch-byte-compile))"
 
 ELFILE := learn-ocaml.el
 

@@ -29,6 +29,7 @@
 (require 'browse-url)
 (require 'json)
 
+(require 'package)  ; for #'learn-ocaml-upgrade-packages
 
 ;;; Code:
 
@@ -170,14 +171,12 @@ Function added in the `kill-emacs-query-functions' hook."
 (defun learn-ocaml-upgrade-packages ()
   "Upgrade ELPA packages (using package.el)."
   (interactive)
-  (if (featurep 'package)
-      (let ((old-async package-menu-async))
-        (setq package-menu-async nil)
-        (package-list-packages)
-        (package-menu-mark-upgrades)
-        (package-menu-execute)     ; TODO: don't call it interactively
-        (setq package-menu-async old-async))
-    (message "Feature package.el is not loaded.")))
+  (let ((old-async package-menu-async))
+    (setq package-menu-async nil)
+    (package-list-packages)
+    (package-menu-mark-upgrades)
+    (package-menu-execute)         ; TODO: don't call it interactively
+    (setq package-menu-async old-async)))
 
 ;;
 ;; Core functions
