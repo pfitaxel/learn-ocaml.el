@@ -888,7 +888,7 @@ If TOKEN is \"\", interactively ask a token."
   "Initialisation function to check whether a token and server is set.
 Do nothing if `learn-ocaml-loaded' is non-nil.
 Call (`learn-ocaml-change-default-directory' t) if OPEN-EXO-LIST holds.
-Used by `learn-ocaml-mode' and autoloads."
+Used by function `learn-ocaml-mode' and autoloads."
   (unless learn-ocaml-loaded
     (if open-exo-list
         (learn-ocaml-on-load
