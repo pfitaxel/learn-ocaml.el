@@ -571,6 +571,7 @@ Argument SECRET may be needed by the server."
   "Grade the current .ml buffer."
   (interactive)
   (learn-ocaml-setup nil)
+  (save-buffer)
   (learn-ocaml-grade-file-cmd
    :id learn-ocaml-exercise-id
    :file buffer-file-name
