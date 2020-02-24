@@ -1,6 +1,7 @@
 # learn-ocaml.el
 
 [![Build Status](https://travis-ci.com/pfitaxel/learn-ocaml.el.svg?branch=master)](https://travis-ci.com/pfitaxel/learn-ocaml.el)
+[![MELPA](https://melpa.org/packages/learn-ocaml-badge.svg)](https://melpa.org/#/learn-ocaml)
 
 ## Summary
 
@@ -36,21 +37,28 @@ It can be installed with opam (the OCaml package manager) in a `4.05.0` switch:
 comprehensive OCaml/Emacs environment (with Tuareg, Merlin, Company):
 for details, see <https://github.com/erikmd/tapfa-init.el> (in French)
 
-## Usage (manual installation procedure before MELPA availability)
+## Installation (using MELPA)
 
-Clone the GitHub repo:
-
-```sh
-git clone https://github.com/pfitaxel/learn-ocaml.el ~/.emacs.d/lisp/learn-ocaml.el
-cd ~/.emacs.d/lisp/learn-ocaml.el && make clean; make  # optional
-```
-
-Add the following to your `.emacs` and restart Emacs:
+[MELPA](https://melpa.org/) is a repository of Emacs packages. Skip
+this step if you already use MELPA. Otherwise, add the following to
+your `.emacs` and restart Emacs:
 
 ```elisp
-;; Make available the learn-ocaml-mode
-(load "~/.emacs.d/lisp/learn-ocaml.el/learn-ocaml.el")
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                    (not (gnutls-available-p))))
+       (proto (if no-ssl "http" "https")))
+  (add-to-list 'package-archives
+               (cons "melpa" (concat proto "://melpa.org/packages/")) t))
+(package-initialize)
 ```
+
+Then, run <kbd>M-x package-refresh-contents RET</kbd> followed by
+<kbd>M-x package-install RET learn-ocaml RET</kbd> to install and
+byte-compile `learn-ocaml`.
+
+
+## Usage
 
 Enable the minor mode in any buffer:
 
