@@ -17,13 +17,11 @@
 ;;
 ;; learn-ocaml.el is an Emacs frontend for students using learn-ocaml.
 ;;
-;; Most features rely on the "learn-ocaml-client" binary, which is run
-;; by `learn-ocaml-make-process-wrapper'.  See also the function
-;; `learn-ocaml-command-constructor'.  By convention, all functions
-;; that call `learn-ocaml-make-process-wrapper' have suffix `-cmd'.
-;; These functions are generally tested in
-;; "tests/learn-ocaml-tests.el" and will often have an associated
-;; interactive/gui counterpart (untested wrapper).
+;; It uses learn-ocaml-client, a CLI tool to interact with learn-ocaml
+;; that can be installed using the OCaml package manager (OPAM 2.0):
+;; https://opam.ocaml.org/packages/learn-ocaml-client/
+;;
+;; For details, see https://github.com/pfitaxel/learn-ocaml.el#readme
 
 (require 'cl-lib)
 (require 'browse-url)
@@ -32,6 +30,14 @@
 (require 'package)  ; for #'learn-ocaml-upgrade-packages
 
 ;;; Code:
+
+;; Most features rely on the "learn-ocaml-client" binary, which is run
+;; by `learn-ocaml-make-process-wrapper'.  See also the function
+;; `learn-ocaml-command-constructor'.  By convention, all functions
+;; that call `learn-ocaml-make-process-wrapper' have suffix `-cmd'.
+;; These functions are generally tested in
+;; "tests/learn-ocaml-tests.el" and will often have an associated
+;; interactive/gui counterpart (untested wrapper).
 
 (defgroup learn-ocaml nil
   "learn-ocaml in Emacs "
