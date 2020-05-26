@@ -239,6 +239,4 @@
     (should (string-equal (learn-ocaml-file-path dir file) path))
     (should (string-equal (learn-ocaml-file-path "/dummy" path) path))))
 
-(provide 'learn-ocaml-tests)
-
 ;;; learn-ocaml-tests.el ends here
