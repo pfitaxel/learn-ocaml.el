@@ -181,7 +181,10 @@ Function added in the `kill-emacs-query-functions' hook."
     (setq package-menu-async nil)
     (package-list-packages)
     (package-menu-mark-upgrades)
-    (package-menu-execute)         ; TODO: don't call it interactively
+    (let ((use-dialog-box nil))
+      ;; make `y-or-n-p' show up within the minibuffer
+      ;; even if `learn-ocaml-upgrade-packages' was called interactively
+      (package-menu-execute))
     (setq package-menu-async old-async)))
 
 ;;
