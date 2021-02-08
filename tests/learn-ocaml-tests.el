@@ -60,6 +60,9 @@
   (let ((file (learn-ocaml-temp-html-file id)))
     (shell-command (concat "rm -f " file))))
 
+(defun learn-ocaml-test-collapse-whitespace (str)
+  (replace-regexp-in-string "[[:space:]\n]+" " " str))
+
 ;; Tests for core functions
 
 (ert-deftest-async 1_learn-ocaml-server-management-test (done)
@@ -156,20 +159,23 @@
 		     (should (equal json expected))
 		     (funcall callback))))))))
   (funcall test done)))
-		   
+
+
 (ert-deftest-async 7_learn-ocaml-compute-questions-url-test (done)
   (learn-ocaml-give-server-cmd
    (lambda (server)
      (learn-ocaml-give-token-cmd
       (lambda (token)
-	(with-temp-buffer
-	  (insert-file-contents learn-ocaml-test-description-file)
-	  (let* ((url (learn-ocaml-compute-questions-url server "demo" token))
-		(expected (buffer-string))
-		(result (shell-command-to-string (concat "curl -fsS " url ))))
-	   (should (string-match expected result))))
-	  (funcall done))))))
-	       
+        (with-temp-buffer
+          (insert-file-contents learn-ocaml-test-description-file)
+          (let* ((url (learn-ocaml-compute-questions-url server "demo" token))
+                 (expected (learn-ocaml-test-collapse-whitespace
+                            (buffer-string)))
+                 (result (learn-ocaml-test-collapse-whitespace
+                          (shell-command-to-string (concat "curl -fsS " url )))))
+           (should (string-match expected result))))
+          (funcall done))))))
+
 
 (ert-deftest-async 8_learn-ocaml-init-another-token (done)
   (learn-ocaml-create-token-cmd
