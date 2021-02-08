@@ -11,7 +11,7 @@ env:
   - LEARNOCAML_IMAGE="ocamlsf/learn-ocaml"
   jobs:
   - LEARNOCAML_VERSION="0.12"
-  - LEARNOCAML_VERSION="dev"
+  - LEARNOCAML_VERSION="master"
 
 install:
 - docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
