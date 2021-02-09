@@ -1,6 +1,6 @@
 ;;; learn-ocaml.el --- Emacs frontend for learn-ocaml -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2019-2020  The learn-ocaml.el developers
+;; Copyright (c) 2019-2021  The learn-ocaml.el developers
 
 ;; Authors: (see the AUTHORS file distributed along the sources)
 ;; URL: https://github.com/pfitaxel/learn-ocaml.el

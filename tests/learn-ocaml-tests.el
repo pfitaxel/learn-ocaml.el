@@ -1,6 +1,6 @@
 ;;; learn-ocaml-tests.el --- unit tests -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2019-2020  The learn-ocaml.el developers
+;; Copyright (c) 2019-2021  The learn-ocaml.el developers
 
 ;; This software is free software; you can redistribute it and/or
 ;; modify it under the terms of the MIT License.
