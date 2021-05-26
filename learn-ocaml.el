@@ -522,7 +522,19 @@ Argument SECRET may be needed by the server."
             server
             (lambda (_)
               (message-box "Server changed succesfully")
-              (learn-ocaml-show-metadata))))))))
+               (cl-case (x-popup-dialog
+             t `("The old token may not work with the new server.\n What do you want to do?\n"
+                 ("Enter my token" . 1)
+                 ("Create new token" . 2)))
+        (1 (let ((token (read-string "Enter token: ")))
+           (learn-ocaml-use-metadata-cmd
+            token
+            nil
+            (lambda (_)
+              (message-box "Token changed succesfully")))))
+        (2 (call-interactively 'learn-ocaml-create-token)))
+               (learn-ocaml-show-metadata)
+               (learn-ocaml-display-exercise-list))))))))
 
 (defun learn-ocaml-change-token ()
   "Interactively change the user token."
