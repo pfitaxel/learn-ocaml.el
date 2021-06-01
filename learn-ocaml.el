@@ -59,6 +59,8 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
+(defvar learn-ocaml-use-pswd nil)
+
 (defvar learn-ocaml-log-buffer nil)
 
 (defun learn-ocaml-log-buffer ()
@@ -169,6 +171,13 @@ Function added in the `kill-emacs-query-functions' hook."
         (mapc (lambda (file) (ignore-errors (delete-file file))) files))
       (ignore-errors (delete-directory (learn-ocaml-temp-dir)))))
   t)
+
+(defun learn-ocaml-server-config (json)
+  "Set the global variable learn-ocaml-use-pswd according
+to the boolean contained in the json returned by the client"
+  (setq learn-ocaml-use-pswd
+        (json-get (json-read-from-string "{\"use_passwd\": true}")
+                  "use_passwd")))
 
 ;;
 ;; package.el shortcut
@@ -293,6 +302,11 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   "Run \"learn-ocaml-client --version\"."
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name) " --version")))
+
+(defun learn-ocaml-client-config ()
+  "Run \"learn-ocaml-client server-config\"."
+  (shell-command-to-string
+   (concat (shell-quote-argument learn-ocaml-command-name) " server-config")))
 
 (cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
