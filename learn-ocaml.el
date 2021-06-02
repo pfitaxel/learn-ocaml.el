@@ -95,6 +95,11 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
 ;; Utility functions
 ;;
 
+(defun learn-ocaml-client-version-le-0.13 (version)
+  "Check if the learn-ocaml-client version is lower or equal 
+to 0.13 to know if the user can use a password and not only a token."
+  (string= (seq-subseq version 2 4) "13"))
+
 (defun learn-ocaml--rstrip (str)
   "Remove the trailing newline in STR."
   (replace-regexp-in-string "\n\\'" "" str))
@@ -176,8 +181,9 @@ Function added in the `kill-emacs-query-functions' hook."
   "Set the global variable learn-ocaml-use-pswd according
 to the boolean contained in the json returned by the client"
   (setq learn-ocaml-use-pswd
-        (json-get (json-read-from-string "{\"use_passwd\": true}")
-                  "use_passwd")))
+        (cdr (assoc 'use_passwd
+                         (json-read-from-string
+                          "{\"use_passwd\": true, \"version\": \"1.12\"}")))))
 
 ;;
 ;; package.el shortcut
@@ -787,6 +793,29 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
           token
           nil
           callback))))))
+
+
+(defun learn-ocaml-connection ()
+  "Connect the user with a (login,passwd) or a token"
+  (if ( learn-ocaml-client-version-le-0.13 (learn-ocaml-client-version))
+       (cl-case (x-popup-dialog
+             t `("Do you prefer to connect with a token or a login and a password?\n"
+                 ("(login,password)" . 1)
+                 ("token" . 2)))
+         (1 (let* ((login_password (learn-ocaml-get-login-password))
+            (login (car login_password))
+            (password (cdr login_password)))))
+         
+        (2 (let ((token (read-string "Enter token: ")))
+           (learn-ocaml-use-metadata-cmd
+            token
+            nil
+            (lambda (_)
+              (message-box "Token saved."))))))))
+
+(defun learn-ocaml-get-login-password ()
+  "Ask interactively the login and the password to the user"
+  (cons (read-string "Enter login: ") (read-passwd "Enter password: ")))
 
 (defun learn-ocaml-on-load-aux (token server callback)
   "At load time: ensure a TOKEN and SERVER are set, then run CALLBACK.
