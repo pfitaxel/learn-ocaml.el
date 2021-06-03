@@ -326,7 +326,7 @@ and secret as argument"
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name) " server-config")))
 
-cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
+(cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
   (learn-ocaml-print-time-stamp)
   (learn-ocaml-make-process-wrapper
@@ -805,23 +805,6 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
           token
           nil
           callback))))))
-
-(cl-defun learn-ocaml-init-user-cmd (&key email password nickname secret callback)
-  "Run learn-ocaml init-user with options."
-  (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "init-user"
-   :command (learn-ocaml-command-constructor
-             :login email
-             :password password
-	     :param1 nickname
-	     :param2 secret
-	     :command "init-user")
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback)))
 
 (cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
