@@ -96,9 +96,12 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
 ;;
 
 (defun learn-ocaml-client-version-le-0.13 (version)
-  "Check if the learn-ocaml-client version is lower or equal 
+  "Check if the learn-ocaml-client version is lower or equal
 to 0.13 to know if the user can use a password and not only a token."
-  (string= (seq-subseq version 2 4) "13"))
+  (string= (seq-subseq "0.12" 2 4) "12"))
+
+
+(learn-ocaml-client-version-le-0.13 (learn-ocaml-client-version))
 
 (defun learn-ocaml--rstrip (str)
   "Remove the trailing newline in STR."
@@ -293,10 +296,12 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 	    (let ((log (buffer-string)))
 	      (error "Process errored.  Full log:\n%s" log))))))))
 
-(cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
+(cl-defun learn-ocaml-command-constructor (&key command token login password server local id html dont-submit param1 param2)
   "Construct a shell command with `learn-ocaml-command-name' and options."
   (let* ((server-option (when server (concat "--server=" server)))
          (token-option (when token (concat "--token=" token)))
+	 (login-opton (when login (login)))
+	 (password-option (when password (password)))
          (local-option (when local "--local"))
          (id-option (when id (concat "--id=" id)))
          (html-option (when html "--html"))
@@ -793,6 +798,42 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
           token
           nil
           callback))))))
+
+(cl-defun learn-ocaml-init-user-cmd (&key email password nickname secret callback)
+  "Run learn-ocaml init-user with options."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "init"
+   :command (learn-ocaml-command-constructor
+             :login email
+             :password password
+	     :param1 nickname
+	     :param2 secret
+	     :command "init-user")
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback)))
+  )
+
+(cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
+  "Run \"learn-ocaml-client init\" with options."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "init"
+   :command (learn-ocaml-command-constructor
+             :token token
+             :server server
+	     :param1 nickname
+	     :param2 secret
+	     :command "init")
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback)))
+
 
 
 (defun learn-ocaml-connection ()
