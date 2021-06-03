@@ -319,7 +319,7 @@ and secret as argument"
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name)
            " init-user --server=\"http://localhost:8080\" "
-           login password nickname secret)))
+           login " " password " " nickname " " secret)))
 
 (defun learn-ocaml-client-config ()
   "Run \"learn-ocaml-client server-config\"."
@@ -586,7 +586,7 @@ Argument SECRET may be needed by the server."
               (learn-ocaml-show-metadata))))))))
 
 (defun learn-ocaml-download-server-file (id &optional directory)
-  "Download the last saved code for exercise ID in DIRECTORY."
+con "Download the last saved code for exercise ID in DIRECTORY."
   (interactive `(,(let ((input (read-string (concat
                                              "Enter the id of the exercise (default "
                                              learn-ocaml-exercise-id
