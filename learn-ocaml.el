@@ -60,7 +60,7 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
-(defvar learn-ocaml-use-pswd nil)
+(defvar learn-ocaml-use-pswd t)
 
 (defvar learn-ocaml-log-buffer nil)
 
@@ -307,19 +307,26 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   (string-trim (shell-command-to-string
                 (concat (shell-quote-argument learn-ocaml-command-name) " --version"))))
 
-(defun learn-ocaml-client-sign-in-cmd (login password)
+(defun learn-ocaml-client-sign-in-cmd (server login password)
   "Run learn-ocaml-client init-user with login and password as argument"
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name)
-           " init-user --server=\"http://localhost:8080\" " login " " password)))
+           " init-user --server=" server " " login " " password)))
 
-(defun learn-ocaml-client-sign-up-cmd (login password nickname secret)
+(defun escape-secret (secret)
   "Run learn-ocaml-client init-user with login password nickname
 and secret as argument"
-  (shell-command-to-string
-   (concat (shell-quote-argument learn-ocaml-command-name)
-           " init-user --server=\"http://localhost:8080\" "
-           login " " password " " nickname " " secret)))
+  (if-let (secret-option (string= secret ""))
+      "\"\""
+      secret))
+
+(defun learn-ocaml-client-sign-up-cmd (server login password nickname secret)
+  "Run learn-ocaml-client init-user with login password nickname
+and secret as argument"
+    (shell-command-to-string
+     (concat (shell-quote-argument learn-ocaml-command-name)
+             " init-user --server=" server " "
+             login " " password " " nickname " " secret)))
 
 (defun learn-ocaml-client-config ()
   "Run \"learn-ocaml-client server-config\"."
@@ -825,31 +832,38 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
 
 
 
-(defun learn-ocaml-connection ()
-  "Connect the user with a (login,passwd) or a token"
-  (if (version-list-<=
-         (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
-       (cl-case (x-popup-dialog
-             t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
-                 ("Sign in" . 1)
-                 ("Sign up" . 2)
-                 ("Connect with an old token" . 3)))
-         (1 (let* ((login_password (learn-ocaml-sign-in))
-            (login (car login_password))
-            (password (cdr login_password)))
-              (learn-ocaml-client-sign-in-cmd login password)))
-         (2 (let* ((infos (learn-ocaml-sign-up))
-            (login (nth 0 infos))
-            (password (nth 1 infos))
-            (nickname (nth 2 infos))
-            (secret (nth 3 infos)))
-              (learn-ocaml-client-sign-up-cmd login password nickname secret)))
-        (3 (let ((token (read-string "Enter token: ")))
-           (learn-ocaml-use-metadata-cmd
-            token
-            nil
-            (lambda (_)
-              (message-box "Token saved."))))))))
+(defun learn-ocaml-connection (server callback)
+  "Connect the user with a (login,passwd) or a token and continue with the callback"
+      (let* ((new-server-value (when (or (not server)
+                                         (string-equal server ""))
+                                 (message-box "No server found.  Please enter the server url.")
+                                 (read-string "Enter server URL: " "https://"))))
+             (cl-case (x-popup-dialog
+                       t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
+                           ("Sign in" . 1)
+                           ("Sign up" . 2)
+                           ("Connect with an old token" . 3)))
+               (1 (let* ((login_password (learn-ocaml-sign-in))
+                         (login (nth 0 login_password))
+                         (password (nth 1 login_password))
+                         (message
+                          (learn-ocaml-client-sign-in-cmd server login password)))))
+               (2 (let* ((infos (learn-ocaml-sign-up))
+                         (login (nth 0 infos))
+                         (password (nth 1 infos))
+                         (nickname (nth 2 infos))
+                         (secret (nth 3 infos))
+                         (message (learn-ocaml-client-sign-up-cmd
+                                   server login password nickname (escape-secret secret))))
+                    (message-box message)
+                    (learn-ocaml-connection server callback)))
+               (3 (let ((token (read-string "Enter token: ")))
+                    (learn-ocaml-use-metadata-cmd
+                     token
+                     nil
+                     (lambda (_)
+                       (message-box "Token saved."))))))
+             (funcall callback)))
 
 (defun learn-ocaml-sign-in ()
   "Ask interactively the login and the password to the user to sign in"
@@ -875,36 +889,34 @@ If TOKEN is \"\", interactively ask a token."
                                      (string-equal server ""))
                              (message-box "No server found.  Please enter the server url.")
                              (read-string "Enter server URL: " "https://")))
-	 (rich-callback (lambda (_)
-			  (funcall callback)
-			  (learn-ocaml-show-metadata))))
+     (rich-callback (lambda (_)
+              (funcall callback)
+              (learn-ocaml-show-metadata))))
     (cl-destructuring-bind (token-phrase use-found-token use-another-token)
-	(if (or (not token)
+    (if (or (not token)
                 (string-equal token ""))
             '("No token found"
               "Use found token" ("Use existing token" . 1))
           `(,(concat "Token found: " token)
             ("Use found token" . 0) ("Use another token" . 1)))
       (cl-case (x-popup-dialog
-	     t `(,(concat token-phrase "\n What do you want to do?\n")
-		 ,use-found-token
-		 ,use-another-token
-		 ("Create new token" . 2)))
-	(0 (funcall rich-callback nil))
-	
-	(1 (let ((token (read-string "Enter token: ")))
-	     (learn-ocaml-init
-	      :new-server-value new-server-value
-	      :new-token-value token
-	      :callback rich-callback)))
-	
-	(2 (let ((nickname (read-string "What nickname do you want to use for the token? "))
-		 (secret (read-string "What secret does the server require? ")))
-	     (learn-ocaml-init
-	      :new-server-value new-server-value
-	      :nickname nickname
-	      :secret secret
-	      :callback rich-callback)))))))
+         t `(,(concat token-phrase "\n What do you want to do?\n")
+         ,use-found-token
+         ,use-another-token
+         ("Create new token" . 2)))
+    (0 (funcall rich-callback nil))
+    (1 (let ((token (read-string "Enter token: ")))
+         (learn-ocaml-init
+          :new-server-value new-server-value
+          :new-token-value token
+          :callback rich-callback)))
+    (2 (let ((nickname (read-string "What nickname do you want to use for the token? "))
+         (secret (read-string "What secret does the server require? ")))
+         (learn-ocaml-init
+          :new-server-value new-server-value
+          :nickname nickname
+          :secret secret
+          :callback rich-callback)))))))
 
 (defun learn-ocaml-on-load (callback)
   "Call `learn-ocaml-on-load-aux' and CALLBACK when loading mode."
@@ -912,7 +924,11 @@ If TOKEN is \"\", interactively ask a token."
    (lambda (server)
      (learn-ocaml-give-token-cmd
       (lambda (token)
-        (learn-ocaml-on-load-aux token server callback))))))
+        (if (version-list-<=
+             (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
+            (if learn-ocaml-use-pswd
+                (learn-ocaml-connection server callback))
+        (learn-ocaml-on-load-aux token server callback)))))))
 
 ;;
 ;; menu definition
