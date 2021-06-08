@@ -122,8 +122,7 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
              " ---------------------\n")))
 
 (defun escape-secret (secret)
-  "Run learn-ocaml-client init-user with login password nickname
-and secret as argument"
+  "Add escape to the secret when it's empty"
   (if-let (secret-option (string= secret ""))
       "\"\""
       secret))
@@ -183,9 +182,10 @@ Function added in the `kill-emacs-query-functions' hook."
 (defun learn-ocaml-server-config (json)
   "Set the global variable learn-ocaml-use-pswd according
 to the boolean contained in the json returned by the client"
-  (setq learn-ocaml-use-pswd
-        (cdr (assoc 'use_passwd
-                         (json-read-from-string json)))))
+  (if (eql (cdr (assoc 'use_passwd (json-read-from-string json)))
+         :json-false)
+    (setq learn-ocaml-use-pswd nil)
+  (setq learn-ocaml-use-pswd t)))
 
 ;;
 ;; package.el shortcut
@@ -874,37 +874,42 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
   (while (not (string= pswd pswd-conf))
     (setq pswd (read-passwd "Password are not the same. Enter password: "))
     (setq pswd-conf (read-passwd "Enter password confirmation: ")))
-      (list login pswd nickname secret)))
+  (list login pswd nickname secret)))
 
-(defun learn-ocaml-on-load-aux (token server callback)
+(defun learn-ocaml-on-load-aux (token new-server-value callback)
   "At load time: ensure a TOKEN and SERVER are set, then run CALLBACK.
-If SERVER is \"\", interactively ask a server url.
 If TOKEN is \"\", interactively ask a token."
+   (let* ((rich-callback (lambda (_)
+			  (funcall callback)
+			  (learn-ocaml-show-metadata))))
     (cl-destructuring-bind (token-phrase use-found-token use-another-token)
-    (if (or (not token)
+	(if (or (not token)
                 (string-equal token ""))
             '("No token found"
               "Use found token" ("Use existing token" . 1))
           `(,(concat "Token found: " token)
             ("Use found token" . 0) ("Use another token" . 1)))
       (cl-case (x-popup-dialog
-         t `(,(concat token-phrase "\n What do you want to do?\n")
-         ,use-found-token
-         ,use-another-token
-         ("Create new token" . 2)))
-    (0 (funcall rich-callback nil))
-    (1 (let ((token (read-string "Enter token: ")))
-         (learn-ocaml-init
-          :new-server-value new-server-value
-          :new-token-value token
-          :callback rich-callback)))
-    (2 (let ((nickname (read-string "What nickname do you want to use for the token? "))
-         (secret (read-string "What secret does the server require? ")))
-         (learn-ocaml-init
-          :new-server-value new-server-value
-          :nickname nickname
-          :secret secret
-          :callback rich-callback))))))
+	     t `(,(concat token-phrase "\n What do you want to do?\n")
+		 ,use-found-token
+		 ,use-another-token
+		 ("Create new token" . 2)))
+	(0 (funcall rich-callback nil))
+	
+	(1 (let ((token (read-string "Enter token: ")))
+	     (learn-ocaml-init
+	      :new-server-value new-server-value
+	      :new-token-value token
+	      :callback rich-callback)))
+	
+	(2 (let ((nickname (read-string "What nickname do you want to use for the token? "))
+		 (secret (read-string "What secret does the server require? ")))
+	     (learn-ocaml-init
+	      :new-server-value new-server-value
+	      :nickname nickname
+	      :secret secret
+	      :callback rich-callback)))))))
+
 
 (defun learn-ocaml-on-load (callback)
   "Call `learn-ocaml-on-load-aux' and CALLBACK when loading mode."
@@ -921,7 +926,8 @@ If TOKEN is \"\", interactively ask a token."
                (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
               (progn (learn-ocaml-server-config "{\"use_passwd\": true, \"version\": \"1.12\"}")
                      (if learn-ocaml-use-pswd
-                         (learn-ocaml-connection new-server-value callback)))
+                         (learn-ocaml-connection new-server-value callback)
+                       (learn-ocaml-on-load-aux token new-server-value callback)))
             (learn-ocaml-on-load-aux token new-server-value callback))))))))
 
 ;;
