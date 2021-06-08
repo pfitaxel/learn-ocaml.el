@@ -121,6 +121,13 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
              (current-time-string)
              " ---------------------\n")))
 
+(defun escape-secret (secret)
+  "Run learn-ocaml-client init-user with login password nickname
+and secret as argument"
+  (if-let (secret-option (string= secret ""))
+      "\"\""
+      secret))
+
 (defun learn-ocaml-file-writter-filter (file _proc string)
   "Write in FILE the given STRING.
 To be used as a `make-process' filter."
@@ -312,13 +319,6 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
    (concat (shell-quote-argument learn-ocaml-command-name)
            " init-user --server=" server " " login " " password)))
 
-(defun escape-secret (secret)
-  "Run learn-ocaml-client init-user with login password nickname
-and secret as argument"
-  (if-let (secret-option (string= secret ""))
-      "\"\""
-      secret))
-
 (defun learn-ocaml-client-sign-up-cmd (server login password nickname secret)
   "Run learn-ocaml-client init-user with login password nickname
 and secret as argument"
@@ -327,7 +327,7 @@ and secret as argument"
              " init-user --server=" server " "
              login " " password " " nickname " " secret)))
 
-(defun learn-ocaml-client-config ()
+(defun learn-ocaml-client-config-cmd ()
   "Run \"learn-ocaml-client server-config\"."
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name) " server-config")))
