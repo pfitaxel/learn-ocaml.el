@@ -60,7 +60,7 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
-(defvar learn-ocaml-use-pswd t)
+(defvar learn-ocaml-use-pswd nil)
 
 (defvar learn-ocaml-log-buffer nil)
 
@@ -178,8 +178,7 @@ Function added in the `kill-emacs-query-functions' hook."
 to the boolean contained in the json returned by the client"
   (setq learn-ocaml-use-pswd
         (cdr (assoc 'use_passwd
-                         (json-read-from-string
-                          "{\"use_passwd\": true, \"version\": \"1.12\"}")))))
+                         (json-read-from-string json)))))
 
 ;;
 ;; package.el shortcut
@@ -834,10 +833,6 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
 
 (defun learn-ocaml-connection (server callback)
   "Connect the user with a (login,passwd) or a token and continue with the callback"
-      (let* ((new-server-value (when (or (not server)
-                                         (string-equal server ""))
-                                 (message-box "No server found.  Please enter the server url.")
-                                 (read-string "Enter server URL: " "https://"))))
              (cl-case (x-popup-dialog
                        t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
                            ("Sign in" . 1)
@@ -863,7 +858,7 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
                      nil
                      (lambda (_)
                        (message-box "Token saved."))))))
-             (funcall callback)))
+             (funcall callback))
 
 (defun learn-ocaml-sign-in ()
   "Ask interactively the login and the password to the user to sign in"
@@ -885,13 +880,6 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
   "At load time: ensure a TOKEN and SERVER are set, then run CALLBACK.
 If SERVER is \"\", interactively ask a server url.
 If TOKEN is \"\", interactively ask a token."
-  (let* ((new-server-value (when (or (not server)
-                                     (string-equal server ""))
-                             (message-box "No server found.  Please enter the server url.")
-                             (read-string "Enter server URL: " "https://")))
-     (rich-callback (lambda (_)
-              (funcall callback)
-              (learn-ocaml-show-metadata))))
     (cl-destructuring-bind (token-phrase use-found-token use-another-token)
     (if (or (not token)
                 (string-equal token ""))
@@ -916,7 +904,7 @@ If TOKEN is \"\", interactively ask a token."
           :new-server-value new-server-value
           :nickname nickname
           :secret secret
-          :callback rich-callback)))))))
+          :callback rich-callback))))))
 
 (defun learn-ocaml-on-load (callback)
   "Call `learn-ocaml-on-load-aux' and CALLBACK when loading mode."
@@ -924,11 +912,17 @@ If TOKEN is \"\", interactively ask a token."
    (lambda (server)
      (learn-ocaml-give-token-cmd
       (lambda (token)
-        (if (version-list-<=
-             (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
-            (if learn-ocaml-use-pswd
-                (learn-ocaml-connection server callback))
-        (learn-ocaml-on-load-aux token server callback)))))))
+        (let* ((new-server-value (if (or (not server)
+                                         (string-equal server ""))
+                                     (progn (message-box "No server found. Please enter the server url.")
+                                            (read-string "Enter server URL: " "https://"))
+                                   server)))
+          (if (version-list-<=
+               (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
+              (progn (learn-ocaml-server-config "{\"use_passwd\": true, \"version\": \"1.12\"}")
+                     (if learn-ocaml-use-pswd
+                         (learn-ocaml-connection new-server-value callback)))
+            (learn-ocaml-on-load-aux token new-server-value callback))))))))
 
 ;;
 ;; menu definition
