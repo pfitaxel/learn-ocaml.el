@@ -332,6 +332,13 @@ and secret as argument"
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name) " server-config")))
 
+(defun learn-ocaml-client-init-server-cmd (server)
+  "Run \"learn-ocaml-client server-config\"."
+  (shell-command-to-string
+   (concat
+    (shell-quote-argument learn-ocaml-command-name) " init-server -s " server)))
+
+
 (cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
   (learn-ocaml-print-time-stamp)
@@ -920,13 +927,14 @@ If TOKEN is \"\", interactively ask a token."
                                      (progn (message-box "No server found. Please enter the server url.")
                                             (read-string "Enter server URL: " "https://"))
                                    server)))
+          (progn (learn-ocaml-client-init-server-cmd new-server-value)
           (if (version-list-<=
                (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
-              (progn (learn-ocaml-server-config "{\"use_passwd\": true, \"version\": \"1.12\"}")
+              (progn (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
                      (if learn-ocaml-use-pswd
                          (learn-ocaml-connection new-server-value callback)
                        (learn-ocaml-on-load-aux token new-server-value callback)))
-            (learn-ocaml-on-load-aux token new-server-value callback))))))))
+            (learn-ocaml-on-load-aux token new-server-value callback)))))))))
 
 ;;
 ;; menu definition

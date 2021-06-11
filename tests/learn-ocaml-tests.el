@@ -232,11 +232,21 @@
                      ; (learn-ocaml-test-remove-client-file)
              (funcall done))))))
 
+(ert-deftest-async a12_learn-ocaml-test-sign-up (done)
+  (learn-ocaml-init
+      :new-server-value learn-ocaml-test-url
+      :nickname "test"
+      :secret "test"
+      :callback (lambda (_)
+                  (learn-ocaml-sign-up-cmd
+           (lambda (token2)
+             (funcall done))))))
+
 ;; misc tests
 
 (setq example-file shell-file-name) ; just to get a filename example
 
-(ert-deftest a12_learn-ocaml-file-path ()
+(ert-deftest a13_learn-ocaml-file-path ()
   (let* ((path example-file)
          (dir (file-name-directory path))
          (file (file-name-nondirectory path)))
