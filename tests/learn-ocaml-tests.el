@@ -238,9 +238,12 @@
       :nickname "test"
       :secret "test"
       :callback (lambda (_)
-                  (learn-ocaml-sign-up-cmd
-           (lambda (token2)
-             (funcall done))))))
+                  (should (equal (learn-ocaml-sign-up-cmd
+                   "test@example.com"
+                   "Ocaml123*"
+                   "Test"
+                   "") "A confirmation e-mail has been sent to your address.\nPlease go to your mailbox to finish creating your account,\n then you will be able to sign in.\n"))
+                  funcall done)))
 
 ;; misc tests
 
