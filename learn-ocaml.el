@@ -688,7 +688,7 @@ con "Download the last saved code for exercise ID in DIRECTORY."
     (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-insert (concat "Difficulty: " (number-to-string stars) "/4"
-                   "      Progression:  % " "    id: " id))
+                   "    id: " id))
     (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-create 'learn-ocaml-button
