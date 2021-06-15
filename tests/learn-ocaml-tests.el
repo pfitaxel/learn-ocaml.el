@@ -244,7 +244,7 @@
 (ert-deftest-async a13_learn-ocaml-test-sign-in (done)
  (learn-ocaml-client-init-server-cmd learn-ocaml-test-url)
  (let* ((result (learn-ocaml-client-sign-in-cmd
-                 learn-ocaml-test-url "louis.ayroles@gmail.com" "Ocaml123*")))
+                 learn-ocaml-test-url "ErtTest@example.com" "Ocaml123*")))
    (should (string-equal
             "Configuration written to /home/louis/.config/learnocaml/client.json.\n"
             result)))
