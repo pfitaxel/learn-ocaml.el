@@ -233,15 +233,24 @@
              (funcall done))))))
 
 (ert-deftest-async a12_learn-ocaml-test-sign-up (done)
- (learn-ocaml-init-server-server-cmd learn-ocaml-test-url)
- (let* ((result (learn-ocaml-sign-up-cmd
-                   "test@example.com"
-                   "Ocaml123*"
-                   "Test"
-                   "")))
-          (should (string-equal ("A confirmation e-mail has been sent to your address.\nPlease go to your mailbox to finish creating your account,\n then you will be able to sign in.\n")
+ (learn-ocaml-client-init-server-cmd learn-ocaml-test-url)
+ (let* ((result (learn-ocaml-client-sign-up-cmd
+                 learn-ocaml-test-url "ErtTest@example.com" "Ocaml123*" "Test"
+                 (escape-secret ""))))
+          (should (string-equal "A confirmation e-mail has been sent to your address.\nPlease go to your mailbox to finish creating your account,\n then you will be able to sign in.\n"
                                 result)))
-                  (funcall done))
+ (funcall done))
+
+(ert-deftest-async a13_learn-ocaml-test-sign-in (done)
+ (learn-ocaml-client-init-server-cmd learn-ocaml-test-url)
+ (let* ((result (learn-ocaml-client-sign-in-cmd
+                 learn-ocaml-test-url "louis.ayroles@gmail.com" "Ocaml123*")))
+   (should (string-equal
+            "Configuration written to /home/louis/.config/learnocaml/client.json.\n"
+            result)))
+ (funcall done))
+
+
 
 ;; misc tests
 
