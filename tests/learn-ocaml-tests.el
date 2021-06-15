@@ -233,17 +233,15 @@
              (funcall done))))))
 
 (ert-deftest-async a12_learn-ocaml-test-sign-up (done)
-  (learn-ocaml-init
-      :new-server-value learn-ocaml-test-url
-      :nickname "test"
-      :secret "test"
-      :callback (lambda (_)
-                  (should (equal (learn-ocaml-sign-up-cmd
+ (learn-ocaml-init-server-server-cmd learn-ocaml-test-url)
+ (let* ((result (learn-ocaml-sign-up-cmd
                    "test@example.com"
                    "Ocaml123*"
                    "Test"
-                   "") "A confirmation e-mail has been sent to your address.\nPlease go to your mailbox to finish creating your account,\n then you will be able to sign in.\n"))
-                  funcall done)))
+                   "")))
+          (should (string-equal ("A confirmation e-mail has been sent to your address.\nPlease go to your mailbox to finish creating your account,\n then you will be able to sign in.\n")
+                                result)))
+                  (funcall done))
 
 ;; misc tests
 
