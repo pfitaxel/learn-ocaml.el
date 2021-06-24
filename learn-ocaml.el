@@ -182,7 +182,7 @@ Function added in the `kill-emacs-query-functions' hook."
 (defun learn-ocaml-server-config (json)
   "Set the global variable learn-ocaml-use-pswd according
 to the boolean contained in the json returned by the client"
-  (if (eql (aref (json-read-from-string json) 1)
+  (if (eql (cdr (assoc 'use_passwd (json-read-from-string json)))
          :json-false)
     (setq learn-ocaml-use-pswd nil)
   (setq learn-ocaml-use-pswd t)))
