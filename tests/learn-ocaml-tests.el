@@ -28,7 +28,7 @@
 
 ;; NOTE: This symbol list gather tests specific to 'use_passwd: true'
 (setq learn-ocaml-test-use-passwd-list
-      '(a12_learn-ocaml-test-sign-up))
+      '(a12_learn-ocaml-test-sign-up  2_learn-ocaml-token-management-test))
 
 (setq learn-ocaml-test-skip-use-passwd
       `(not (member ,@learn-ocaml-test-use-passwd-list)))
