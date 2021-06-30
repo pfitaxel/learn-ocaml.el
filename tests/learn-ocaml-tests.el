@@ -26,6 +26,12 @@
 (require 'ert-async)
 ;(setq ert-async-timeout 2)
 
+;; NOTE: This symbol list gather tests specific to 'use_passwd: true'
+(setq learn-ocaml-test-use-passwd-list
+      '(a12_learn-ocaml-test-sign-up))
+
+(setq learn-ocaml-test-skip-use-passwd
+      `(not (member ,@learn-ocaml-test-use-passwd-list)))
 
 ;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")

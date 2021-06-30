@@ -8,9 +8,9 @@ services:
 env:
   global:
   - EMACS_IMAGE="pfitaxel/emacs-learn-ocaml-client"
-  - LEARNOCAML_IMAGE="pfitaxel/learn-ocaml"
   jobs:
-  - LEARNOCAML_VERSION="oauth-moodle-dev"
+  - LEARNOCAML_IMAGE="ocamlsf/learn-ocaml" LEARNOCAML_VERSION="0.12"
+  - LEARNOCAML_IMAGE="pfitaxel/learn-ocaml" LEARNOCAML_VERSION="oauth-moodle-dev" USE_PASSWD="true"
 
 install:
 - docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
