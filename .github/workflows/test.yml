@@ -19,6 +19,9 @@ jobs:
             use_passwd: "false"
           - learnocaml_image: "pfitaxel/learn-ocaml"
             learnocaml_version: "oauth-moodle-dev"
+            use_passwd: "false"
+          - learnocaml_image: "pfitaxel/learn-ocaml"
+            learnocaml_version: "oauth-moodle-dev"
             use_passwd: "true"
       # at most 20 concurrent jobs per free account:
       max-parallel: 4
