@@ -328,24 +328,48 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
          (list (list learn-ocaml-command-name command token-option server-option id-option html-option dont-submit-option local-option param1 param2)))
     (cl-remove-if-not 'stringp list)))
 
+(cl-defun learn-ocaml-init-user-command-constructor (&key server login password nickname secret)
+  "Construct a shell command with `learn-ocaml-command-name' and options."
+  (let* ((nickname-option (when nickname (concat " " nickname)))
+         (secret-option (when secret (concat " " secret)))
+         (server-option (when server (concat "--server=" server)))
+         (list (list learn-ocaml-command-name "init-user" server-option login password nickname-option secret-option)))
+    (cl-remove-if-not 'stringp list)))
+
 (defun learn-ocaml-client-version ()
   "Run \"learn-ocaml-client --version\"."
   (string-trim (shell-command-to-string
                 (concat (shell-quote-argument learn-ocaml-command-name) " --version"))))
 
-(defun learn-ocaml-client-sign-in-cmd (server login password)
-  "Run learn-ocaml-client init-user with login and password as argument"
-  (shell-command-to-string
-   (concat (shell-quote-argument learn-ocaml-command-name)
-           " init-user --server=" server " " login " " password)))
+(cl-defun learn-ocaml-sign-in-cmd (&key server login password)
+  "Run \"learn-ocaml-client init-user\" with server login password to sign-in an user."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "init-user"
+   :command (learn-ocaml-init-user-command-constructor :server server
+                                           :login login
+                                           :password password)
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              (lambda(_)))))
 
-(defun learn-ocaml-client-sign-up-cmd (server login password nickname secret)
-  "Run learn-ocaml-client init-user with login password nickname
-and secret as argument"
-    (shell-command-to-string
-     (concat (shell-quote-argument learn-ocaml-command-name)
-             " init-user --server=" server " "
-             login " " password " " nickname " " secret)))
+(cl-defun learn-ocaml-sign-up-cmd (&key server login password nickname secret)
+  "Run \"learn-ocaml-client init-user\" with server login password nickname and secret to sign-up an user."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "init-user"
+   :command (learn-ocaml-init-user-command-constructor :server server
+                                           :login login
+                                           :password password
+                                           :nickname nickname
+                                           :secret secret)
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              (lambda(_)))))
 
 (defun learn-ocaml-client-config-cmd ()
   "Run \"learn-ocaml-client server-config\"."
