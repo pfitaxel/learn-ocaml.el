@@ -125,14 +125,17 @@ echo
 assert "learn-ocaml-client --version"
 
 if [ "$USE_PASSWD" = "true" ]; then
+    # TODO: Refactor this to run the init command from ERT's fixture
+    init='learn-ocaml-client init-user -s http://localhost:8080 foo@example.com OCaml123_ Foo ""'
     selector=""
 else
+    init='learn-ocaml-client init --server=http://localhost:8080 Foo ""'
     selector="learn-ocaml-test-skip-use-passwd"
 fi
 
 assert "
 cd /build/tests
-learn-ocaml-client init --server=http://localhost:8080 test test
+$init
 emacs --batch -l ert -l init-tests.el -l /build/learn-ocaml.el \
   -l learn-ocaml-tests.el --eval '(ert-run-tests-batch-and-exit $selector)'
 "
