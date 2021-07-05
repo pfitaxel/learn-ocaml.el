@@ -111,6 +111,22 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
           (funcall run)
         (quit nil)))))
 
+(defun learn-ocaml-global-disable-mode ()
+  "Disable learn-ocaml-mode' in ALL buffers."
+  (interactive "a")
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (funcall 'learn-ocaml-mode -1))))
+
+(defun close-all-buffers ()
+  (interactive)
+  (mapc 'kill-buffer (buffer-list)))
+
+(defun learn-ocaml-get-progression-by-id (id json)
+  (if (cdr (assoc (intern id) json))
+      (concat (number-to-string (cdr (assoc (intern id) json))) "%")
+    "NA"))
+
 (defun learn-ocaml-print-time-stamp ()
   "Insert date/time in the buffer given by function `learn-ocaml-log-buffer'."
   (set-buffer (learn-ocaml-log-buffer))
@@ -276,26 +292,30 @@ add \"opam var bin\" (or another directory) in `exec-path'."
 (defun learn-ocaml-error-handler (buffer callback proc string)
   "Get text from BUFFER and pass it to the CALLBACK.
 To be used as a `make-process' sentinel, using args PROC and STRING."
-(let ((result (if (not buffer)
+  (let ((result (if (not buffer)
                     ""
-                      (set-buffer buffer)
-                      (buffer-string))))
+                  (set-buffer buffer)
+                  (buffer-string))))
     (when buffer (kill-buffer buffer))
     (if  (or (string-equal string "finished\n")
-         (string-match "give-token" (process-name proc))
-         (string-match "give-server" (process-name proc)))
+             (string-match "give-token" (process-name proc))
+             (string-match "give-server" (process-name proc)))
         (funcall callback result)
-      (if (learn-ocaml-yes-or-no learn-ocaml-warning-message)
-      (progn (switch-to-buffer-other-window "*learn-ocaml-log*")
-                 (goto-char (point-max))
-                 ;; Do this to cope with the addition of up-to 3 lines
-                 ;; (... Process upload-demo stderr finished)
-                 (recenter-top-bottom -3))
-    (when learn-ocaml-fail-noisely
-      (with-current-buffer (learn-ocaml-log-buffer)
-        ;; Remark: the log will contain earlier, unrelated info...
-        (let ((log (buffer-string)))
-          (error "Process errored.  Full log:\n%s" log))))))))
+      (progn (set-buffer (learn-ocaml-log-buffer))
+             (goto-char (point-max))
+             (let ((message
+                    (if (search-backward "[ERROR]" nil t 1)
+                        (buffer-substring (point) (point-max)) "")))
+               (cl-case (x-popup-dialog
+                         t `(,message
+                             ("Ok" . 1)
+                             ("Check full learn-ocaml-log" . 2)))
+                 (2 (switch-to-buffer-other-window "*learn-ocaml-log*")))))
+      (when learn-ocaml-fail-noisely
+        (with-current-buffer (learn-ocaml-log-buffer)
+          ;; Remark: the log will contain earlier, unrelated info...
+          (let ((log (buffer-string)))
+            (error "Process errored.  Full log:\n%s" log)))))))
 
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
   "Construct a shell command with `learn-ocaml-command-name' and options."
@@ -337,6 +357,11 @@ and secret as argument"
   (shell-command-to-string
    (concat
     (shell-quote-argument learn-ocaml-command-name) " init-server -s " server)))
+
+(defun learn-ocaml-client-exercise-score-cmd ()
+  "Run \"learn-ocaml-client exercise-score\"."
+   (json-read-from-string (shell-command-to-string
+  (concat (shell-quote-argument learn-ocaml-command-name) " exercise-score"))))
 
 
 (cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
@@ -671,13 +696,14 @@ Argument SECRET may be needed by the server."
   :format "%{%t%}"
   :sample-face 'learn-ocaml-header-hint-face)
 
-(defun learn-ocaml-print-exercise-info (indent tuple)
+(defun learn-ocaml-print-exercise-info (indent tuple json-progression)
   "Render an exercise item with leading INDENT from the data in TUPLE."
   (let* ((id (elt tuple 0))
          (exo (elt tuple 1))
          (title (assoc-default 'title exo) )
          (short_description (assoc-default 'short_description exo))
-         (stars (assoc-default 'stars exo)))
+         (stars (assoc-default 'stars exo))
+         (progression (learn-ocaml-get-progression-by-id id json-progression)))
     (widget-insert "\n")
     (widget-insert indent)
     (widget-create 'learn-ocaml-exercise-title
@@ -688,7 +714,8 @@ Argument SECRET may be needed by the server."
     (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-insert (concat "Difficulty: " (number-to-string stars) "/4"
-                   "    id: " id))
+                           "      progression: "
+                           progression "    id: " id ))
     (widget-insert "\n")
     (widget-insert (concat indent " "))
     (widget-create 'learn-ocaml-button
@@ -714,7 +741,8 @@ Argument SECRET may be needed by the server."
 
 (defun learn-ocaml-print-groups (indent json)
   "Render an exercise group with leading INDENT from the data in JSON."
-  (let ((head (car json))
+  (let ((json-progression (learn-ocaml-client-exercise-score-cmd))
+        (head (car json))
         (queue (cdr json)))
     (if (eq 'groups head)
         (progn
@@ -730,7 +758,7 @@ Argument SECRET may be needed by the server."
            queue))
       (seq-do (lambda (elt)
                 (learn-ocaml-print-exercise-info
-                 (concat indent " ") elt))
+                 (concat indent " ") elt json-progression))
               queue)
       (widget-insert "\n"))))
 
@@ -840,32 +868,35 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
 
 (defun learn-ocaml-login-possibly-with-passwd (server callback)
   "Connect the user when learn-ocaml-use-passwd=true with a (login,passwd) or a token and continue with the CALLBACK"
-             (cl-case (x-popup-dialog
-                       t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
-                           ("Sign in" . 1)
-                           ("Sign up" . 2)
-                           ("Connect with an old token" . 3)))
-               (1 (let* ((login_password (learn-ocaml-sign-in))
-                         (login (nth 0 login_password))
-                         (password (nth 1 login_password))
-                         (message
-                          (learn-ocaml-client-sign-in-cmd server login password)))))
-               (2 (let* ((infos (learn-ocaml-sign-up))
-                         (login (nth 0 infos))
-                         (password (nth 1 infos))
-                         (nickname (nth 2 infos))
-                         (secret (nth 3 infos))
-                         (message (learn-ocaml-client-sign-up-cmd
-                                   server login password nickname (escape-secret secret))))
-                    (message-box message)
-                    (learn-ocaml-login-possibly-with-passwd server callback)))
-               (3 (let ((token (read-string "Enter token: ")))
-                    (learn-ocaml-use-metadata-cmd
-                     token
-                     nil
-                     (lambda (_)
-                       (message-box "Token saved."))))))
-             (funcall callback))
+  (cl-case (x-popup-dialog
+            t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
+                ("Sign in" . 1)
+                ("Sign up" . 2)
+                ("Connect with an old token" . 3)))
+    (1 (let* ((login_password (learn-ocaml-sign-in))
+              (login (nth 0 login_password))
+              (password (nth 1 login_password))
+              (message
+               (learn-ocaml-client-sign-in-cmd server login password)))
+         (if (string= (seq-subseq message 0 7) "[ERROR]")
+             (progn (message-box (seq-subseq message 46 100))
+                    (learn-ocaml-login-possibly-with-passwd server callback)))))
+    (2 (let* ((infos (learn-ocaml-sign-up))
+              (login (nth 0 infos))
+              (password (nth 1 infos))
+              (nickname (nth 2 infos))
+              (secret (nth 3 infos))
+              (message (learn-ocaml-client-sign-up-cmd
+                        server login password nickname (escape-secret secret))))
+         (message-box message)
+         (learn-ocaml-login-possibly-with-passwd server callback)))
+    (3 (let ((token (read-string "Enter token: ")))
+         (learn-ocaml-use-metadata-cmd
+          token
+          nil
+          (lambda (_)
+            (message-box "Token saved."))))))
+  (funcall callback))
 
 (defun learn-ocaml-sign-in ()
   "Ask interactively the login and the password to the user to sign in"
@@ -936,6 +967,16 @@ If TOKEN is \"\", interactively ask a token."
                        (learn-ocaml-login-with-token token new-server-value callback)))
             (learn-ocaml-login-with-token token new-server-value callback)))))))))
 
+(defun learn-ocaml-logout ()
+  "Logout the user from the server by deleting the config file client.json"
+  (interactive)
+  (shell-command-to-string
+   (concat (shell-quote-argument learn-ocaml-command-name)
+           " logout"))
+  (progn (message-box "You have been successfully disconnected")
+         (learn-ocaml-global-disable-mode)
+         (close-all-buffers)))
+
 ;;
 ;; menu definition
 ;;
@@ -948,6 +989,13 @@ If TOKEN is \"\", interactively ask a token."
     (define-key map [menu-bar] nil)
     map))
 
+(defvar learn-ocaml-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-m C-l") #'learn-ocaml-display-exercise-list)
+    (define-key map (kbd "C-c C-m l") #'learn-ocaml-display-exercise-list)
+    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade)
+    (define-key map [menu-bar] nil)
+    map))
 (easy-menu-define learn-ocaml-mode-menu
   learn-ocaml-mode-map
   "LearnOCaml Mode Menu."
@@ -972,11 +1020,11 @@ If TOKEN is \"\", interactively ask a token."
     ["Show exercise list" learn-ocaml-display-exercise-list]
     ["Download template" learn-ocaml-download-template]
     ["Download server version" learn-ocaml-download-server-file]
-    ["Grade" learn-ocaml-grade]))
+    ["Grade" learn-ocaml-grade]
+    ["Logout" learn-ocaml-logout]))
 ;;
 ;; id management
 ;;
-
 
 (defun learn-ocaml-compute-exercise-id ()
   "Store the exercise id of current buffer in `learn-ocaml-exercise-id'."
