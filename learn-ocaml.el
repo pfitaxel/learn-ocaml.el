@@ -60,7 +60,7 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
-(defvar learn-ocaml-use-pswd nil)
+(defvar learn-ocaml-use-passwd nil)
 
 (defvar learn-ocaml-log-buffer nil)
 
@@ -180,12 +180,12 @@ Function added in the `kill-emacs-query-functions' hook."
   t)
 
 (defun learn-ocaml-server-config (json)
-  "Set the global variable learn-ocaml-use-pswd according
+  "Set the global variable learn-ocaml-use-passwd according
 to the boolean contained in the json returned by the client"
   (if (eql (cdr (assoc 'use_passwd (json-read-from-string json)))
-         :json-false)
-    (setq learn-ocaml-use-pswd nil)
-  (setq learn-ocaml-use-pswd t)))
+         t)
+    (setq learn-ocaml-use-passwd t)
+  (setq learn-ocaml-use-passwd nil)))
 
 ;;
 ;; package.el shortcut
@@ -599,7 +599,7 @@ Argument SECRET may be needed by the server."
               (learn-ocaml-show-metadata))))))))
 
 (defun learn-ocaml-download-server-file (id &optional directory)
-con "Download the last saved code for exercise ID in DIRECTORY."
+  "Download the last saved code for exercise ID in DIRECTORY."
   (interactive `(,(let ((input (read-string (concat
                                              "Enter the id of the exercise (default "
                                              learn-ocaml-exercise-id
@@ -794,7 +794,7 @@ con "Download the last saved code for exercise ID in DIRECTORY."
 Otherwise, call `learn-ocaml-create-token-cmd' if NEW-TOKEN-VALUE is nil.
 Otherwise, call `learn-ocaml-use-metadata-cmd'.
 Finally, run the CALLBACK.
-Note: this function will be used by `learn-ocaml-on-load-aux'."
+Note: this function will be used by `learn-ocaml-login-with-token'."
   (if new-server-value
       ;; without config file
       (learn-ocaml-init-cmd
@@ -838,8 +838,8 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
 
 
 
-(defun learn-ocaml-connection (server callback)
-  "Connect the user with a (login,passwd) or a token and continue with the callback"
+(defun learn-ocaml-login-possibly-with-passwd (server callback)
+  "Connect the user when learn-ocaml-use-passwd=true with a (login,passwd) or a token and continue with the CALLBACK"
              (cl-case (x-popup-dialog
                        t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
                            ("Sign in" . 1)
@@ -858,7 +858,7 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
                          (message (learn-ocaml-client-sign-up-cmd
                                    server login password nickname (escape-secret secret))))
                     (message-box message)
-                    (learn-ocaml-connection server callback)))
+                    (learn-ocaml-login-possibly-with-passwd server callback)))
                (3 (let ((token (read-string "Enter token: ")))
                     (learn-ocaml-use-metadata-cmd
                      token
@@ -883,7 +883,7 @@ Note: this function will be used by `learn-ocaml-on-load-aux'."
     (setq pswd-conf (read-passwd "Enter password confirmation: ")))
   (list login pswd nickname secret)))
 
-(defun learn-ocaml-on-load-aux (token new-server-value callback)
+(defun learn-ocaml-login-with-token (token new-server-value callback)
   "At load time: ensure a TOKEN and SERVER are set, then run CALLBACK.
 If TOKEN is \"\", interactively ask a token."
    (let* ((rich-callback (lambda (_)
@@ -917,7 +917,7 @@ If TOKEN is \"\", interactively ask a token."
 
 
 (defun learn-ocaml-on-load (callback)
-  "Call `learn-ocaml-on-load-aux' and CALLBACK when loading mode."
+  "Call `learn-ocaml-login-with-token' and CALLBACK when loading mode."
   (learn-ocaml-give-server-cmd
    (lambda (server)
      (learn-ocaml-give-token-cmd
@@ -931,10 +931,10 @@ If TOKEN is \"\", interactively ask a token."
           (if (version-list-<=
                (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
               (progn (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
-                     (if learn-ocaml-use-pswd
-                         (learn-ocaml-connection new-server-value callback)
-                       (learn-ocaml-on-load-aux token new-server-value callback)))
-            (learn-ocaml-on-load-aux token new-server-value callback)))))))))
+                     (if learn-ocaml-use-passwd
+                         (learn-ocaml-login-possibly-with-passwd new-server-value callback)
+                       (learn-ocaml-login-with-token token new-server-value callback)))
+            (learn-ocaml-login-with-token token new-server-value callback)))))))))
 
 ;;
 ;; menu definition
