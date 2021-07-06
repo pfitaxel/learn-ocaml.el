@@ -317,6 +317,34 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
           (let ((log (buffer-string)))
             (error "Process errored.  Full log:\n%s" log)))))))
 
+(defun learn-ocaml-error-handler-sign-in (buffer callback-ok callback-err proc string)
+  "Get text from BUFFER and pass it to the CALLBACK.
+To be used as a `make-process' sentinel, using args PROC and STRING."
+  (let ((result (if (not buffer)
+                    ""
+                  (set-buffer buffer)
+                  (buffer-string))))
+    (when buffer (kill-buffer buffer))
+    (if  (or (string-equal string "finished\n"))
+               (funcall callback-ok)
+      (progn (set-buffer (learn-ocaml-log-buffer))
+             (insert result)
+             (funcall callback-err result)))))
+
+(defun learn-ocaml-error-handler-sign-up (buffer callback-ok callback-err proc string)
+  "Get text from BUFFER and pass it to the CALLBACK.
+To be used as a `make-process' sentinel, using args PROC and STRING."
+  (let ((result (if (not buffer)
+                    ""
+                  (set-buffer buffer)
+                  (buffer-string))))
+    (when buffer (kill-buffer buffer))
+    (if  (or (string-equal string "finished\n"))
+               (funcall callback-ok result)
+      (progn (set-buffer (learn-ocaml-log-buffer))
+             (insert result)
+             (funcall callback-err result)))))
+
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
   "Construct a shell command with `learn-ocaml-command-name' and options."
   (let* ((server-option (when server (concat "--server=" server)))
@@ -330,8 +358,8 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 
 (cl-defun learn-ocaml-init-user-command-constructor (&key server login password nickname secret)
   "Construct a shell command with `learn-ocaml-command-name' and options."
-  (let* ((nickname-option (when nickname (concat " " nickname)))
-         (secret-option (when secret (concat " " secret)))
+  (let* ((nickname-option (when nickname nickname))
+         (secret-option (when secret secret))
          (server-option (when server (concat "--server=" server)))
          (list (list learn-ocaml-command-name "init-user" server-option login password nickname-option secret-option)))
     (cl-remove-if-not 'stringp list)))
@@ -341,35 +369,39 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
   (string-trim (shell-command-to-string
                 (concat (shell-quote-argument learn-ocaml-command-name) " --version"))))
 
-(cl-defun learn-ocaml-sign-in-cmd (&key server login password)
+(cl-defun learn-ocaml-client-sign-in-cmd (&key server login password callback-ok callback-err)
   "Run \"learn-ocaml-client init-user\" with server login password to sign-in an user."
   (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "init-user"
-   :command (learn-ocaml-init-user-command-constructor :server server
-                                           :login login
-                                           :password password)
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              (lambda(_)))))
+  (let ((buffer (generate-new-buffer "sign-in-std-out")))
+    (learn-ocaml-make-process-wrapper
+     :name "init-user"
+     :command (learn-ocaml-init-user-command-constructor :server server
+                                                         :login login
+                                                         :password password)
+     :buffer buffer
+     :sentinel (apply-partially
+                       #'learn-ocaml-error-handler-sign-in
+                       buffer
+                       callback-ok
+                       callback-err))))
 
-(cl-defun learn-ocaml-sign-up-cmd (&key server login password nickname secret)
+(cl-defun learn-ocaml-client-sign-up-cmd (&key server login password nickname secret callback-ok callback-err)
   "Run \"learn-ocaml-client init-user\" with server login password nickname and secret to sign-up an user."
   (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "init-user"
-   :command (learn-ocaml-init-user-command-constructor :server server
-                                           :login login
-                                           :password password
-                                           :nickname nickname
-                                           :secret secret)
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              (lambda(_)))))
+  (let ((buffer (generate-new-buffer "sign-up-std-out")))
+    (learn-ocaml-make-process-wrapper
+     :name "init-user"
+     :command (learn-ocaml-init-user-command-constructor :server server
+                                                         :login login
+                                                         :password password
+                                                         :nickname nickname
+                                                         :secret secret)
+     :buffer buffer
+     :sentinel (apply-partially
+                #'learn-ocaml-error-handler-sign-up
+                buffer
+                callback-ok
+                callback-err))))
 
 (defun learn-ocaml-client-config-cmd ()
   "Run \"learn-ocaml-client server-config\"."
@@ -891,7 +923,7 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
 
 
 (defun learn-ocaml-login-possibly-with-passwd (server callback)
-  "Connect the user when learn-ocaml-use-passwd=true with a (login,passwd) or a token and continue with the CALLBACK"
+  "Connect the user when learn-ocaml-use-passwd=true with a (login,passwd) or a token and continue with the CALLBACK."
   (cl-case (x-popup-dialog
             t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
                 ("Sign in" . 1)
@@ -899,28 +931,38 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
                 ("Connect with an old token" . 3)))
     (1 (let* ((login_password (learn-ocaml-sign-in))
               (login (nth 0 login_password))
-              (password (nth 1 login_password))
-              (message
-               (learn-ocaml-client-sign-in-cmd server login password)))
-         (if (string= (seq-subseq message 0 7) "[ERROR]")
-             (progn (message-box (seq-subseq message 46 100))
-                    (learn-ocaml-login-possibly-with-passwd server callback)))))
+              (password (nth 1 login_password)))
+         (learn-ocaml-client-sign-in-cmd
+          :server server
+          :login login
+          :password password
+          :callback-ok callback
+          :callback-err (lambda(s)
+                          (message-box s)
+                          (learn-ocaml-login-possibly-with-passwd server callback)))))
     (2 (let* ((infos (learn-ocaml-sign-up))
               (login (nth 0 infos))
               (password (nth 1 infos))
               (nickname (nth 2 infos))
-              (secret (nth 3 infos))
-              (message (learn-ocaml-client-sign-up-cmd
-                        server login password nickname (escape-secret secret))))
-         (message-box message)
-         (learn-ocaml-login-possibly-with-passwd server callback)))
+              (secret (nth 3 infos)))
+         (learn-ocaml-client-sign-up-cmd
+          :server server
+          :login login
+          :password password
+          :nickname nickname
+          :secret secret
+          :callback-ok (lambda(s)
+                          (message-box s)
+                          (learn-ocaml-login-possibly-with-passwd server callback))
+          :callback-err (lambda(s)
+                          (message-box s)
+                          (learn-ocaml-login-possibly-with-passwd server callback)))))
     (3 (let ((token (read-string "Enter token: ")))
          (learn-ocaml-use-metadata-cmd
           token
           nil
           (lambda (_)
-            (message-box "Token saved."))))))
-  (funcall callback))
+            (message-box "Token saved.")))))))
 
 (defun learn-ocaml-sign-in ()
   "Ask interactively the login and the password to the user to sign in"
