@@ -933,7 +933,7 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
 (defun learn-ocaml-login-possibly-with-passwd (server callback)
   "Connect the user when learn-ocaml-use-passwd=true with a (login,passwd) or a token and continue with the CALLBACK."
   (cl-case (x-popup-dialog
-            t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you to do?\n"
+            t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you want to do?\n"
                 ("Sign in" . 1)
                 ("Sign up" . 2)
                 ("Connect with an old token" . 3)))
