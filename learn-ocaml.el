@@ -1044,11 +1044,22 @@ If TOKEN is \"\", interactively ask a token."
             (learn-ocaml-login-with-token token new-server-value callback)))))))))))
 
 (defun learn-ocaml-logout ()
-  "Logout the user from the server by deleting the config file client.json"
+  "Logout the user from the server by removing the token from the file client.json"
   (interactive)
   (shell-command-to-string
    (concat (shell-quote-argument learn-ocaml-command-name)
            " logout"))
+  (progn (message-box "You have been successfully disconnected")
+         (learn-ocaml-global-disable-mode)
+         (close-all-buffers)))
+
+
+(defun learn-ocaml-deinit ()
+  "Logout the user and forget the server by removing the file client.json"
+  (interactive)
+  (shell-command-to-string
+   (concat (shell-quote-argument learn-ocaml-command-name)
+           " deinit"))
   (progn (message-box "You have been successfully disconnected")
          (learn-ocaml-global-disable-mode)
          (close-all-buffers)))
@@ -1097,7 +1108,9 @@ If TOKEN is \"\", interactively ask a token."
     ["Download template" learn-ocaml-download-template]
     ["Download server version" learn-ocaml-download-server-file]
     ["Grade" learn-ocaml-grade]
-    ["Logout" learn-ocaml-logout]))
+    "---"
+    ["Logout" learn-ocaml-logout]
+    ["Logout & Forget server" learn-ocaml-deinit]))
 ;;
 ;; id management
 ;;
