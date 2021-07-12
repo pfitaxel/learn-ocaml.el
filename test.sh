@@ -39,6 +39,12 @@ EMACS_NAME="emacs-client"
 run_server () {
     local oldopt="$(set +o)"; set -x
     # Run the server in background
+    if [ "$USE_PASSWD" = "true" ]; then
+        cp -f "$PWD/tests/use_passwd.json" "$PWD/tests/repo/server_config.json"
+    else
+        rm -f "$PWD/tests/repo/server_config.json"
+    fi
+    # Add -e "LEARNOCAML_BASE_URL=$LEARNOCAML_BASE_URL"?
     sudo docker run -d --rm --name="$SERVER_NAME" \
       -v "$PWD/tests/repo:/repository" \
       "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
@@ -118,10 +124,20 @@ echo
 
 assert "learn-ocaml-client --version"
 
+if [ "$USE_PASSWD" = "true" ]; then
+    # TODO: Refactor this to run the init command from ERT's fixture
+    init='learn-ocaml-client init-user -s http://localhost:8080 foo@example.com OCaml123_ Foo ""'
+    selector=""
+else
+    init='learn-ocaml-client init --server=http://localhost:8080 Foo ""'
+    selector="learn-ocaml-test-skip-use-passwd"
+fi
+
 assert "
 cd /build/tests
-learn-ocaml-client init --server=http://localhost:8080 test test
-emacs --batch -l ert -l init-tests.el -l /build/learn-ocaml.el -l learn-ocaml-tests.el -f ert-run-tests-batch-and-exit
+$init
+emacs --batch -l ert -l init-tests.el -l /build/learn-ocaml.el \
+  -l learn-ocaml-tests.el --eval '(ert-run-tests-batch-and-exit $selector)'
 "
 
 stop_emacs

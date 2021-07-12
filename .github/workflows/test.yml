@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - learnocaml_image: "ocamlsf/learn-ocaml"
+            learnocaml_version: "0.12"
+            use_passwd: "false"
+          - learnocaml_image: "pfitaxel/learn-ocaml"
+            learnocaml_version: "oauth-moodle-dev"
+            use_passwd: "false"
+          - learnocaml_image: "pfitaxel/learn-ocaml"
+            learnocaml_version: "oauth-moodle-dev"
+            use_passwd: "true"
+      # at most 20 concurrent jobs per free account:
+      max-parallel: 4
+      # don't cancel all in-progress jobs if one matrix job fails:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Script
+        env:
+          EMACS_IMAGE: "pfitaxel/emacs-learn-ocaml-client"
+          LEARNOCAML_IMAGE: ${{ matrix.learnocaml_image }}
+          LEARNOCAML_VERSION: ${{ matrix.learnocaml_version }}
+          USE_PASSWD: ${{ matrix.use_passwd }}
+        run: |
+          docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
+          docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
+          ./test.sh

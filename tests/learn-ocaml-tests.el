@@ -26,6 +26,12 @@
 (require 'ert-async)
 ;(setq ert-async-timeout 2)
 
+;; NOTE: This symbol list gather tests specific to 'use_passwd: true'
+(setq learn-ocaml-test-use-passwd-list
+      '(a12_learn-ocaml-test-sign-up  2_learn-ocaml-token-management-test))
+
+(setq learn-ocaml-test-skip-use-passwd
+      `(not (member ,@learn-ocaml-test-use-passwd-list)))
 
 ;; WARNING: several tests delete the ./demo.ml and client.json files:
 (setq learn-ocaml-test-client-file "~/.config/learnocaml/client.json")
@@ -67,97 +73,97 @@
 
 (ert-deftest-async 1_learn-ocaml-server-management-test (done)
   (let ((tests (lambda (callback)
-		 (learn-ocaml-use-metadata-cmd
-		  nil
-		  learn-ocaml-test-url
-		  (lambda (_)
-		    (learn-ocaml-give-server-cmd
-		   (lambda (given-server)
-		     (should (string-equal
-			      learn-ocaml-test-url
-			      given-server))
-		     (funcall callback))))))))
+         (learn-ocaml-use-metadata-cmd
+          nil
+          learn-ocaml-test-url
+          (lambda (_)
+            (learn-ocaml-give-server-cmd
+           (lambda (given-server)
+             (should (string-equal
+                  learn-ocaml-test-url
+                  given-server))
+             (funcall callback))))))))
     (funcall tests done)))
 
 (ert-deftest-async 2_learn-ocaml-token-management-test (done)
   (let ((tests (lambda (callback)
-		 (learn-ocaml-create-token-cmd
-		  "test"
-		  "test"
-		  (lambda (token)
-		    (learn-ocaml-use-metadata-cmd
-		     token
-		     nil
-		     (lambda (_)
-		       (learn-ocaml-give-token-cmd
-			(lambda (given_token)
-			  (should
-			   (string-equal
-			    given_token
-			    token ))
-		       (funcall callback))))))))))
+         (learn-ocaml-create-token-cmd
+          "test"
+          "test"
+          (lambda (token)
+            (learn-ocaml-use-metadata-cmd
+             token
+             nil
+             (lambda (_)
+               (learn-ocaml-give-token-cmd
+            (lambda (given_token)
+              (should
+               (string-equal
+                given_token
+                token ))
+               (funcall callback))))))))))
     (funcall tests done)))
 
 
 (ert-deftest-async 3_learn-ocaml-grade-test (done)
   (learn-ocaml-test-remove-temp-file "demo")
   (let ((test (lambda(callback)
-		(learn-ocaml-grade-file-cmd
-		 :id "demo"
-		 :file learn-ocaml-test-tograde-file
-		 :callback (lambda (_)
-			     (should (= (shell-command
-					 (concat
-					  "cat "
-					  (learn-ocaml-temp-html-file "demo")
-					  " | grep \"Exercise complete\"")
-					 )
-					0))
+        (learn-ocaml-grade-file-cmd
+         :id "demo"
+         :file learn-ocaml-test-tograde-file
+         :callback (lambda (_)
+                 (should (= (shell-command
+                     (concat
+                      "cat "
+                      (learn-ocaml-temp-html-file "demo")
+                      " | grep \"Exercise complete\"")
+                     )
+                    0))
                              (learn-ocaml-test-remove-temp-file "demo")
-			     (funcall callback))))))
+                 (funcall callback))))))
     (funcall test done)))
 
 (ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda(callback)
-		(learn-ocaml-download-server-file-cmd
+        (learn-ocaml-download-server-file-cmd
                  :id "demo"
                  :directory learn-ocaml-fixture-directory
-		 :callback (lambda (s)
-			     (should (= 0 (shell-command
-					   (concat "cat "
+         :callback (lambda (s)
+                 (should (= 0 (shell-command
+                       (concat "cat "
                                                    learn-ocaml-test-demo-file))))
-			     (learn-ocaml-test-remove-demo-file t)
-			     (funcall callback))))))
+                 (learn-ocaml-test-remove-demo-file t)
+                 (funcall callback))))))
     (funcall test done)))
 
 (ert-deftest-async 5_learn-ocaml-download-template-test (done)
   (learn-ocaml-test-remove-demo-file)
   (let ((test (lambda (callback)
- 		(learn-ocaml-download-template-cmd
- 		 :id "demo"
+         (learn-ocaml-download-template-cmd
+          :id "demo"
                  :directory learn-ocaml-fixture-directory
- 		 :callback (lambda (s)
- 			     (should
- 			      (= 0 (shell-command
-				    (concat "diff "
-					    learn-ocaml-test-demo-file
-					    " "
+          :callback (lambda (s)
+                  (should
+                   (= 0 (shell-command
+                    (concat "diff "
+                        learn-ocaml-test-demo-file
+                        " "
                                             learn-ocaml-test-template-file))))
-			     (learn-ocaml-test-remove-demo-file t)
- 			     (funcall callback))))))
+                 (learn-ocaml-test-remove-demo-file t)
+                  (funcall callback))))))
     (funcall test done)))
 
-  
+
 (ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)
   (let ((test (lambda (callback)
-		(with-temp-buffer
-		  (insert-file-contents learn-ocaml-test-json-file)
-		  (let ((expected (json-read-from-string (buffer-string))))
-		  (learn-ocaml-give-exercise-list-cmd
-		   (lambda (json)
-		     (should (equal json expected))
-		     (funcall callback))))))))
+        (with-temp-buffer
+          (insert-file-contents learn-ocaml-test-json-file)
+          (let ((expected (json-read-from-string (buffer-string))))
+          (learn-ocaml-give-exercise-list-cmd
+           (lambda (json)
+             (should (equal json expected))
+             (funcall callback))))))))
   (funcall test done)))
 
 
@@ -186,11 +192,10 @@
       :new-server-value nil
       :new-token-value token
       :callback (lambda (_)
-		  (learn-ocaml-give-token-cmd
-		   (lambda (token2)
-		     (should (equal token token2))
-		     (funcall done))))))))
-   
+          (learn-ocaml-give-token-cmd
+           (lambda (token2)
+             (should (equal token token2))
+             (funcall done))))))))
 
 (ert-deftest-async 9_learn-ocaml-init-create-token (done)
   (learn-ocaml-give-token-cmd
@@ -200,11 +205,11 @@
       :nickname "test"
       :secret "test"
       :callback (lambda (_)
-		  (learn-ocaml-give-token-cmd
-		   (lambda (token2)
-		     (should-not (equal previous-token token2))
-		     (funcall done))))))))
-  
+          (learn-ocaml-give-token-cmd
+           (lambda (token2)
+             (should-not (equal previous-token token2))
+             (funcall done))))))))
+
 ;; tests without the config file
 
 (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
@@ -215,29 +220,38 @@
       :new-server-value learn-ocaml-test-url
       :new-token-value token
       :callback (lambda (_)
-		  (learn-ocaml-give-token-cmd
-		   (lambda (token2)
-		     (should (equal token token2))
+          (learn-ocaml-give-token-cmd
+           (lambda (token2)
+             (should (equal token token2))
                      ; (learn-ocaml-test-remove-client-file)
-		     (funcall done))))))))
-     
-(ert-deftest-async a111_learn-ocaml-on-load-test-create-token-no-config (done)
+             (funcall done))))))))
+
+(ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
   (learn-ocaml-test-remove-client-file)
   (learn-ocaml-init
       :new-server-value learn-ocaml-test-url
       :nickname "test"
       :secret "test"
       :callback (lambda (_)
-		  (learn-ocaml-give-token-cmd
-		   (lambda (token2)
+          (learn-ocaml-give-token-cmd
+           (lambda (token2)
                      ; (learn-ocaml-test-remove-client-file)
-		     (funcall done))))))
+             (funcall done))))))
+
+(ert-deftest-async a12_learn-ocaml-test-sign-up (done)
+ (learn-ocaml-client-init-server-cmd learn-ocaml-test-url)
+ (let* ((result (learn-ocaml-client-sign-up-cmd
+                 learn-ocaml-test-url "ErtTest@example.com" "Ocaml123*" "Test"
+                 (escape-secret ""))))
+          (should (string-equal "A confirmation e-mail has been sent to your address.\nPlease go to your mailbox to finish creating your account,\n then you will be able to sign in.\n"
+                                result)))
+ (funcall done))
 
 ;; misc tests
 
 (setq example-file shell-file-name) ; just to get a filename example
 
-(ert-deftest a12_learn-ocaml-file-path ()
+(ert-deftest a13_learn-ocaml-file-path ()
   (let* ((path example-file)
          (dir (file-name-directory path))
          (file (file-name-nondirectory path)))
