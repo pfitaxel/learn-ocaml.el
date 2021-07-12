@@ -198,8 +198,8 @@ Function added in the `kill-emacs-query-functions' hook."
 (defun learn-ocaml-server-config (json)
   "Set the global variable learn-ocaml-use-passwd according
 to the boolean contained in the json returned by the client"
-  (if (eql (cdr (assoc 'use_passwd (json-read-from-string json)))
-         t)
+  (if (string= (cdr (assoc 'use_passwd (json-read-from-string json)))
+         "true")
     (setq learn-ocaml-use-passwd t)
   (setq learn-ocaml-use-passwd nil)))
 
@@ -543,6 +543,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
                 (lambda (s)
                   (funcall-interactively
                    callback
+
                    (learn-ocaml--rstrip s)))))))
 
 (defun learn-ocaml-use-metadata-cmd (token server callback)
