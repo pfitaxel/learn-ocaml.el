@@ -287,7 +287,28 @@ add \"opam var bin\" (or another directory) in `exec-path'."
           (apply #'learn-ocaml-make-process-wrapper args) ; this could be a loop
         nil))))
 
+;;
+;; Higher-order functions, sentinels of the make-process wrapper
+;;
+;; NOTE: if we want to get stdout+stderr output in one go, we need to
+;; omit the :stderr argument of make-process.  Otherwise, to get the
+;; streams apart (e.g., for grade), the :stderr arg must be specified.
 
+;; FIXME: Move this docstring?
+;; Summary of the workflow for sign-up/sign-in
+;; - Choice (Sign-up/Login ?)
+;; - Sign-up:
+;;   - Ask login, password, nickname, secret
+;;   - learn-ocaml-client init-user
+;;   - message-box stdout+stderr (e-mail sent)
+;;   - GoTo Choice
+;; - Login:
+;;   - Ask login, password (TODO Check that OK if C-g)
+;;   - learn-ocaml-client init-user
+;;   - if exit code 0: callback “open exo list?”
+;;   - if exit code >0:
+;;     - message-box stdout+stderr (which will contain ERROR)
+;;     - GoTo Login
 
 (defun learn-ocaml-error-handler (buffer callback proc string)
   "Get text from BUFFER and pass it to the CALLBACK.
@@ -317,22 +338,8 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
           (let ((log (buffer-string)))
             (error "Process errored.  Full log:\n%s" log)))))))
 
-(defun learn-ocaml-error-handler-sign-in (buffer callback-ok callback-err proc string)
-  "Get text from BUFFER and pass it to the CALLBACK.
-To be used as a `make-process' sentinel, using args PROC and STRING."
-  (let ((result (if (not buffer)
-                    ""
-                  (set-buffer buffer)
-                  (buffer-string))))
-    (when buffer (kill-buffer buffer))
-    (if  (or (string-equal string "finished\n"))
-               (funcall callback-ok)
-      (progn (set-buffer (learn-ocaml-log-buffer))
-             (insert result)
-             (funcall callback-err result)))))
-
-(defun learn-ocaml-error-handler-sign-up (buffer callback-ok callback-err proc string)
-  "Get text from BUFFER and pass it to the CALLBACK.
+(defun learn-ocaml-error-handler-nosplit-catch (buffer callback-ok callback-err proc string)
+  "Get text from BUFFER, pass it to CALLBACK-OK ($?=0) or CALLBACK-ERR.
 To be used as a `make-process' sentinel, using args PROC and STRING."
   (let ((result (if (not buffer)
                     ""
@@ -344,6 +351,10 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
       (progn (set-buffer (learn-ocaml-log-buffer))
              (insert result)
              (funcall callback-err result)))))
+
+;;
+;; CLI constructors
+;;
 
 (cl-defun learn-ocaml-command-constructor (&key command token server local id html dont-submit param1 param2)
   "Construct a shell command with `learn-ocaml-command-name' and options."
@@ -380,7 +391,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
                                                          :password password)
      :buffer buffer
      :sentinel (apply-partially
-                       #'learn-ocaml-error-handler-sign-in
+                       #'learn-ocaml-error-handler-nosplit-catch
                        buffer
                        callback-ok
                        callback-err))))
@@ -398,7 +409,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
                                                          :secret secret)
      :buffer buffer
      :sentinel (apply-partially
-                #'learn-ocaml-error-handler-sign-up
+                #'learn-ocaml-error-handler-nosplit-catch
                 buffer
                 callback-ok
                 callback-err))))
@@ -932,7 +943,7 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
 
 
 (defun learn-ocaml-login-possibly-with-passwd (server callback)
-  "Connect the user when learn-ocaml-use-passwd=true with an (email,passwd) or a token and continue with the CALLBACK."
+  "Connect the user when learn-ocaml-use-passwd=true with an (email,passwd) or a token and continue with the no-arg CALLBACK."
   (cl-case (x-popup-dialog
             t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you want to do?\n"
                 ("Login" . 1)
@@ -945,7 +956,8 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
           :server server
           :login login
           :password password
-          :callback-ok callback
+          :callback-ok (lambda(_)
+                         (funcall callback))
           :callback-err (lambda(s)
                           (message-box s)
                           (learn-ocaml-login-possibly-with-passwd server callback)))))
