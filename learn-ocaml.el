@@ -125,7 +125,7 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
 (defun learn-ocaml-get-progression-by-id (id json)
   (if (cdr (assoc (intern id) json))
       (concat (number-to-string (cdr (assoc (intern id) json))) "%")
-    "NA"))
+    "N/A"))
 
 (defun learn-ocaml-print-time-stamp ()
   "Insert date/time in the buffer given by function `learn-ocaml-log-buffer'."
@@ -370,7 +370,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
                 (concat (shell-quote-argument learn-ocaml-command-name) " --version"))))
 
 (cl-defun learn-ocaml-client-sign-in-cmd (&key server login password callback-ok callback-err)
-  "Run \"learn-ocaml-client init-user\" with server login password to sign-in an user."
+  "Run \"learn-ocaml-client init-user\" with SERVER LOGIN PASSWORD to login an user."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "sign-in-std-out")))
     (learn-ocaml-make-process-wrapper
@@ -386,7 +386,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
                        callback-err))))
 
 (cl-defun learn-ocaml-client-sign-up-cmd (&key server login password nickname secret callback-ok callback-err)
-  "Run \"learn-ocaml-client init-user\" with server login password nickname and secret to sign-up an user."
+  "Run \"learn-ocaml-client init-user\" with SERVER LOGIN PASSWORD NICKNAME and SECRET to sign-up an user."
   (learn-ocaml-print-time-stamp)
   (let ((buffer (generate-new-buffer "sign-up-std-out")))
     (learn-ocaml-make-process-wrapper
@@ -932,12 +932,12 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
 
 
 (defun learn-ocaml-login-possibly-with-passwd (server callback)
-  "Connect the user when learn-ocaml-use-passwd=true with a (login,passwd) or a token and continue with the CALLBACK."
+  "Connect the user when learn-ocaml-use-passwd=true with an (email,passwd) or a token and continue with the CALLBACK."
   (cl-case (x-popup-dialog
             t `("Welcome to Learn OCaml mode for Emacs.\nWhat do you want to do?\n"
-                ("Sign in" . 1)
-                ("Sign up" . 2)
-                ("Connect with an old token" . 3)))
+                ("Login" . 1)
+                ("Sign-up" . 2)
+                ("Login with a legacy token" . 3)))
     (1 (let* ((login_password (learn-ocaml-sign-in))
               (login (nth 0 login_password))
               (password (nth 1 login_password)))
@@ -974,12 +974,12 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
             (message-box "Token saved.")))))))
 
 (defun learn-ocaml-sign-in ()
-  "Ask interactively the login and the password to the user to sign in"
-  (list (read-string "Enter login: ") (read-passwd "Enter password: ")))
+  "Ask interactively the e-mail and the password for the user to login"
+  (list (read-string "Enter e-mail: ") (read-passwd "Enter password: ")))
 
 (defun learn-ocaml-sign-up ()
-  "Ask interactively the login, password(with confirmation), nickname, secret"
-  (let* ((login (read-string "Enter login: "))
+  "Ask interactively the e-mail,password(with confirmation),nickname,secret"
+  (let* ((login (read-string "Enter e-mail: "))
         (pswd (read-passwd "Enter password: "))
         (pswd-conf (read-passwd "Enter password confirmation: "))
         (nickname (read-string "Enter nickname: "))
