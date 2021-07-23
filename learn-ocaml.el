@@ -59,6 +59,8 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
+(defvar learn-ocaml-working-directory nil)
+
 (defvar learn-ocaml-log-buffer nil)
 
 (defun learn-ocaml-log-buffer ()
@@ -223,7 +225,16 @@ Call `learn-ocaml-display-exercise-list' if OPEN-EXO-LIST is non-nil."
                               default-directory
                               nil "")))
     (make-directory dir t)
-    (setq default-directory dir))
+    (setq default-directory dir)
+    (setq learn-ocaml-working-directory dir))
+  (write-region "B .learn-ocaml" nil
+                (learn-ocaml-file-path learn-ocaml-working-directory ".merlin"))
+  (when (file-exists-p (concat learn-ocaml-working-directory "/.ocamlinit"))
+    (copy-file
+     (concat learn-ocaml-working-directory "/.ocamlinit")
+     (concat learn-ocaml-working-directory "/.ocamlinit~") t))
+  (write-region "#load .learn-ocaml/Given_demo.cmo;;\nopen Given_demo;;" nil
+                (learn-ocaml-file-path learn-ocaml-working-directory ".ocamlinit"))
   (if open-exo-list (learn-ocaml-display-exercise-list)))
 
 (cl-defun learn-ocaml-make-process-wrapper (&rest args &key command &allow-other-keys)
