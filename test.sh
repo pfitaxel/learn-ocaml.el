@@ -16,13 +16,13 @@ red () {
 
 green "Beforehand: LEARNOCAML_VERSION=$LEARNOCAML_VERSION"
 # Default learn-ocaml version
-: ${LEARNOCAML_VERSION:=dev}
+: ${LEARNOCAML_VERSION:=oauth-moodle-dev}
 # Do "export LEARNOCAML_VERSION=…" before running test.sh to override
 green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\n"
 
 green "Beforehand: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE"
 # Default learn-ocaml image
-: ${LEARNOCAML_IMAGE:=ocamlsf/learn-ocaml}
+: ${LEARNOCAML_IMAGE:=pfitaxel/learn-ocaml}
 # Do "export LEARNOCAML_IMAGE=…" before running test.sh to override
 green "Henceforth: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE\n"
 
