@@ -121,10 +121,6 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
     (with-current-buffer buffer
       (funcall 'learn-ocaml-mode -1))))
 
-(defun close-all-buffers ()
-  (interactive)
-  (mapc 'kill-buffer (buffer-list)))
-
 (defun learn-ocaml-get-progression-by-id (id json)
   (if (cdr (assoc (intern id) json))
       (concat (number-to-string (cdr (assoc (intern id) json))) "%")
@@ -1139,8 +1135,7 @@ If TOKEN is \"\", interactively ask a token."
       (if (car result)
 	  (progn (message-box "You have been successfully disconnected\n\n%s"
                               (cdr result))
-		 (learn-ocaml-global-disable-mode)
-		 (close-all-buffers))
+                 (learn-ocaml-global-disable-mode))
         ;; FIXME: Use learn-ocaml-log-buffer
 	(error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
                (string-trim (cdr result))))))
@@ -1157,8 +1152,7 @@ If TOKEN is \"\", interactively ask a token."
       (if (car result)
 	  (progn (message-box "You have been successfully disconnected\n\n%s"
                               (cdr result))
-		 (learn-ocaml-global-disable-mode)
-		 (close-all-buffers))
+                 (learn-ocaml-global-disable-mode))
         ;; FIXME: Use learn-ocaml-log-buffer
 	(error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
                (string-trim (cdr result))))))
