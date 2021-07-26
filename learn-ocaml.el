@@ -378,6 +378,7 @@ Raise (error \"learn-ocaml-await-for...\") if `learn-ocaml-timeout' exceeded."
 ;;     - message-box stdout+stderr (which will contain ERROR)
 ;;     - GoTo Login
 
+;; FIXME: Add buffer-err argument, copied to (learn-ocaml-log-buffer)
 (defun learn-ocaml-error-handler (buffer callback proc string)
   "Get text from BUFFER and pass it to the CALLBACK.
 To be used as a `make-process' sentinel, using args PROC and STRING."
