@@ -6,12 +6,12 @@
 
 # Print $1 in green
 green () {
-    echo -e "\e[32m$1\e[0m"
+    echo -e "\\e[32m$1\\e[0m"
 }
 
 # Print $1 in red
 red () {
-    echo -e "\e[31m$1\e[0m"
+    echo -e "\\e[31m$1\\e[0m"
 }
 
 read_cid () {

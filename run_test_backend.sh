@@ -15,12 +15,12 @@ fcid="$PWD/learn-ocaml-server.pid"
 
 # Print $1 in green
 green () {
-    echo -e "\e[32m$1\e[0m"
+    echo -e "\\e[32m$1\\e[0m"
 }
 
 # Print $1 in red
 red () {
-    echo -e "\e[31m$1\e[0m"
+    echo -e "\\e[31m$1\\e[0m"
 }
 
 # Filter docker-logs
@@ -30,27 +30,27 @@ filter_confirm () {
 
 green "Beforehand: LEARNOCAML_VERSION=$LEARNOCAML_VERSION"
 # Default learn-ocaml version
-: ${LEARNOCAML_VERSION:=oauth-moodle-dev}
+: "${LEARNOCAML_VERSION:=oauth-moodle-dev}"
 # Do "export LEARNOCAML_VERSION=…" before running the script to override
-green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\n"
+green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\\n"
 
 green "Beforehand: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE"
 # Default learn-ocaml image
-: ${LEARNOCAML_IMAGE:=pfitaxel/learn-ocaml}
+: "${LEARNOCAML_IMAGE:=pfitaxel/learn-ocaml}"
 # Do "export LEARNOCAML_IMAGE=…" before running the script to override
-green "Henceforth: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE\n"
+green "Henceforth: LEARNOCAML_IMAGE=$LEARNOCAML_IMAGE\\n"
 
 green "Beforehand: LEARNOCAML_BASE_URL=$LEARNOCAML_BASE_URL"
 # Default emacs image
-: ${LEARNOCAML_BASE_URL:=http://localhost:8080}
+: "${LEARNOCAML_BASE_URL:=http://localhost:8080}"
 # Do "export LEARNOCAML_BASE_URL=…" before running the script to override
-green "Henceforth: LEARNOCAML_BASE_URL=$LEARNOCAML_BASE_URL\n"
+green "Henceforth: LEARNOCAML_BASE_URL=$LEARNOCAML_BASE_URL\\n"
 
 green "Beforehand: USE_PASSWD=$USE_PASSWD"
 # Default mode
-: ${USE_PASSWD:=false}
+: "${USE_PASSWD:=false}"
 # Do "export USE_PASSWD=…" before running the script to override
-green "Henceforth: USE_PASSWD=$USE_PASSWD\n"
+green "Henceforth: USE_PASSWD=$USE_PASSWD\\n"
 
 sudo docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
 
@@ -131,7 +131,7 @@ stop_server () {
 }
 
 run_server () {
-    local oldopt="$(set +o)"; set -x
+    local oldopt; oldopt="$(set +o)"; set -x
 
     if [ "$USE_PASSWD" = "true" ]; then
         cp -f "$PWD/tests/use_passwd.json" "$PWD/tests/repo/server_config.json"

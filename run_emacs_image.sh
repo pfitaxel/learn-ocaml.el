@@ -4,11 +4,6 @@
 # because it runs a container with $PWD as bind-mount, and relies on
 # both tests/learn-ocaml-tests.el and learn-ocaml.el
 
-# These files contain some useful/hidden info for ERT tests.
-confirm="$PWD/confirm.txt"
-teacher="$PWD/teacher.txt"
-# TODO Use them.
-
 # This file contains the Server Container ID (gen by ./run_test_backend.sh)
 fcid="$PWD/learn-ocaml-server.pid"
 # This file contains the Emacs Container ID (used by ./stop_emacs_image.sh)
@@ -16,25 +11,25 @@ feid="$PWD/learn-ocaml-emacs.pid"
 
 # Print $1 in green
 green () {
-    echo -e "\e[32m$1\e[0m"
+    echo -e "\\e[32m$1\\e[0m"
 }
 
 # Print $1 in red
 red () {
-    echo -e "\e[31m$1\e[0m"
+    echo -e "\\e[31m$1\\e[0m"
 }
 
 green "Beforehand: LEARNOCAML_VERSION=$LEARNOCAML_VERSION"
 # Default learn-ocaml version
-: ${LEARNOCAML_VERSION:=oauth-moodle-dev}
+: "${LEARNOCAML_VERSION:=oauth-moodle-dev}"
 # Do "export LEARNOCAML_VERSION=…" before running the script to override
-green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\n"
+green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\\n"
 
 green "Beforehand: EMACS_IMAGE=$EMACS_IMAGE"
 # Default emacs image
-: ${EMACS_IMAGE:=pfitaxel/emacs-learn-ocaml-client}
+: "${EMACS_IMAGE:=pfitaxel/emacs-learn-ocaml-client}"
 # Do "export EMACS_IMAGE=…" before running the script to override
-green "Henceforth: EMACS_IMAGE=$EMACS_IMAGE\n"
+green "Henceforth: EMACS_IMAGE=$EMACS_IMAGE\\n"
 
 sudo docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
 
@@ -65,7 +60,7 @@ stop_emacs () {
 }
 
 run_emacs () {
-    local oldopt="$(set +o)"; set -x
+    local oldopt; oldopt="$(set +o)"; set -x
 
     # Run the image in background
     sudo docker run -d -i --init --rm --name="$eid" \
