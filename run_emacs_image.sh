@@ -31,7 +31,15 @@ green "Beforehand: EMACS_IMAGE=$EMACS_IMAGE"
 # Do "export EMACS_IMAGE=…" before running the script to override
 green "Henceforth: EMACS_IMAGE=$EMACS_IMAGE\\n"
 
-sudo docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
+pull_ifneedbe () {
+    sudo docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
+    ret=$?
+
+    if [ "$ret" -ne 0 ]; then
+        red "PROBLEM, 'sudo docker pull $EMACS_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
+        exit $ret
+    fi
+}
 
 gen_emacs_cid () {
     if [ -f "$feid" ]; then
@@ -80,6 +88,7 @@ run_emacs () {
     fi
 }
 
+pull_ifneedbe
 read_cid
 gen_emacs_cid
 run_emacs

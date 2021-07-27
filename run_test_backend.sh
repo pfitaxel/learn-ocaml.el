@@ -52,7 +52,15 @@ green "Beforehand: USE_PASSWD=$USE_PASSWD"
 # Do "export USE_PASSWD=…" before running the script to override
 green "Henceforth: USE_PASSWD=$USE_PASSWD\\n"
 
-sudo docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
+pull_ifneedbe () {
+    sudo docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
+    ret=$?
+
+    if [ "$ret" -ne 0 ]; then
+        red "PROBLEM, 'sudo docker pull $LEARNOCAML_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
+        exit $ret
+    fi
+}
 
 ###############################################################################
 ### BACKUP OF OLD CODE ###
@@ -167,6 +175,7 @@ read_teacher () {
     echo
 }
 
+pull_ifneedbe
 gen_cid
 run_server
 read_teacher
