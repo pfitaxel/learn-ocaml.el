@@ -12,13 +12,18 @@ help:
 	@echo '$$ make elc    # byte-compile $(ELFILE)'
 	@echo '$$ make bump v=1.0.0  # Replace version strings with 1.0.0'
 	@echo ''
-	@echo 'The following three commands require sudo.'
+	@echo 'All the following commands require sudo.'
+	@echo ''
 	@echo '$$ make back   # Run a docker backend for interactive ERT tests'
+	@echo '$$ make back LEARNOCAML_IMAGE=ocamlsf/learn-ocaml LEARNOCAML_VERSION=0.12'
+	@echo ''
 	@echo '$$ make emacs  # Run a dockerized emacs for ERT tests'
 	@echo '$$ make tests  # Run dockerized ERT tests'
-	@echo '$$ make stop   # Stop the docker backend and/or ERT frontend'
+	@echo ''
 	@echo '$$ make dist-tests    # Alias-of: make back emacs tests'
 	@echo '$$ make dist-tests USE_PASSWD=true'
+	@echo ''
+	@echo '$$ make stop   # Stop the docker backend and/or ERT frontend'
 
 bump:
 	git diff -p --raw --exit-code || { echo >&2 "*** Please commit beforehand ***"; exit 1; }
