@@ -36,6 +36,8 @@ green "Beforehand: EMACS_IMAGE=$EMACS_IMAGE"
 # Do "export EMACS_IMAGE=…" before running the script to override
 green "Henceforth: EMACS_IMAGE=$EMACS_IMAGE\n"
 
+sudo docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
+
 gen_emacs_cid () {
     if [ -f "$feid" ]; then
         red >&2 "Error: file '$feid' already exists: container is running?"
@@ -58,7 +60,8 @@ stop_emacs () {
     green "Stopping emacs..."
     ( set -x && \
       rm -f "$feid" && \
-      sudo docker stop "$EMACS_NAME" )
+      sudo docker logs "$eid"; \
+      sudo docker stop "$eid" )
 }
 
 run_emacs () {

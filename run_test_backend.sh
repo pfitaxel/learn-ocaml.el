@@ -52,7 +52,7 @@ green "Beforehand: USE_PASSWD=$USE_PASSWD"
 # Do "export USE_PASSWD=…" before running the script to override
 green "Henceforth: USE_PASSWD=$USE_PASSWD\n"
 
-sudo docker pull pfitaxel/learn-ocaml:"$LEARNOCAML_VERSION"
+sudo docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
 
 ###############################################################################
 ### BACKUP OF OLD CODE ###
@@ -126,7 +126,7 @@ stop_server () {
     green "Stopping server..."
     ( set -x && \
       rm -f "$fcid" && \
-      # sudo docker logs "$cid"
+      sudo docker logs "$cid"; \
       sudo docker stop "$cid" )
 }
 
@@ -144,7 +144,7 @@ run_server () {
     sudo docker run --name="$cid" --rm -p 8080:8080 \
          -e LEARNOCAML_BASE_URL="$LEARNOCAML_BASE_URL" \
          -v "$PWD/tests/repo:/repository" \
-         pfitaxel/learn-ocaml:$LEARNOCAML_VERSION build serve 2>&1 | \
+         "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION" build serve 2>&1 | \
         filter_confirm >"$confirm" &
 
     set +vx; eval "$oldopt"
