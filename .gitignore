@@ -85,3 +85,9 @@ setup.log
 _opam/
 
 # End of https://www.gitignore.io/api/emacs,ocaml
+
+### Misc ###
+
+tests/repo/server_config.json
+logger
+confirm.txt
