@@ -38,4 +38,5 @@ jobs:
         run: |
           docker pull "$LEARNOCAML_IMAGE:$LEARNOCAML_VERSION"
           docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
-          ./test.sh
+          make dist-tests || { ret=$?; make stop; exit $ret; }
+          make stop

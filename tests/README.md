@@ -1,13 +1,15 @@
 # How to run tests
 
-## Using the Travis CI wrapper
+## Using only Docker containers
 
+* (Useful to preserve `~/.config/learnocaml/client.json` on the host.)
 * Install Docker
-* Run `cd .. && ./test.sh`
+* Run `cd ..; make dist-tests; make stop`
 
 ## Using ert within emacs
 
 * Install Docker
+* Run `cd ..; make back`
 * Install `learn-ocaml` using OPAM (`make && make opaminstall`)
 * Add `learn-ocaml-client` in the `PATH`, e.g. run in a terminal:
 	
@@ -20,12 +22,7 @@
 * Run then:
 
 ```bash
-cd .../learn-ocaml.el
-export LOVERSION=dev
-docker pull ocamlsf/learn-ocaml:$LOVERSION
-docker run --name=server -d --rm -p 8080:8080 \
-  -v "$PWD/tests/repo:/repository" ocamlsf/learn-ocaml:$LOVERSION build serve
-learn-ocaml-client init -s http://localhost:8080 test test
+# learn-ocaml-client init -s http://localhost:8080 test test
 emacs tests/learn-ocaml-tests.el &
 ```
 
@@ -37,6 +34,8 @@ emacs tests/learn-ocaml-tests.el &
 ```
 
 ## Note to learn-ocaml.el's CI maintainers
+
+* (**WARNING**: Needs documentation update.)
 
 To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
 

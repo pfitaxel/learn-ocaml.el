@@ -9,8 +9,16 @@ ELC := $(ELFILE:.el=.elc)
 all: elc
 
 help:
-	@echo '$$ make elc  # byte-compile $(ELFILE)'
+	@echo '$$ make elc    # byte-compile $(ELFILE)'
 	@echo '$$ make bump v=1.0.0  # Replace version strings with 1.0.0'
+	@echo ''
+	@echo 'The following three commands require sudo.'
+	@echo '$$ make back   # Run a docker backend for interactive ERT tests'
+	@echo '$$ make emacs  # Run a dockerized emacs for ERT tests'
+	@echo '$$ make tests  # Run dockerized ERT tests'
+	@echo '$$ make stop   # Stop the docker backend and/or ERT frontend'
+	@echo '$$ make dist-tests    # Alias-of: make back emacs tests'
+	@echo '$$ make dist-tests USE_PASSWD=true'
 
 bump:
 	git diff -p --raw --exit-code || { echo >&2 "*** Please commit beforehand ***"; exit 1; }
@@ -26,4 +34,19 @@ elc: $(ELC)
 clean:
 	$(RM) $(ELC)
 
-.PHONY: all help bump elc clean
+back:
+	./run_test_backend.sh
+
+emacs:
+	./run_emacs_image.sh
+
+tests:
+	./run_tests.sh
+
+dist-tests: back emacs tests
+
+stop:
+	-./stop_emacs_image.sh
+	./stop_test_backend.sh
+
+.PHONY: all help bump elc clean back emacs tests dist-tests stop
