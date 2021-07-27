@@ -89,5 +89,6 @@ _opam/
 ### Misc ###
 
 tests/repo/server_config.json
-logger
 confirm.txt
+teacher.txt
+*.pid
