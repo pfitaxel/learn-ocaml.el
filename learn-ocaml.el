@@ -641,6 +641,17 @@ Argument SECRET may be needed by the server."
 	:underline nil :weight bold :height 1.2)))
   "Face group titles.")
 
+(defface learn-ocaml-nickname-face
+  '((t (
+	:inherit variable-pitch
+	:foreground "LightSalmon1"
+	:underline nil :weight bold :height 1.3)))
+  "Face nickname.")
+
+(define-widget 'learn-ocaml-nickname 'lazy ""
+  :format "%{%t%}"
+  :sample-face 'learn-ocaml-nickname-face)
+
 (define-widget 'learn-ocaml-group-title 'lazy ""
   :format "%{%t%}"
   :sample-face 'learn-ocaml-group-title-face)
@@ -735,6 +746,14 @@ Argument SECRET may be needed by the server."
    'learn-ocaml-header-hint
    :tag (make-string (length learn-ocaml-exo-list-doc) 45)) ; 45='-'
   (widget-insert "\n\n")
+  (widget-create
+   'learn-ocaml-nickname
+   :tag (concat "Hello " "Louis" "! "))
+  (widget-create 'learn-ocaml-button
+                 :notify (lambda (&rest _ignore)
+                           (find-file default-directory))
+                 "Change nickname")
+    (widget-insert "\n\n")
   (widget-insert "LearnOCaml ")
   (widget-create 'learn-ocaml-button
                  :notify (lambda (&rest _ignore)
