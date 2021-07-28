@@ -239,7 +239,7 @@
              (funcall done))))))
 
 (ert-deftest-async a12_learn-ocaml-test-sign-up (done)
- (learn-ocaml-client-init-server-cmd learn-ocaml-test-url)
+ ; FIXME: (learn-ocaml-client-init-server-cmd learn-ocaml-test-url)
  (let* ((result (learn-ocaml-client-sign-up-cmd
                  learn-ocaml-test-url "ErtTest@example.com" "Ocaml123*" "Test"
                  (escape-secret ""))))
