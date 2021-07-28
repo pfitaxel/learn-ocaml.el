@@ -19,24 +19,18 @@ red () {
     echo -e "\\e[31m$1\\e[0m"
 }
 
-green "Beforehand: LEARNOCAML_VERSION=$LEARNOCAML_VERSION"
-# Default learn-ocaml version
-: "${LEARNOCAML_VERSION:=oauth-moodle-dev}"
-# Do "export LEARNOCAML_VERSION=…" before running the script to override
-green "Henceforth: LEARNOCAML_VERSION=$LEARNOCAML_VERSION\\n"
-
-green "Beforehand: EMACS_IMAGE=$EMACS_IMAGE"
+green "Beforehand: EMACS_IMAGE_VERSION=$EMACS_IMAGE_VERSION"
 # Default emacs image
-: "${EMACS_IMAGE:=pfitaxel/emacs-learn-ocaml-client}"
-# Do "export EMACS_IMAGE=…" before running the script to override
-green "Henceforth: EMACS_IMAGE=$EMACS_IMAGE\\n"
+: "${EMACS_IMAGE_VERSION:=pfitaxel/emacs-learn-ocaml-client:oauth-moodle-dev}"
+# Do "export EMACS_IMAGE_VERSION=…" before running the script to override
+green "Henceforth: EMACS_IMAGE_VERSION=$EMACS_IMAGE_VERSION\\n"
 
 pull_ifneedbe () {
-    sudo docker pull "$EMACS_IMAGE:$LEARNOCAML_VERSION"
+    sudo docker pull "$EMACS_IMAGE_VERSION"
     ret=$?
 
     if [ "$ret" -ne 0 ]; then
-        red "PROBLEM, 'sudo docker pull $EMACS_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
+        red "PROBLEM, 'sudo docker pull $EMACS_IMAGE_VERSION' failed with exit status $ret"
         exit $ret
     fi
 }
@@ -73,7 +67,7 @@ run_emacs () {
     # Run the image in background
     sudo docker run -d -i --init --rm --name="$eid" \
       -v "$PWD:/build" --network="container:$cid" \
-      "$EMACS_IMAGE:$LEARNOCAML_VERSION"
+      "$EMACS_IMAGE_VERSION"
     ret=$?
 
     # hacky but working
@@ -82,7 +76,7 @@ run_emacs () {
     set +vx; eval "$oldopt"  # has to be after "ret=$?"
 
     if [ "$ret" -ne 0 ]; then
-        red "PROBLEM, 'sudo docker run -d ... $EMACS_IMAGE:$LEARNOCAML_VERSION' failed with exit status $ret"
+        red "PROBLEM, 'sudo docker run -d ... $EMACS_IMAGE_VERSION' failed with exit status $ret"
         stop_emacs
         exit $ret
     fi
