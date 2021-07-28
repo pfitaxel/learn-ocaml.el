@@ -970,8 +970,7 @@ Shortcuts for the learn-ocaml mode:
       (progn
         (learn-ocaml-update-exercise-id-view)
         (easy-menu-add learn-ocaml-mode-menu)
-        (learn-ocaml-setup t)
-        (message (pp-to-string learn-ocaml-exercise-id)))
+        (learn-ocaml-setup t))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
     (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)))
