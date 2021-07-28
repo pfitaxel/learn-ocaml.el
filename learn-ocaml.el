@@ -330,30 +330,30 @@ Return (nil . \"stdout+stderr\") if exit code > 0."
 ;;    2 ;; or 0
 ;;   "test"))
 
-(defun learn-ocaml-command-to-string-await-cmd (arg1)
-  "Run \"learn-ocaml-client ARG1\" (only one arg supported).
+(defun learn-ocaml-command-to-string-await-cmd (args)
+  "Run \"learn-ocaml-client ARGS\".
 This is a `learn-ocaml-update-exec-path'-enhanced replacement for
-(shell-command-to-string (concat learn-ocaml-command-name arg1)),
-relying on `learn-ocaml-await-for'.
+(shell-command-to-string (combine-and-quote-strings
+  (cons \"learn-ocaml-client\" args))), relying on `learn-ocaml-await-for'.
 Return (t . \"stdout+stderr\") if exit code = 0;
 Return (nil . \"stdout+stderr\") if exit code > 0;
 Raise (error \"learn-ocaml-await-for...\") if `learn-ocaml-timeout' exceeded."
   ;; (learn-ocaml-print-time-stamp) ;; FIXME: enable?
-  (unless (stringp arg1)
-    (error "ARG1 must be a string (in learn-ocaml-command-to-string-cmd)"))
-  (let ((buffer (generate-new-buffer (concat arg1 "-std-out"))))
+  (unless (and args (listp args))
+    (error "ARGS must be a nonempty list (of strings)"))
+  (let ((buffer (generate-new-buffer (concat (car args) "-std-out"))))
     (learn-ocaml-await-for
      #'(lambda (result failure)
 	 (learn-ocaml-make-process-wrapper
-	  :name arg1
-	  :command `(,learn-ocaml-command-name ,arg1)
+	  :name (car args)
+	  :command (cons learn-ocaml-command-name args)
 	  :buffer buffer
 	  :sentinel (apply-partially
                      #'learn-ocaml-error-handler-nosplit-catch
                      buffer
                      #'(lambda (s) (funcall result s))
                      #'(lambda (s) (funcall failure s)))))
-     learn-ocaml-timeout arg1)))
+     learn-ocaml-timeout (car args))))
 
 ;;
 ;; Higher-order functions, sentinels of the make-process wrapper
@@ -447,7 +447,8 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 
 (defun learn-ocaml-client-version ()
   "Run \"learn-ocaml-client --version\"."
-  (string-trim (cdr (learn-ocaml-command-to-string-await-cmd "--version"))))
+  (string-trim
+   (cdr (learn-ocaml-command-to-string-await-cmd (list "--version")))))
 
 (cl-defun learn-ocaml-client-sign-in-cmd (&key server login password callback-ok callback-err)
   "Run \"learn-ocaml-client init-user\" with SERVER LOGIN PASSWORD to login an user."
@@ -486,7 +487,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
 (defun learn-ocaml-client-config-cmd ()
   "Run \"learn-ocaml-client server-config\"."
   (let* ((cmd "server-config")
-	 (result (learn-ocaml-command-to-string-await-cmd cmd)))
+         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
     (if (car result) (cdr result)
       ;; FIXME: Use learn-ocaml-log-buffer
       (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd (string-trim (cdr result))))))
@@ -505,10 +506,12 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
               nil
               callback)))
 
+(learn-ocaml-client-exercise-score-cmd)
+
 (defun learn-ocaml-client-exercise-score-cmd ()
   "Run \"learn-ocaml-client exercise-score\"."
-    (let* ((cmd "exercise-score")
-	 (result (learn-ocaml-command-to-string-await-cmd cmd)))
+  (let* ((cmd "exercise-score")
+         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
     (if (car result) (json-read-from-string (cdr result))
       ;; FIXME: Use learn-ocaml-log-buffer
       (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
@@ -1114,15 +1117,15 @@ If TOKEN is \"\", interactively ask a token."
 (defun learn-ocaml-logout ()
   "Logout the user from the server by removing the token from the file client.json"
   (interactive)
-    (let* ((cmd "logout")
-	   (result (learn-ocaml-command-to-string-await-cmd cmd)))
-      (if (car result)
-	  (progn (message-box "You have been successfully disconnected\n\n%s"
-                              (cdr result))
-                 (learn-ocaml-global-disable-mode))
-        ;; FIXME: Use learn-ocaml-log-buffer
-	(error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
-               (string-trim (cdr result))))))
+  (let* ((cmd "logout")
+         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
+    (if (car result)
+        (progn (message-box "You have been successfully disconnected\n\n%s"
+                            (cdr result))
+               (learn-ocaml-global-disable-mode))
+      ;; FIXME: Use learn-ocaml-log-buffer
+      (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
+             (string-trim (cdr result))))))
 
 (defun learn-ocaml-deinit ()
   "Logout the user and forget the server by removing the file client.json"
@@ -1131,15 +1134,15 @@ If TOKEN is \"\", interactively ask a token."
   ;; should fail with exit code > 0
   ;; if Cannot remove ~/.config/learnocaml/client.json : no such file or directory.
   (interactive)
-    (let* ((cmd "deinit")
-	   (result (learn-ocaml-command-to-string-await-cmd cmd)))
-      (if (car result)
-	  (progn (message-box "You have been successfully disconnected\n\n%s"
-                              (cdr result))
-                 (learn-ocaml-global-disable-mode))
-        ;; FIXME: Use learn-ocaml-log-buffer
-	(error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
-               (string-trim (cdr result))))))
+  (let* ((cmd "deinit")
+         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
+    (if (car result)
+        (progn (message-box "You have been successfully disconnected\n\n%s"
+                            (cdr result))
+               (learn-ocaml-global-disable-mode))
+      ;; FIXME: Use learn-ocaml-log-buffer
+      (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
+             (string-trim (cdr result))))))
 
 ;;
 ;; menu definition
