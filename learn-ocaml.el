@@ -99,6 +99,23 @@ Call `get-buffer-create' if need be, to ensure it is a live buffer."
   "Remove the trailing newline in STR."
   (replace-regexp-in-string "\n\\'" "" str))
 
+(defun learn-ocaml-replace-in-string (what with in)
+  "Replace WHAT by WITH in string IN."
+  (replace-regexp-in-string (regexp-quote what) with in nil 'literal))
+
+(defun learn-ocaml-exercise-to-module-name (id)
+  (let* ((module-name (learn-ocaml-replace-in-string "_" "__" id))
+         (module-name-bis (learn-ocaml-replace-in-string "-" "_0" module-name)))
+    module-name-bis))
+
+(defun learn-ocaml-open-ml-file (id)
+  "Open ID in a new buffer and load prelude and prepare according to his name."
+  (find-file (concat id ".ml"))
+  (with-current-buffer (concat id ".ml")
+      (setq merlin-buffer-flags
+            (concat "-open Given_"
+                    (learn-ocaml-exercise-to-module-name id)))))
+
 (defun learn-ocaml-yes-or-no (message &optional dont-trap-quit)
   "Display MESSAGE in a yes-or-no popup.
 `\\[keyboard-quit]' is seen as nil, unless DONT-TRAP-QUIT is non-nil."
@@ -233,7 +250,11 @@ Call `learn-ocaml-display-exercise-list' if OPEN-EXO-LIST is non-nil."
     (copy-file
      (concat learn-ocaml-working-directory "/.ocamlinit")
      (concat learn-ocaml-working-directory "/.ocamlinit~") t))
-  (write-region "#load .learn-ocaml/Given_demo.cmo;;\nopen Given_demo;;" nil
+  (write-region (concat "#load .learn-ocaml/Given_"
+                        (learn-ocaml-exercise-to-module-name "demo")
+                        ".cmo;;\nopen Given_"
+                        (learn-ocaml-exercise-to-module-name "demo")
+                        ";;") nil
                 (learn-ocaml-file-path learn-ocaml-working-directory ".ocamlinit"))
   (if open-exo-list (learn-ocaml-display-exercise-list)))
 
@@ -669,7 +690,7 @@ Argument SECRET may be needed by the server."
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
 		   :notify (lambda (&rest _ignore)
-			     (find-file (concat id ".ml")))
+			     (learn-ocaml-open-ml-file id))
 		   "Open .ml")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
@@ -949,7 +970,8 @@ Shortcuts for the learn-ocaml mode:
       (progn
         (learn-ocaml-update-exercise-id-view)
         (easy-menu-add learn-ocaml-mode-menu)
-        (learn-ocaml-setup t))
+        (learn-ocaml-setup t)
+        (message (pp-to-string learn-ocaml-exercise-id)))
     (setq learn-ocaml-loaded nil)
     (remove-hook 'caml-mode-hook #'learn-ocaml-mode)
     (remove-hook 'tuareg-mode-hook #'learn-ocaml-mode)))
