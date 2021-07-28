@@ -408,7 +408,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
           (let ((log (buffer-string)))
             (error "Process errored.  Full log:\n%s" log)))))))
 
-(defun learn-ocaml-error-handler-nosplit-catch (buffer callback-ok callback-err proc string)
+(defun learn-ocaml-error-handler-nosplit-catch (buffer callback-ok callback-err _proc string)
   "Get text from BUFFER, pass it to CALLBACK-OK ($?=0) or CALLBACK-ERR.
 To be used as a `make-process' sentinel, using args PROC and STRING."
   (let ((result (if (not buffer)
@@ -997,23 +997,6 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
           token
           nil
           callback))))))
-
-(cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
-  "Run \"learn-ocaml-client init\" with options."
-  (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "init"
-   :command (learn-ocaml-command-constructor
-             :token token
-             :server server
-             :param1 nickname
-             :param2 secret
-             :command "init")
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback)))
 
 (defun learn-ocaml-login-possibly-with-passwd (server callback)
   "Connect the user when learn-ocaml-use-passwd=true with an (email,passwd) or a token and continue with the no-arg CALLBACK."
