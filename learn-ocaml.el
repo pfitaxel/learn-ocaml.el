@@ -63,11 +63,9 @@
 
 (defvar learn-ocaml-temp-dir nil)
 
-<<<<<<< HEAD
 (defvar learn-ocaml-working-directory nil)
-=======
+
 (defvar learn-ocaml-use-passwd nil)
->>>>>>> oauth-moodle
 
 (defvar learn-ocaml-log-buffer nil)
 
@@ -925,15 +923,9 @@ Argument SECRET may be needed by the server."
                    "Get template")
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
-<<<<<<< HEAD
 		   :notify (lambda (&rest _ignore)
 			     (learn-ocaml-open-ml-file id))
 		   "Open .ml")
-=======
-                   :notify (lambda (&rest _ignore)
-                             (find-file (concat id ".ml")))
-                   "Open .ml")
->>>>>>> oauth-moodle
     (widget-insert " ")
     (widget-create 'learn-ocaml-button
                    :notify (lambda (&rest _ignore)
@@ -980,10 +972,10 @@ Argument SECRET may be needed by the server."
   (widget-insert "\n\n")
   (widget-create
    'learn-ocaml-nickname
-   :tag (concat "Hello " "Louis" "! "))
+   :tag (concat "Hello " (learn-ocaml-get-nickname) "! "))
   (widget-create 'learn-ocaml-button
                  :notify (lambda (&rest _ignore)
-                           (find-file default-directory))
+                           (learn-ocaml-set-nickname))
                  "Change nickname")
     (widget-insert "\n\n")
   (widget-insert "LearnOCaml ")
@@ -1200,6 +1192,16 @@ If TOKEN is \"\", interactively ask a token."
 	(error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
                (string-trim (cdr result))))))
 
+(defun learn-ocaml-get-nickname ()
+  "Get the nickname from the current user"
+  (string-trim (cdr (learn-ocaml-command-to-string-await-cmd "print-nickname"))))
+
+(defun learn-ocaml-set-nickname ()
+  "Ask a new nickname and set it."
+  (interactive)
+  (let* ((nickname (read-string "Enter your new nickname: "))	 
+	 (string-trim (cdr (learn-ocaml-command-to-string-await-cmd (concat "set-nickname " nickname)))))))
+
 ;;
 ;; menu definition
 ;;
@@ -1212,13 +1214,6 @@ If TOKEN is \"\", interactively ask a token."
     (define-key map [menu-bar] nil)
     map))
 
-(defvar learn-ocaml-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-m C-l") #'learn-ocaml-display-exercise-list)
-    (define-key map (kbd "C-c C-m l") #'learn-ocaml-display-exercise-list)
-    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade)
-    (define-key map [menu-bar] nil)
-    map))
 (easy-menu-define learn-ocaml-mode-menu
   learn-ocaml-mode-map
   "LearnOCaml Mode Menu."
