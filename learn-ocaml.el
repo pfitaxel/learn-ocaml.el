@@ -1199,8 +1199,8 @@ If TOKEN is \"\", interactively ask a token."
 (defun learn-ocaml-set-nickname ()
   "Ask a new nickname and set it."
   (interactive)
-  (let* ((nickname (read-string "Enter your new nickname: "))	 
-	 (string-trim (cdr (learn-ocaml-command-to-string-await-cmd (concat "set-nickname " nickname)))))))
+  (let* ((nickname (read-string "Enter your new nickname: ")))
+	 (string-trim (cdr (learn-ocaml-command-to-string-await-cmd `("set-nickname" ,nickname))))))
 
 ;;
 ;; menu definition
