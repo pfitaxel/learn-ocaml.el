@@ -538,8 +538,6 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
               nil
               callback)))
 
-(learn-ocaml-client-exercise-score-cmd)
-
 (defun learn-ocaml-client-exercise-score-cmd ()
   "Run \"learn-ocaml-client exercise-score\"."
   (let* ((cmd "exercise-score")
@@ -961,7 +959,7 @@ Argument SECRET may be needed by the server."
 
 (defun learn-ocaml-display-exercise-list-aux (json)
   "Render the exercise list from the server-provided JSON."
-  (set-buffer (learn-ocaml-exo-list-buffer))
+  (switch-to-buffer (learn-ocaml-exo-list-buffer))
   (kill-all-local-variables)
   (let ((inhibit-read-only t))
     (erase-buffer))
@@ -1005,8 +1003,7 @@ Argument SECRET may be needed by the server."
   (with-current-buffer learn-ocaml-exo-list-buffer ; just to be safe
     (read-only-mode 1))
   ;; should be in the end, after (read-only-mode 1):
-  (learn-ocaml-mode)
-  (switch-to-buffer-other-window learn-ocaml-exo-list-buffer))
+  (learn-ocaml-mode))
 
 ;;;###autoload
 (defun learn-ocaml-display-exercise-list ()
@@ -1197,13 +1194,15 @@ If TOKEN is \"\", interactively ask a token."
 
 (defun learn-ocaml-get-nickname ()
   "Get the nickname from the current user"
-  (string-trim (cdr (learn-ocaml-command-to-string-await-cmd "print-nickname"))))
+  (string-trim (cdr (learn-ocaml-command-to-string-await-cmd (list "print-nickname")))))
 
 (defun learn-ocaml-set-nickname ()
-  "Ask a new nickname and set it."
+  "Ask a new nickname, set it and refresh the buffer."
   (interactive)
   (let* ((nickname (read-string "Enter your new nickname: ")))
-	 (string-trim (cdr (learn-ocaml-command-to-string-await-cmd `("set-nickname" ,nickname))))))
+    (string-trim (cdr (learn-ocaml-command-to-string-await-cmd (list "set-nickname" nickname))))
+    (kill-matching-buffers "^\*learn-ocaml.*\*" nil t)
+    (learn-ocaml-display-exercise-list)))
 
 ;;
 ;; menu definition
