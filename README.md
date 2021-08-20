@@ -1,6 +1,6 @@
 # learn-ocaml.el
 
-[![Build Status](https://travis-ci.com/pfitaxel/learn-ocaml.el.svg?branch=master)](https://travis-ci.com/pfitaxel/learn-ocaml.el)
+[![Test](https://github.com/pfitaxel/learn-ocaml.el/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/pfitaxel/learn-ocaml.el/actions/workflows/test.yml)
 [![MELPA](https://melpa.org/packages/learn-ocaml-badge.svg)](https://melpa.org/#/learn-ocaml)
 
 ## Summary
