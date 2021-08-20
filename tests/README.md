@@ -30,13 +30,15 @@
 
 ## Note to learn-ocaml.el's CI maintainers
 
-* (**WARNING**: Needs documentation update.)
-
 To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
 
-* Push a new branch in <https://github.com/pfitaxel/docker-emacs-learn-ocaml-client>,
-* Wait for the image in <https://hub.docker.com/r/pfitaxel/emacs-learn-ocaml-client>,
-* Add a new job line (`LEARNOCAML_VERSION="0.xx"`) in this repo's `.travis.yml`.
+* Add the image in <https://hub.docker.com/r/pfitaxel/emacs-learn-ocaml-client>
+  * Either by pushing a new branch in
+    <https://github.com/pfitaxel/docker-emacs-learn-ocaml-client>
+	(for existing learn-ocaml releases)
+  * Or by committing in a continuously-deployed dev branch such as
+    <https://github.com/pfitaxel/learn-ocaml/blob/oauth-moodle-dev/.github/workflows/deploy-oauth-moodle.yml>
+* Add a matrix item in `.github/workflows/test.yml` (`client_version: "0.xx"`).
 
 # Description of the test-suite
 
@@ -141,4 +143,3 @@ To avoid this, you can use the dockerized version, `make tests`.
 * If the function requires to be logged (with the "cookie file"),
   use the fixture `(learn-ocaml-test-run-with :before-login-teacher t :body _)`,
   or (**TODO**) use `(learn-ocaml-test-run-with :before-signup t :body _)`.
-* 

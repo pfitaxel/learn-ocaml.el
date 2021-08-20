@@ -11,18 +11,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.allow_failures }}
     strategy:
       matrix:
         include:
           - learnocaml_image: "ocamlsf/learn-ocaml"
             learnocaml_version: "0.12"
             use_passwd: "false"
+            client_version: "0.12"
+            allow_failures: false
+            # may be removed at some point, when the following test will pass:
+          - learnocaml_image: "ocamlsf/learn-ocaml"
+            learnocaml_version: "0.12"
+            use_passwd: "false"
+            client_version: "oauth-moodle-dev"
+            # NOTE: currently fails because of an API version mismatch
+            allow_failures: true
           - learnocaml_image: "pfitaxel/learn-ocaml"
             learnocaml_version: "oauth-moodle-dev"
             use_passwd: "false"
+            client_version: "oauth-moodle-dev"
+            allow_failures: false
           - learnocaml_image: "pfitaxel/learn-ocaml"
             learnocaml_version: "oauth-moodle-dev"
             use_passwd: "true"
+            client_version: "oauth-moodle-dev"
+            allow_failures: false
       # at most 20 concurrent jobs per free account:
       max-parallel: 4
       # don't cancel all in-progress jobs if one matrix job fails:
@@ -31,7 +45,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Script
         env:
-          EMACS_IMAGE_VERSION: "pfitaxel/emacs-learn-ocaml-client:oauth-moodle-dev"
+          EMACS_IMAGE_VERSION: "pfitaxel/emacs-learn-ocaml-client:${{ matrix.client_version }}"
           LEARNOCAML_IMAGE: ${{ matrix.learnocaml_image }}
           LEARNOCAML_VERSION: ${{ matrix.learnocaml_version }}
           USE_PASSWD: ${{ matrix.use_passwd }}
