@@ -50,5 +50,5 @@ jobs:
           LEARNOCAML_VERSION: ${{ matrix.learnocaml_version }}
           USE_PASSWD: ${{ matrix.use_passwd }}
         run: |
-          make dist-tests || { ret=$?; make stop; exit $ret; }
+          make dist-tests || ( ret=$?; make stop; exit $ret )
           make stop
