@@ -506,8 +506,6 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
               nil
               callback)))
 
-(learn-ocaml-client-exercise-score-cmd)
-
 (defun learn-ocaml-client-exercise-score-cmd ()
   "Run \"learn-ocaml-client exercise-score\"."
   (let* ((cmd "exercise-score")
