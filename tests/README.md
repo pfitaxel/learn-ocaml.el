@@ -64,6 +64,8 @@ To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
 
 **BEWARE** that some tests do `rm -f ~/.config/learnocaml/client.json`
 
+(*TODO* One might use `learn-ocaml-client --local` instead)
+
 *Note* that the tests use `http://localhost:8080` as server URL.
 
 * `1_learn-ocaml-server-management-test`  
