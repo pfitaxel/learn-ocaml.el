@@ -14,6 +14,7 @@
 ;;;  Eval these lines to run the tests interactively <C-x C-e>
 ;;
 ;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
+;; (add-to-list 'exec-path (learn-ocaml-test-client-expected-path))
 ;; (call-interactively #'ert-run-tests-interactively)
 
 ;; (setq debug-on-error t)  ; to open the debugger/backtrace on error
@@ -68,6 +69,12 @@
 
 (defun learn-ocaml-test-collapse-whitespace (str)
   (replace-regexp-in-string "[[:space:]\n]+" " " str))
+
+(defun learn-ocaml-test-client-expected-path ()
+  "Return ../../learn-ocaml/_opam/bin"
+  (let ((curdir (file-name-directory (buffer-file-name)))
+        (up (lambda (dir) (file-name-directory (directory-file-name dir)))))
+    (concat (funcall up (funcall up curdir)) "learn-ocaml/_opam/bin")))
 
 ;; Tests for core functions
 

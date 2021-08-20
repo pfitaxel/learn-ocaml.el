@@ -35,6 +35,7 @@ emacs tests/learn-ocaml-tests.el &
 
 ```elisp
 ;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
+;; (add-to-list 'exec-path (learn-ocaml-test-client-expected-path))
 ;; (call-interactively #'ert-run-tests-interactively)
 ```
 
@@ -136,5 +137,5 @@ To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
   * **TODO** Add secret ≠ ""
   * Get stdout+stderr
   * Compare with hardcoded string
-  * **TODO** Improve this text, using `string-match-p` i/o `string-equa`
+  * **TODO** Improve this text, using `string-match-p` instead of `string-equal`
 * **TODO** Test `learn-ocaml-login-possibly-with-passwd`
