@@ -4,12 +4,17 @@
 
 * (Useful to preserve `~/.config/learnocaml/client.json` on the host.)
 * Install Docker
-* Run `cd ..; make dist-tests; make stop`
+* Then, run:
+  * `cd ..`
+  * `make dist-tests` or `make dist-tests USE_PASSWD=true`
+  * `make stop`
 
 ## Using ert within emacs
 
 * Install Docker
-* Run `cd ..; make back`
+* Then, run:
+  * `cd ..`
+  * `make back` or `make back USE_PASSWD=true`
 * Install `learn-ocaml` using OPAM (`make && make opaminstall`)
 * Add `learn-ocaml-client` in the `PATH`, e.g. run in a terminal:
 	

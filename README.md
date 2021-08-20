@@ -112,6 +112,7 @@ Bug reports and suggestions are very welcome: feel free to open a new
   * [GH: erikmd/docker-examples](https://github.com/erikmd/docker-examples#prérequis--installer-docker-et-docker-compose) (Docker)
 * **Use the Makefile to start the test environment**:  
   run `make help` to list the available Makefile commands.
+* **Browse the [tests/README.md](./tests/README.md) file** for further details.
 
 ## Authors and Acknowledgments
 
