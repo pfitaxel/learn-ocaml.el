@@ -15,27 +15,16 @@
 * Then, run:
   * `cd ..`
   * `make back` or `make back USE_PASSWD=true`
-* Install `learn-ocaml` using OPAM (`make && make opaminstall`)
-* Add `learn-ocaml-client` in the `PATH`, e.g. run in a terminal:
-	
-		export PATH=$PATH:$HOME/forge/git/learn-ocaml/_opam/bin
-
-* Remark: the Elisp equivalent would be:
-
-		(add-to-list 'exec-path (expand-file-name "~/forge/git/learn-ocaml/_opam/bin"))
-		
-* Run then:
-
-```bash
-# learn-ocaml-client init -s http://localhost:8080 test test
-emacs tests/learn-ocaml-tests.el &
-```
-
-* In the `learn-ocaml-tests.el` buffer, eval using <kbd>C-x C-e </kbd>:
+* Ensure `learn-ocaml` has been cloned in a sibling directory, e.g.:
+  * `~/forge/git/learn-ocaml.el`
+  * `~/forge/git/learn-ocaml`
+* Build `learn-ocaml` using OPAM (`make && make opaminstall`)
+* Open a `runtests.el` file, eval using <kbd>C-x C-e </kbd>:
 
 ```elisp
-;; (progn (load-file "../learn-ocaml.el") (load-file "learn-ocaml-tests.el"))
+;; (progn (load-file "../../learn-ocaml.el") (load-file "../learn-ocaml-tests.el") (load-file "./runtests.el"))
 ;; (add-to-list 'exec-path (learn-ocaml-test-client-expected-path))
+;; (learn-ocaml-test-use-passwd-auto)
 ;; (call-interactively #'ert-run-tests-interactively)
 ```
 
@@ -63,79 +52,93 @@ To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
 
 ## Integration tests (`ert-deftest-async`)
 
-**BEWARE** that some tests do `rm -f ~/.config/learnocaml/client.json`
+**BEWARE** all tests do `rm -f ~/.config/learnocaml/client.json`
 
-(*TODO* One might use `learn-ocaml-client --local` instead)
+To avoid this, you can use the dockerized version, `make tests`.  
+(*TODO* or, one might use `learn-ocaml-client --local` instead...)
 
 *Note* that the tests use `http://localhost:8080` as server URL.
 
-* `1_learn-ocaml-server-management-test`  
+### ITs in 001-common
+
+* `1_learn-ocaml-server-management-test` (*001-common*)  
   * Set server (`learn-ocaml-use-metadata-cmd`)
   * Read server (`learn-ocaml-give-server-cmd`)
-* `2_learn-ocaml-token-management-test`  
-  * Create token from nickname, secret (`learn-ocaml-create-token-cmd`)
-  * **TODO** Change nickname(test→Foo)
-  * **TODO** Add secret to `server_config.json`
-  * Set token (`learn-ocaml-use-metadata-cmd`)
-  * Read token (`learn-ocaml-give-token-cmd`)
-* `3_learn-ocaml-grade-test`  
+* `3_learn-ocaml-grade-test` (*001-common*)  
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo-results.html`
   * Grade `tests/to_grade.ml` for `demo` (`learn-ocaml-grade-file-cmd`)
   * `grep "Exercise complete" /tmp/learn-ocaml-mode$XXXXXX/demo-results.html` (`should return 0`)
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo-results.html`
-* `4_learn-ocaml-download-server-file-test`  
+* `4_learn-ocaml-download-server-file-test` (*001-common*)  
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
   * Download `demo.ml` (`learn-ocaml-download-server-file-cmd`)
   * `cat /tmp/learn-ocaml-mode$XXXXXX/demo.ml` (`should return 0`)
   * **TODO** Improve/Split this test, using `diff` or so
-* `5_learn-ocaml-download-template-test`  
+* `5_learn-ocaml-download-template-test` (*001-common*)  
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
   * Download template `demo.ml` (`learn-ocaml-download-template-cmd`)
   * `diff /tmp/learn-ocaml-mode$XXXXXX/demo.ml ./tests/template_demo.ml` (`should return 0`)
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
-* `6_learn-ocaml-give-exercise-list-test`  
+* `6_learn-ocaml-give-exercise-list-test` (*001-common*)  
   * Get exercise list (`learn-ocaml-give-exercise-list-cmd`)
   * Read `./tests/exercise_list.json`
   * They should be equal
   * **TODO** Extend this test, using more subdirs?
-* `7_learn-ocaml-compute-questions-url-test`  
+* `7_learn-ocaml-compute-questions-url-test` (*001-common*)  
   * Read server, token (`learn-ocaml-give-server-cmd`, `learn-ocaml-give-token-cmd`)
   * Get description URL of `demo` (`learn-ocaml-compute-questions-url`)
   * `curl -fsS $URL`
   * Read `./tests/expected_description.html`
   * They should be equal
-* `8_learn-ocaml-init-another-token`  
-  * Create token from nickname, secret (`learn-ocaml-create-token-cmd`)
-  * **TODO** Change nickname(test→Foo)
-  * **TODO** Add secret to `server_config.json`
-  * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with new token
-  * Read new token (`learn-ocaml-give-token-cmd`)
-  * They should be equal
-* `9_learn-ocaml-init-create-token`  
-  * Read token (`learn-ocaml-give-token-cmd`)
-  * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with no token
-  * which will call `learn-ocaml-create-token-cmd`
-  * Read new token (`learn-ocaml-give-token-cmd`)
-  * It should be different
-* `a10_learn-ocaml-on-load-test-another-token-no-config`  
+* `a10_learn-ocaml-on-load-test-another-token-no-config` (*001-common*)  
   * Read token (`learn-ocaml-give-token-cmd`)
   * `rm -f ~/.config/learnocaml/client.json`
   * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with URL, initial token
   * Read token (`learn-ocaml-give-token-cmd`)
   * They should be equal
-* `a11_learn-ocaml-on-load-test-create-token-no-config`  
+
+### ITs in 002-use-token context
+
+* `2_learn-ocaml-token-management-test` (**002-use-token**)  
+  * Create token from nickname, secret (`learn-ocaml-create-token-cmd`)
+  * **TODO** Add secret to `server_config.json`
+  * Set token (`learn-ocaml-use-metadata-cmd`)
+  * Read token (`learn-ocaml-give-token-cmd`)
+* `8_learn-ocaml-init-another-token` (**002-use-token**)  
+  * Create token from nickname, secret (`learn-ocaml-create-token-cmd`)
+  * **TODO** Add secret to `server_config.json`
+  * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with new token
+  * Read new token (`learn-ocaml-give-token-cmd`)
+  * They should be equal
+* `9_learn-ocaml-init-create-token` (**002-use-token**)  
+  * Read token (`learn-ocaml-give-token-cmd`)
+  * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with no token
+  * which will call `learn-ocaml-create-token-cmd`
+  * Read new token (`learn-ocaml-give-token-cmd`)
+  * It should be different
+* `a11_learn-ocaml-on-load-test-create-token-no-config` (**002-use-token**)  
   * Read token (`learn-ocaml-give-token-cmd`)
   * `rm -f ~/.config/learnocaml/client.json`
   * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with URL, nickname, secret
-  * **TODO** Change nickname(test→Foo)
   * **TODO** Add secret to `server_config.json`
   * Read token (`learn-ocaml-give-token-cmd`)
   * **FIXME** It should be different
-* `a12_learn-ocaml-test-sign-up`  
+
+### ITs in 003-use-passwd context
+
+* `a12_learn-ocaml-test-sign-up` (**003-use-passwd**)  
   * Test `learn-ocaml-client-sign-up-cmd` {used by `learn-ocaml-login-possibly-with-passwd`} with URL, email, passwd, nickname, empty secret
-  * **TODO** Change nickname(Test→Foo)
   * **TODO** Add secret ≠ ""
   * Get stdout+stderr
   * Compare with hardcoded string
-  * **TODO** Improve this text, using `string-match-p` instead of `string-equal`
+  * **TODO** Extend this test?
 * **TODO** Test `learn-ocaml-login-possibly-with-passwd`
+
+### Guidelines for adding integration tests
+
+* Document the test scenario (in this document, above)
+* Write an `(ert-deftest-async)` in the appropriate `000-context/runtests.el`
+* If the function requires to be logged (with the "cookie file"),
+  use the fixture `(learn-ocaml-test-run-with :before-login-teacher t :body _)`,
+  or (**TODO**) use `(learn-ocaml-test-run-with :before-signup t :body _)`.
+* 
