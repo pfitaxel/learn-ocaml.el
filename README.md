@@ -117,7 +117,7 @@ Bug reports and suggestions are very welcome: feel free to open a new
 ## Authors and Acknowledgments
 
 **learn-ocaml.el** has been developed in University Toulouse III by
-Erik Martin-Dorel and Manuel Cabarcos Baulina, thanks to the support
+Erik Martin-Dorel, Manuel Cabarcos Baulina, and Louis Ayroles, thanks to the support
 of the [OCaml Software Foundation](http://ocaml-sf.org/).
 
 ## License
