@@ -66,17 +66,26 @@
   4_learn-ocaml-download-server-file-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
    :before-action action
-   :body (lambda ()
-           (learn-ocaml-test-remove-demo-file)
-           (learn-ocaml-download-server-file-cmd
-            :id "demo"
-            :directory learn-ocaml-fixture-directory
-            :callback (lambda (s)
-                        (should (= 0 (shell-command
-                                      (concat "cat "
-                                              learn-ocaml-test-demo-file))))
-                        (learn-ocaml-test-remove-demo-file t)
-                        (funcall done))))))
+   :body
+   (lambda ()
+     (learn-ocaml-test-remove-demo-file) ; not really necessary
+     (learn-ocaml-grade-file-cmd
+      ;; The test would fail on a fresh account, if demo wasn't graded
+      :id "demo"
+      :file learn-ocaml-test-tograde-file ; sol. that happens to be OK
+      :callback
+      (lambda (_)
+        (learn-ocaml-test-remove-temp-file "demo") ; .html is unneeded
+        (learn-ocaml-test-remove-demo-file t)      ; this is necessary
+        (learn-ocaml-download-server-file-cmd
+         :id "demo"
+         :directory learn-ocaml-fixture-directory
+         :callback (lambda (s)
+                     (should (= 0 (shell-command
+                                   (concat "cat "
+                                           learn-ocaml-test-demo-file))))
+                     (learn-ocaml-test-remove-demo-file t)
+                     (funcall done))))))))
 
 (ert-deftest-async-map-symb
   5_learn-ocaml-download-template-test (login-teacher signup) action (done)
