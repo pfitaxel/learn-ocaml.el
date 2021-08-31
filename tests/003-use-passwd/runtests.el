@@ -29,7 +29,7 @@
 
 (ert-deftest-async a12_learn-ocaml-test-sign-up (done)
   (learn-ocaml-test-run-with
-   ;; Focus on sign-up => no :before-login-teacher; just pre-teardown
+   ;; Focus on sign-up, no :before-action 'login-teacher, just pre-teardown
    :body (lambda ()
            (let ((email (learn-ocaml-test-user-email))
                  (pass (learn-ocaml-test-user-pass)))

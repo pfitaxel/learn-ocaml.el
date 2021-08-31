@@ -28,7 +28,7 @@
 
 (ert-deftest-async 1_learn-ocaml-server-management-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    ;; TODO should also test with :before-signup t
    :body (lambda ()
            (learn-ocaml-use-metadata-cmd
@@ -44,7 +44,7 @@
 
 (ert-deftest-async 3_learn-ocaml-grade-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-test-remove-temp-file "demo")
            (learn-ocaml-grade-file-cmd
@@ -63,7 +63,7 @@
 
 (ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-test-remove-demo-file)
            (learn-ocaml-download-server-file-cmd
@@ -78,7 +78,7 @@
 
 (ert-deftest-async 5_learn-ocaml-download-template-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-test-remove-demo-file)
            (learn-ocaml-download-template-cmd
@@ -96,7 +96,7 @@
 
 (ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (with-temp-buffer
              (insert-file-contents learn-ocaml-test-json-file)
@@ -108,7 +108,7 @@
 
 (ert-deftest-async 7_learn-ocaml-compute-questions-url-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-give-server-cmd
             (lambda (server)
@@ -128,7 +128,7 @@
 
 (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-give-token-cmd
             (lambda (token)

@@ -28,7 +28,7 @@
 
 (ert-deftest-async 2_learn-ocaml-token-management-test (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-create-token-cmd
             "Foo"
@@ -48,7 +48,7 @@
 
 (ert-deftest-async 8_learn-ocaml-init-another-token (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-create-token-cmd
             "Foo"
@@ -65,7 +65,7 @@
 
 (ert-deftest-async 9_learn-ocaml-init-create-token (done)
   (learn-ocaml-test-run-with
-   :before-login-teacher t
+   :before-action 'login-teacher
    :body (lambda ()
            (learn-ocaml-give-token-cmd
             (lambda (previous-token)
@@ -84,7 +84,7 @@
 ;; MOVED TO 001-common:
 ;; (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
 ;;   (learn-ocaml-test-run-with
-;;    :before-login-teacher t
+;;    :before-action 'login-teacher
 ;;    :body (lambda ()
 ;;            (learn-ocaml-give-token-cmd
 ;;             (lambda (token)
@@ -100,7 +100,7 @@
 
 (ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
   (learn-ocaml-test-run-with
-   ;; No :before-login-teacher; just pre-teardown
+   ;; No :before-action 'login-teacher; just pre-teardown
    :body (lambda ()
            (learn-ocaml-init
             :new-server-value learn-ocaml-test-url

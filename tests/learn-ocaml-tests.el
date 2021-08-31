@@ -165,16 +165,12 @@ Assume this function is run from a subdirectory/runtests.el"
           (buffer-substring-no-properties bol eol))))))
 
 (cl-defun learn-ocaml-test-run-with
-    (&key before-login-teacher before-signup
-          body)
-  "Fixture to provide a login environment for each test.
+    (&key before-action body)
+  "Fixture to setup a login environment for tests.
+BEFORE-ACTION should be nil, 'login-teacher or 'signup.
 The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
 
   (learn-ocaml-test-remove-client-file) ;; pre-teardown
-
-  ;; Note: we could use (cond)
-  (when (and before-login-teacher before-signup)
-    (error "(and before-login-teacher before-signup) unexpectedly true"))
 
   ;; (let ((teardown
   ;;        (if after-remove-cookie
@@ -182,19 +178,24 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
   ;;        (lambda () (message "No need for cookie file removal"))))
   ;; COMMENTED-OUT as maybe this fixture could incorporate a teardown
 
-  (when (not (or before-login-teacher before-signup))
+  (cond
+   ((and before-action (not (member before-action '(login-teacher signup))))
+    (error "Unexpectedly value for before-action: [%s]"
+           (pp-to-string before-action)))
+
+   ((not before-action)
     (funcall body))
 
-  (when before-login-teacher
+   ((equal before-action 'login-teacher)
     (learn-ocaml-init-cmd ;; OK even if USE_PASSWD=true
      :server learn-ocaml-test-url
      :token (learn-ocaml-test-get-teacher-token)
      :nickname "Teacher"
      :secret ""
      :callback (lambda (_) (funcall body))))
-  ;; Note: this form completes immediately *but* the async test runs in the bg.
+   ;; Note: this form completes immediately *but* the async test runs in the bg.
 
-  (when before-signup
+   ((equal before-action 'signup)
     (if (not learn-ocaml-test-use-passwd)
         (learn-ocaml-init-cmd
          :server learn-ocaml-test-url
@@ -225,6 +226,6 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
             :callback-err
             (lambda (output) (error "learn-ocaml-test-run-with: learn-ocaml-client-sign-in-cmd: failed with [%s]." output))
             :callback-ok
-            (lambda (_) (funcall body)))))))))
+            (lambda (_) (funcall body))))))))))
 
 ;;; learn-ocaml-tests.el ends here
