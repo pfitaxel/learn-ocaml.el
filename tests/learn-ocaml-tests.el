@@ -164,6 +164,54 @@ Assume this function is run from a subdirectory/runtests.el"
             (error "learn-ocaml-test-get-last-confirm: No confirmation URL available")
           (buffer-substring-no-properties bol eol))))))
 
+;;; Two macros that leverage `ert-deftest-async' with `mapcar' (DRY principle)
+
+(defmacro ert-deftest-async-map-symb (name symb-list var callbacks &rest body)
+  "Call (`ert-deftest-async' NAME CALLBACKS BODY) foreach VAR in SYMB-LIST.
+Alter NAME accordingly with a suffix from SYMB-LIST.
+Bind VAR before calling BODY."
+  (declare (indent 2))
+  `(progn
+     ,@(mapcar ;; better than (dolist)
+        (lambda (symb)
+          (let ((name-symb (intern (concat (symbol-name name) "-" (symbol-name symb)))))
+            `(ert-deftest-async ,name-symb ,callbacks
+               (let ((,var ',symb))
+                 ,@body))))
+        symb-list)))
+
+(defmacro ert-deftest-async-map (name val-list var callbacks &rest body)
+  "Call (`ert-deftest-async' NAME CALLBACKS BODY) foreach VAR in VAL-LIST.
+Alter NAME accordingly with a suffix from VAL-LIST.
+Bind VAR before calling BODY.
+If VAL-LIST contains symbols, do not quote them."
+  (declare (indent 2))
+  (let ((idx-list (number-sequence 0 (1- (length val-list)))))
+    `(progn
+       ,@(mapcar ;; better than (dotimes)
+          (lambda (idx)
+            (let ((val (nth idx val-list)) ;; or (elt val-list idx)
+                  (name-idx (intern (concat (symbol-name name) "-"
+                                            (int-to-string idx)))))
+              `(ert-deftest-async ,name-idx ,callbacks
+                 (let ((,var ',val))
+                   ,@body))))
+          idx-list))))
+
+;;; Examples:
+;;
+;; (ert-deftest-async-map-symb
+;;     foobar (action1 action2) action (done1 done2)
+;;     (funcall done1)
+;;     (message (symbol-name action))
+;;     (funcall done2))
+;;
+;; (ert-deftest-async-map
+;;     foobaz ((action1 . "Hello") (action2 . "World")) pair (done1 done2)
+;;     (funcall done1)
+;;     (message "%s: %s!" (symbol-name (car pair)) (cdr pair))
+;;     (funcall done2))
+
 (cl-defun learn-ocaml-test-run-with
     (&key before-action body)
   "Fixture to setup a login environment for tests.
