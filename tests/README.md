@@ -107,18 +107,16 @@ To avoid this, you can use the dockerized version, `make tests`.
 
 * `2_learn-ocaml-token-management-test` (**002-use-token**)  
   * Create token from nickname, secret (`learn-ocaml-create-token-cmd`)
-  * **TODO** Add secret to `server_config.json`
   * Set token (`learn-ocaml-use-metadata-cmd`)
   * Read token (`learn-ocaml-give-token-cmd`)
 * `8_learn-ocaml-init-another-token` (**002-use-token**)  
   * Create token from nickname, secret (`learn-ocaml-create-token-cmd`)
-  * **TODO** Add secret to `server_config.json`
   * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with new token
   * Read new token (`learn-ocaml-give-token-cmd`)
   * They should be equal
 * `9_learn-ocaml-init-create-token` (**002-use-token**)  
   * Read token (`learn-ocaml-give-token-cmd`)
-  * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with no token
+  * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with no token, secret
   * which will call `learn-ocaml-create-token-cmd`
   * Read new token (`learn-ocaml-give-token-cmd`)
   * It should be different
@@ -126,7 +124,6 @@ To avoid this, you can use the dockerized version, `make tests`.
   * Read token (`learn-ocaml-give-token-cmd`)
   * `rm -f ~/.config/learnocaml/client.json`
   * Test `learn-ocaml-init` {used by `learn-ocaml-login-with-token`} with URL, nickname, secret
-  * **TODO** Add secret to `server_config.json`
   * Read token (`learn-ocaml-give-token-cmd`)
   * **FIXME** It should be different
 

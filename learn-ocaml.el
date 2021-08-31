@@ -648,6 +648,7 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
               nil
               callback)))
 
+;; TODO: Use cl-defun
 (defun learn-ocaml-create-token-cmd (nickname secret callback)
   "Create a new token for NICKNAME.
 Argument SECRET may be needed by the server.
@@ -979,6 +980,7 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
       ;; without config file
       (learn-ocaml-init-cmd
        :server new-server-value
+       :secret secret
        :token new-token-value
        :nickname nickname
        :callback callback)

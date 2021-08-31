@@ -9,7 +9,6 @@
 # These files contain some useful/hidden info for ERT tests.
 confirm="$PWD/confirm.txt"
 teacher="$PWD/teacher.txt"
-# TODO Use them.
 
 # This file contains the Server Container ID (gen by ./run_test_backend.sh)
 fcid="$PWD/learn-ocaml-server.pid"

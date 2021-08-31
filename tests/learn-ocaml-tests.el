@@ -66,7 +66,12 @@ See also `learn-ocaml-client-sign-up-cmd'.")
   (format "test%d-%d@example.com" learn-ocaml-test-user-num rand)))
 
 (defun learn-ocaml-test-user-pass ()
+  "Return a dummy password for creating test accounts."
   "OCaml123_")
+
+(defun learn-ocaml-test-secret ()
+  "Return the learn-ocaml secret for creating accounts."
+  "ServerPass")
 
 ;;; NOTE: This symbol list gather tests specific to 'use_passwd: true'
 ;;; (setq learn-ocaml-test-use-passwd-list
@@ -239,7 +244,6 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
      :server learn-ocaml-test-url
      :token (learn-ocaml-test-get-teacher-token)
      :nickname "Teacher"
-     :secret ""
      :callback (lambda (_) (funcall body))))
    ;; Note: this form completes immediately *but* the async test runs in the bg.
 
@@ -248,7 +252,7 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
         (learn-ocaml-init-cmd
          :server learn-ocaml-test-url
          :nickname "Student"
-         :secret ""
+         :secret (learn-ocaml-test-secret)
          :callback (lambda (_) (funcall body)))
       (let ((email (learn-ocaml-test-user-email))
             (pass (learn-ocaml-test-user-pass)))
@@ -257,7 +261,7 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
          :login email
          :password pass
          :nickname (format "StudentWithEmail(%s)" email)
-         :secret ""
+         :secret (learn-ocaml-test-secret)
          :callback-err
          (lambda (output) (error "learn-ocaml-test-run-with: learn-ocaml-client-sign-up-cmd: failed with [%s]." output))
          :callback-ok

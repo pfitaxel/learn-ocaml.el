@@ -144,8 +144,7 @@ run_server () {
     if [ "$USE_PASSWD" = "true" ]; then
         cp -f "$PWD/tests/use_passwd.json" "$PWD/tests/repo/server_config.json"
     else
-        # TODO: Add a secret
-        rm -f "$PWD/tests/repo/server_config.json"
+        cp -f "$PWD/tests/use_token.json" "$PWD/tests/repo/server_config.json"
     fi
 
     # Don't use the "-d" option

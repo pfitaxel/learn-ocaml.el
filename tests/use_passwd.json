@@ -1,3 +1,4 @@
 {
+    "secret": "ServerPass",
     "use_passwd": true
 }
