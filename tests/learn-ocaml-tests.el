@@ -163,8 +163,10 @@ Assume this function is run from a subdirectory/runtests.el"
       (insert-file-contents-literally filename)
       (goto-char (point-max))
       (delete-blank-lines) ;; Remove potential trailing whitespace
-      (when (= (line-beginning-position) (line-end-position))
-        (left-char 1))
+      (when (and
+             (= (line-beginning-position) (line-end-position))
+             (> (point) (point-min)))
+             (left-char 1))
       (let ((bol (line-beginning-position)) (eol (line-end-position)))
         (if (= bol eol)
             (error "learn-ocaml-test-get-last-confirm: No confirmation URL available")
