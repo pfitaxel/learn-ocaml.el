@@ -66,6 +66,7 @@ See also `learn-ocaml-client-sign-up-cmd'.")
   (format "test%d-%d@example.com" learn-ocaml-test-user-num rand)))
 
 (defun learn-ocaml-test-user-pass ()
+  "Return a dummy password for creating test accounts."
   "OCaml123_")
 
 ;;; NOTE: This symbol list gather tests specific to 'use_passwd: true'

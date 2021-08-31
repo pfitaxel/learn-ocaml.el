@@ -86,20 +86,7 @@
 
 ;; MOVED TO 001-common:
 ;; (ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
-;;   (learn-ocaml-test-run-with
-;;    :before-action 'login-teacher
-;;    :body (lambda ()
-;;            (learn-ocaml-give-token-cmd
-;;             (lambda (token)
-;;               (learn-ocaml-test-remove-client-file)
-;;               (learn-ocaml-init
-;;                :new-server-value learn-ocaml-test-url
-;;                :new-token-value token
-;;                :callback (lambda (_)
-;;                            (learn-ocaml-give-token-cmd
-;;                             (lambda (token2)
-;;                               (should (equal token token2))
-;;                               (funcall done))))))))))
+;; ...
 
 (ert-deftest-async a11_learn-ocaml-on-load-test-create-token-no-config (done)
   (learn-ocaml-test-run-with
