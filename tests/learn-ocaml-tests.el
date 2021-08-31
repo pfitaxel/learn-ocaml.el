@@ -170,7 +170,7 @@ Assume this function is run from a subdirectory/runtests.el"
   "Call (`ert-deftest-async' NAME CALLBACKS BODY) foreach VAR in SYMB-LIST.
 Alter NAME accordingly with a suffix from SYMB-LIST.
 Bind VAR before calling BODY."
-  (declare (indent 2))
+  (declare (indent 0))
   `(progn
      ,@(mapcar ;; better than (dolist)
         (lambda (symb)
@@ -185,7 +185,7 @@ Bind VAR before calling BODY."
 Alter NAME accordingly with a suffix from VAL-LIST.
 Bind VAR before calling BODY.
 If VAL-LIST contains symbols, do not quote them."
-  (declare (indent 2))
+  (declare (indent 0))
   (let ((idx-list (number-sequence 0 (1- (length val-list)))))
     `(progn
        ,@(mapcar ;; better than (dotimes)
