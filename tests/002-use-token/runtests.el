@@ -33,7 +33,7 @@
    :body (lambda ()
            (learn-ocaml-create-token-cmd
             "Foo"
-            ""
+            (learn-ocaml-test-secret)
             (lambda (token)
               (learn-ocaml-use-metadata-cmd
                token
@@ -54,7 +54,7 @@
    :body (lambda ()
            (learn-ocaml-create-token-cmd
             "Foo"
-            ""
+            (learn-ocaml-test-secret)
             (lambda (token)
               (learn-ocaml-init
                :new-server-value nil
@@ -75,7 +75,7 @@
               (learn-ocaml-init
                :new-server-value nil
                :nickname "Foo"
-               :secret ""
+               :secret (learn-ocaml-test-secret)
                :callback (lambda (_)
                            (learn-ocaml-give-token-cmd
                             (lambda (token2)
@@ -95,7 +95,7 @@
            (learn-ocaml-init
             :new-server-value learn-ocaml-test-url
             :nickname "Foo"
-            :secret ""
+            :secret (learn-ocaml-test-secret)
             :callback (lambda (_)
                         (learn-ocaml-give-token-cmd
                          (lambda (token2)

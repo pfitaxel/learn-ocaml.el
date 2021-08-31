@@ -39,7 +39,7 @@
               :login email
               :password pass
               :nickname (format "FooStudentWithEmail(%s)" email)
-              :secret ""
+              :secret (learn-ocaml-test-secret)
               :callback-err
               (lambda (output) (error "a12_learn-ocaml-test-sign-up: failed with [%s]." output))
               :callback-ok
