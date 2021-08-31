@@ -271,7 +271,6 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
             :login email
             :password pass
             :callback-err
-            :callback-err
             (lambda (output) (error "learn-ocaml-test-run-with: learn-ocaml-client-sign-in-cmd: failed with [%s]." output))
             :callback-ok
             (lambda (_) (funcall body))))))))))
