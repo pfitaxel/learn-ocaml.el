@@ -115,12 +115,27 @@ Assume this function is run from a subdirectory/runtests.el"
     (concat (funcall up (funcall up (funcall up curdir)))
             "learn-ocaml/_opam/bin")))
 
+(defvar learn-ocaml-test-dir nil
+  "Path of the .../learn-ocaml.el/tests/00x-name/ directory.
+Useful if the ERT tests are run interactively, because in this case
+(buffer-file-name) returns nil.")
+
+(defun learn-ocaml-test-dir ()
+  "Set the `learn-ocaml-test-dir' variable.
+Assume this function is run from a subdirectory/runtests.el"
+  (let ((curdir (file-name-directory
+                 (or (buffer-file-name)
+                     (file-name-as-directory command-line-default-directory)))))
+    (setq learn-ocaml-test-dir curdir))
+    learn-ocaml-test-dir)
+
 (defun learn-ocaml-test-get-teacher-token ()
   "Get ../../teacher.txt
 Assume this function is run from a subdirectory/runtests.el"
   (let* ((curdir (file-name-directory
-                 (or (buffer-file-name)
-                     (file-name-as-directory command-line-default-directory))))
+                  (or learn-ocaml-test-dir
+                      (buffer-file-name)
+                      (file-name-as-directory command-line-default-directory))))
          (up (lambda (dir) (file-name-directory (directory-file-name dir))))
          (filename (concat (funcall up (funcall up curdir))
                            "teacher.txt")))
@@ -132,8 +147,9 @@ Assume this function is run from a subdirectory/runtests.el"
   "Get last ../../confirm.txt
 Assume this function is run from a subdirectory/runtests.el"
   (let* ((curdir (file-name-directory
-                 (or (buffer-file-name)
-                     (file-name-as-directory command-line-default-directory))))
+                  (or learn-ocaml-test-dir
+                      (buffer-file-name)
+                      (file-name-as-directory command-line-default-directory))))
          (up (lambda (dir) (file-name-directory (directory-file-name dir))))
          (filename (concat (funcall up (funcall up curdir))
                            "confirm.txt")))
@@ -148,17 +164,61 @@ Assume this function is run from a subdirectory/runtests.el"
             (error "learn-ocaml-test-get-last-confirm: No confirmation URL available")
           (buffer-substring-no-properties bol eol))))))
 
+;;; Two macros that leverage `ert-deftest-async' with `mapcar' (DRY principle)
+
+(defmacro ert-deftest-async-map-symb (name symb-list var callbacks &rest body)
+  "Call (`ert-deftest-async' NAME CALLBACKS BODY) foreach VAR in SYMB-LIST.
+Alter NAME accordingly with a suffix from SYMB-LIST.
+Bind VAR before calling BODY."
+  (declare (indent 0))
+  `(progn
+     ,@(mapcar ;; better than (dolist)
+        (lambda (symb)
+          (let ((name-symb (intern (concat (symbol-name name) "_" (symbol-name symb)))))
+            `(ert-deftest-async ,name-symb ,callbacks
+               (let ((,var ',symb))
+                 ,@body))))
+        symb-list)))
+
+(defmacro ert-deftest-async-map (name val-list var callbacks &rest body)
+  "Call (`ert-deftest-async' NAME CALLBACKS BODY) foreach VAR in VAL-LIST.
+Alter NAME accordingly with a suffix from VAL-LIST.
+Bind VAR before calling BODY.
+If VAL-LIST contains symbols, do not quote them."
+  (declare (indent 0))
+  (let ((idx-list (number-sequence 0 (1- (length val-list)))))
+    `(progn
+       ,@(mapcar ;; better than (dotimes)
+          (lambda (idx)
+            (let ((val (nth idx val-list)) ;; or (elt val-list idx)
+                  (name-idx (intern (concat (symbol-name name) "_"
+                                            (int-to-string idx)))))
+              `(ert-deftest-async ,name-idx ,callbacks
+                 (let ((,var ',val))
+                   ,@body))))
+          idx-list))))
+
+;;; Examples:
+;;
+;; (ert-deftest-async-map-symb
+;;     foobar (action1 action2) action (done1 done2)
+;;     (funcall done1)
+;;     (message (symbol-name action))
+;;     (funcall done2))
+;;
+;; (ert-deftest-async-map
+;;     foobaz ((action1 . "Hello") (action2 . "World")) pair (done1 done2)
+;;     (funcall done1)
+;;     (message "%s: %s!" (symbol-name (car pair)) (cdr pair))
+;;     (funcall done2))
+
 (cl-defun learn-ocaml-test-run-with
-    (&key before-login-teacher before-signup
-          body)
-  "Fixture to provide a login environment for each test.
+    (&key before-action body)
+  "Fixture to setup a login environment for tests.
+BEFORE-ACTION should be nil, 'login-teacher or 'signup.
 The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
 
   (learn-ocaml-test-remove-client-file) ;; pre-teardown
-
-  ;; Note: we could use (cond)
-  (when (and before-login-teacher before-signup)
-    (error "(and before-login-teacher before-signup) unexpectedly true"))
 
   ;; (let ((teardown
   ;;        (if after-remove-cookie
@@ -166,19 +226,24 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
   ;;        (lambda () (message "No need for cookie file removal"))))
   ;; COMMENTED-OUT as maybe this fixture could incorporate a teardown
 
-  (when (not (or before-login-teacher before-signup))
+  (cond
+   ((and before-action (not (member before-action '(login-teacher signup))))
+    (error "Unexpectedly value for before-action: [%s]"
+           (pp-to-string before-action)))
+
+   ((not before-action)
     (funcall body))
 
-  (when before-login-teacher
+   ((equal before-action 'login-teacher)
     (learn-ocaml-init-cmd ;; OK even if USE_PASSWD=true
      :server learn-ocaml-test-url
      :token (learn-ocaml-test-get-teacher-token)
      :nickname "Teacher"
      :secret ""
      :callback (lambda (_) (funcall body))))
-  ;; Note: this form completes immediately *but* the async test runs in the bg.
+   ;; Note: this form completes immediately *but* the async test runs in the bg.
 
-  (when before-signup
+   ((equal before-action 'signup)
     (if (not learn-ocaml-test-use-passwd)
         (learn-ocaml-init-cmd
          :server learn-ocaml-test-url
@@ -191,7 +256,7 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
          :server learn-ocaml-test-url
          :login email
          :password pass
-         :nickname "StudentWithEmail"
+         :nickname (format "StudentWithEmail(%s)" email)
          :secret ""
          :callback-err
          (lambda (output) (error "learn-ocaml-test-run-with: learn-ocaml-client-sign-up-cmd: failed with [%s]." output))
@@ -206,9 +271,8 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
             :login email
             :password pass
             :callback-err
-            :callback-err
             (lambda (output) (error "learn-ocaml-test-run-with: learn-ocaml-client-sign-in-cmd: failed with [%s]." output))
             :callback-ok
-            (lambda (_) (funcall body)))))))))
+            (lambda (_) (funcall body))))))))))
 
 ;;; learn-ocaml-tests.el ends here

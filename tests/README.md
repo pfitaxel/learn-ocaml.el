@@ -24,7 +24,7 @@
 ```elisp
 ;; (progn (load-file "../../learn-ocaml.el") (load-file "../learn-ocaml-tests.el") (load-file "./runtests.el"))
 ;; (add-to-list 'exec-path (learn-ocaml-test-client-expected-path))
-;; (learn-ocaml-test-use-passwd-auto)
+;; (progn (learn-ocaml-test-use-passwd-auto)(learn-ocaml-test-dir))
 ;; (call-interactively #'ert-run-tests-interactively)
 ```
 
@@ -73,14 +73,18 @@ To avoid this, you can use the dockerized version, `make tests`.
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo-results.html`
 * `4_learn-ocaml-download-server-file-test` (*001-common*)  
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
+  * Grade `tests/to_grade.ml` for `demo` (`learn-ocaml-grade-file-cmd`)
+  * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo-results.html`
+  * `rm /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
   * Download `demo.ml` (`learn-ocaml-download-server-file-cmd`)
   * `cat /tmp/learn-ocaml-mode$XXXXXX/demo.ml` (`should return 0`)
   * **TODO** Improve/Split this test, using `diff` or so
+  * `rm /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
 * `5_learn-ocaml-download-template-test` (*001-common*)  
   * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
   * Download template `demo.ml` (`learn-ocaml-download-template-cmd`)
   * `diff /tmp/learn-ocaml-mode$XXXXXX/demo.ml ./tests/template_demo.ml` (`should return 0`)
-  * `rm -f /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
+  * `rm /tmp/learn-ocaml-mode$XXXXXX/demo.ml`
 * `6_learn-ocaml-give-exercise-list-test` (*001-common*)  
   * Get exercise list (`learn-ocaml-give-exercise-list-cmd`)
   * Read `./tests/exercise_list.json`
