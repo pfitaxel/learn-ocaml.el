@@ -26,10 +26,10 @@
 
 ;; Tests for core functions
 
-(ert-deftest-async 1_learn-ocaml-server-management-test (done)
+(ert-deftest-async-map-symb
+  1_learn-ocaml-server-management-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
-   ;; TODO should also test with :before-signup t
+   :before-action action
    :body (lambda ()
            (learn-ocaml-use-metadata-cmd
             nil
@@ -42,9 +42,10 @@
                           given-server))
                  (funcall done))))))))
 
-(ert-deftest-async 3_learn-ocaml-grade-test (done)
+(ert-deftest-async-map-symb
+  3_learn-ocaml-grade-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
+   :before-action action
    :body (lambda ()
            (learn-ocaml-test-remove-temp-file "demo")
            (learn-ocaml-grade-file-cmd
@@ -61,9 +62,10 @@
                         (learn-ocaml-test-remove-temp-file "demo")
                  (funcall done))))))
 
-(ert-deftest-async 4_learn-ocaml-download-server-file-test (done)
+(ert-deftest-async-map-symb
+  4_learn-ocaml-download-server-file-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
+   :before-action action
    :body (lambda ()
            (learn-ocaml-test-remove-demo-file)
            (learn-ocaml-download-server-file-cmd
@@ -76,9 +78,10 @@
                         (learn-ocaml-test-remove-demo-file t)
                         (funcall done))))))
 
-(ert-deftest-async 5_learn-ocaml-download-template-test (done)
+(ert-deftest-async-map-symb
+  5_learn-ocaml-download-template-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
+   :before-action action
    :body (lambda ()
            (learn-ocaml-test-remove-demo-file)
            (learn-ocaml-download-template-cmd
@@ -94,9 +97,10 @@
                         (learn-ocaml-test-remove-demo-file t)
                         (funcall done))))))
 
-(ert-deftest-async 6_learn-ocaml-give-exercise-list-test (done)
+(ert-deftest-async-map-symb
+  6_learn-ocaml-give-exercise-list-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
+   :before-action action
    :body (lambda ()
            (with-temp-buffer
              (insert-file-contents learn-ocaml-test-json-file)
@@ -106,9 +110,10 @@
                   (should (equal json expected))
                   (funcall done))))))))
 
-(ert-deftest-async 7_learn-ocaml-compute-questions-url-test (done)
+(ert-deftest-async-map-symb
+  7_learn-ocaml-compute-questions-url-test (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
+   :before-action action
    :body (lambda ()
            (learn-ocaml-give-server-cmd
             (lambda (server)
@@ -126,9 +131,10 @@
 
 ;; tests "without" the config file
 
-(ert-deftest-async a10_learn-ocaml-on-load-test-another-token-no-config (done)
+(ert-deftest-async-map-symb
+  a10_learn-ocaml-on-load-test-another-token-no-config (login-teacher signup) action (done)
   (learn-ocaml-test-run-with
-   :before-action 'login-teacher
+   :before-action action
    :body (lambda ()
            (learn-ocaml-give-token-cmd
             (lambda (token)
