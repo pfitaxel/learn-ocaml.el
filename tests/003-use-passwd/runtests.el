@@ -29,7 +29,8 @@
 
 (ert-deftest-async a12_learn-ocaml-test-sign-up (done)
   (learn-ocaml-test-run-with
-   ;; Focus on sign-up, no :before-action 'login-teacher, just pre-teardown
+   ;; As we focus on sign-up,
+   ;; no :before-action 'login-teacher/'signup; just pre-teardown
    :body (lambda ()
            (let ((email (learn-ocaml-test-user-email))
                  (pass (learn-ocaml-test-user-pass)))
@@ -37,7 +38,7 @@
               :server learn-ocaml-test-url
               :login email
               :password pass
-              :nickname "FooStudentWithEmail"
+              :nickname (format "FooStudentWithEmail(%s)" email)
               :secret ""
               :callback-err
               (lambda (output) (error "a12_learn-ocaml-test-sign-up: failed with [%s]." output))

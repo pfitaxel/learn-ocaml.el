@@ -174,7 +174,7 @@ Bind VAR before calling BODY."
   `(progn
      ,@(mapcar ;; better than (dolist)
         (lambda (symb)
-          (let ((name-symb (intern (concat (symbol-name name) "-" (symbol-name symb)))))
+          (let ((name-symb (intern (concat (symbol-name name) "_" (symbol-name symb)))))
             `(ert-deftest-async ,name-symb ,callbacks
                (let ((,var ',symb))
                  ,@body))))
@@ -191,7 +191,7 @@ If VAL-LIST contains symbols, do not quote them."
        ,@(mapcar ;; better than (dotimes)
           (lambda (idx)
             (let ((val (nth idx val-list)) ;; or (elt val-list idx)
-                  (name-idx (intern (concat (symbol-name name) "-"
+                  (name-idx (intern (concat (symbol-name name) "_"
                                             (int-to-string idx)))))
               `(ert-deftest-async ,name-idx ,callbacks
                  (let ((,var ',val))
@@ -256,7 +256,7 @@ The caller must run (learn-ocaml-test-remove-client-file) manually afterwards."
          :server learn-ocaml-test-url
          :login email
          :password pass
-         :nickname "StudentWithEmail"
+         :nickname (format "StudentWithEmail(%s)" email)
          :secret ""
          :callback-err
          (lambda (output) (error "learn-ocaml-test-run-with: learn-ocaml-client-sign-up-cmd: failed with [%s]." output))
