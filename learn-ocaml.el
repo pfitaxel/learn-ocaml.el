@@ -980,6 +980,7 @@ Note: this function will be used by `learn-ocaml-login-with-token'."
       ;; without config file
       (learn-ocaml-init-cmd
        :server new-server-value
+       :secret secret
        :token new-token-value
        :nickname nickname
        :callback callback)
