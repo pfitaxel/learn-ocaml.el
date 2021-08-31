@@ -18,7 +18,7 @@
 ;;
 ;; (progn (load-file "../../learn-ocaml.el") (load-file "../learn-ocaml-tests.el") (load-file "./runtests.el"))
 ;; (add-to-list 'exec-path (learn-ocaml-test-client-expected-path))
-;; (learn-ocaml-test-use-passwd-auto)
+;; (progn (learn-ocaml-test-use-passwd-auto)(learn-ocaml-test-dir))
 ;; (call-interactively #'ert-run-tests-interactively)
 
 ;; (setq debug-on-error t)  ; to open the debugger/backtrace on error

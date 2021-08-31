@@ -115,12 +115,27 @@ Assume this function is run from a subdirectory/runtests.el"
     (concat (funcall up (funcall up (funcall up curdir)))
             "learn-ocaml/_opam/bin")))
 
+(defvar learn-ocaml-test-dir nil
+  "Path of the .../learn-ocaml.el/tests/00x-name/ directory.
+Useful if the ERT tests are run interactively, because in this case
+(buffer-file-name) returns nil.")
+
+(defun learn-ocaml-test-dir ()
+  "Set the `learn-ocaml-test-dir' variable.
+Assume this function is run from a subdirectory/runtests.el"
+  (let ((curdir (file-name-directory
+                 (or (buffer-file-name)
+                     (file-name-as-directory command-line-default-directory)))))
+    (setq learn-ocaml-test-dir curdir))
+    learn-ocaml-test-dir)
+
 (defun learn-ocaml-test-get-teacher-token ()
   "Get ../../teacher.txt
 Assume this function is run from a subdirectory/runtests.el"
   (let* ((curdir (file-name-directory
-                 (or (buffer-file-name)
-                     (file-name-as-directory command-line-default-directory))))
+                  (or learn-ocaml-test-dir
+                      (buffer-file-name)
+                      (file-name-as-directory command-line-default-directory))))
          (up (lambda (dir) (file-name-directory (directory-file-name dir))))
          (filename (concat (funcall up (funcall up curdir))
                            "teacher.txt")))
@@ -132,8 +147,9 @@ Assume this function is run from a subdirectory/runtests.el"
   "Get last ../../confirm.txt
 Assume this function is run from a subdirectory/runtests.el"
   (let* ((curdir (file-name-directory
-                 (or (buffer-file-name)
-                     (file-name-as-directory command-line-default-directory))))
+                  (or learn-ocaml-test-dir
+                      (buffer-file-name)
+                      (file-name-as-directory command-line-default-directory))))
          (up (lambda (dir) (file-name-directory (directory-file-name dir))))
          (filename (concat (funcall up (funcall up curdir))
                            "confirm.txt")))
