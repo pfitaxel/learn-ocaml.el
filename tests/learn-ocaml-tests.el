@@ -158,6 +158,7 @@ Assume this function is run from a subdirectory/runtests.el"
          (up (lambda (dir) (file-name-directory (directory-file-name dir))))
          (filename (concat (funcall up (funcall up curdir))
                            "confirm.txt")))
+    (sleep-for 0.2) ;; hacky
     (with-temp-buffer
       (insert-file-contents-literally filename)
       (goto-char (point-max))
