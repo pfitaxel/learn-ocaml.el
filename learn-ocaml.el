@@ -1107,7 +1107,7 @@ If TOKEN is \"\", interactively ask a token."
                                                   :callback
                                                   (lambda(_)
           (if (version-list-<=
-               (version-to-list (learn-ocaml-client-version)) (version-to-list "0.13"))
+              (version-to-list "0.13") (version-to-list (learn-ocaml-client-version)))
               (progn (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
                      (if learn-ocaml-use-passwd
                          (learn-ocaml-login-possibly-with-passwd new-server-value callback)
