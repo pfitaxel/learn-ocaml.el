@@ -506,15 +506,15 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
               nil
               callback)))
 
-(defun learn-ocaml-client-exercise-score-cmd ()
-  "Run \"learn-ocaml-client exercise-score\"."
-  (let* ((cmd "exercise-score")
-         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
-    (if (car result) (json-read-from-string (cdr result))
-      ;; FIXME: Use learn-ocaml-log-buffer
-      (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
-             (string-trim (cdr result))))))
-
+(defun learn-ocaml-client-exercise-score-cmd () ()
+  ;; "Run \"learn-ocaml-client exercise-score\"."
+  ;; (let* ((cmd "exercise-score")
+  ;;        (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
+  ;;   (if (car result) (json-read-from-string (cdr result))
+  ;;     ;; FIXME: Use learn-ocaml-log-buffer
+  ;;     (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
+  ;;            (string-trim (cdr result))))))
+)
 (cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
   (learn-ocaml-print-time-stamp)
@@ -1103,16 +1103,18 @@ If TOKEN is \"\", interactively ask a token."
                                      (progn (message-box "No server found. Please enter the server url.")
                                             (read-string "Enter server URL: " "https://"))
                                    server)))
-          (progn (learn-ocaml-init-server-cmd :server new-server-value
-                                                  :callback
-                                                  (lambda(_)
           (if (version-list-<=
-              (version-to-list "0.13") (version-to-list (learn-ocaml-client-version)))
-              (progn (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
-                     (if learn-ocaml-use-passwd
-                         (learn-ocaml-login-possibly-with-passwd new-server-value callback)
-                       (learn-ocaml-login-with-token token new-server-value callback)))
-            (learn-ocaml-login-with-token token new-server-value callback)))))))))))
+               ;; TODO: Update, https://github.com/pfitaxel/learn-ocaml.el/pull/26#pullrequestreview-758063532
+               (version-to-list "0.13") (version-to-list (learn-ocaml-client-version)))
+              (progn (learn-ocaml-init-server-cmd
+                      :server new-server-value
+                      :callback
+                      (lambda(_)
+                        (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
+                        (if learn-ocaml-use-passwd
+                            (learn-ocaml-login-possibly-with-passwd new-server-value callback)
+                          (learn-ocaml-login-with-token token new-server-value callback)))))
+            (learn-ocaml-login-with-token token new-server-value callback))))))))
 
 (defun learn-ocaml-logout ()
   "Logout the user from the server by removing the token from the file client.json"
