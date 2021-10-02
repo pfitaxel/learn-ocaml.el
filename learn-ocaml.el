@@ -355,6 +355,21 @@ Raise (error \"learn-ocaml-await-for...\") if `learn-ocaml-timeout' exceeded."
                      #'(lambda (s) (funcall failure s)))))
      learn-ocaml-timeout (car args))))
 
+(defun learn-ocaml-client-version ()
+  "Run \"learn-ocaml-client --version\"."
+  (string-trim
+   (cdr (learn-ocaml-command-to-string-await-cmd (list "--version")))))
+
+(defun learn-ocaml-client-server-version ()
+  "Run \"learn-ocaml-client server-version\"."
+  ;; TODO/FIXME: Update when possible
+  (learn-ocaml-client-version))
+
+(defun learn-ocaml-client-server-min-version ()
+  "Return the min of the learn-ocaml server and learn-ocaml-client versions."
+  ;; TODO/FIXME: Update when possible, "learn-ocaml-client server-version --min"
+  (learn-ocaml-client-version))
+
 ;;
 ;; Higher-order functions, sentinels of the make-process wrapper
 ;;
@@ -445,10 +460,227 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
          (list (list learn-ocaml-command-name "init-user" server-option login password nickname-option secret-option)))
     (cl-remove-if-not 'stringp list)))
 
-(defun learn-ocaml-client-version ()
-  "Run \"learn-ocaml-client --version\"."
-  (string-trim
-   (cdr (learn-ocaml-command-to-string-await-cmd (list "--version")))))
+;;
+;; Low-level functions 0.12
+;;
+
+;; a useful one-liner:
+;; VERSION=0.12; docker run --rm -i ocamlsf/learn-ocaml-client:"$VERSION" --help | perl -wne 'BEGIN{my $at=0;} $at=0 if /ARGUMENTS/; s/^ {7}//; print if $at && /./ && ! /^ /; $at=1 if /COMMANDS/;'
+;;
+;; create-token
+;; exercise-list
+;; fetch
+;; grade
+;; init
+;; print-server
+;; print-token
+;; set-options
+;; template
+
+;; TODO: Rename them below if need be
+
+;; TODO: Use cl-defun
+(defun learn-ocaml-create-token-cmd (nickname secret callback)
+  "Create a new token for NICKNAME.
+Argument SECRET may be needed by the server.
+Argument CALLBACK will receive the token."
+  (learn-ocaml-print-time-stamp)
+  (let ((buffer (generate-new-buffer "create-token")))
+    (learn-ocaml-make-process-wrapper
+     :name "create-token"
+     :command (learn-ocaml-command-constructor
+               :command "create-token"
+               :param1 nickname
+               :param2 secret)
+     :stderr (learn-ocaml-log-buffer)
+     :buffer buffer
+     :sentinel (apply-partially
+                #'learn-ocaml-error-handler
+                buffer
+                (lambda (s)
+                  (funcall-interactively
+                   callback
+                   (replace-regexp-in-string "\n\\'" "" s)))))))
+
+(defun learn-ocaml-give-exercise-list-cmd (callback)
+  "Give to the CALLBACK a json containing the exercise list."
+  (learn-ocaml-print-time-stamp)
+  (let ((buffer (generate-new-buffer "exercise-list")))
+    (learn-ocaml-make-process-wrapper
+     :name "exercise-list"
+     :command (learn-ocaml-command-constructor
+               :command "exercise-list")
+     :stderr (learn-ocaml-log-buffer)
+     :buffer buffer
+     :sentinel (apply-partially
+                #'learn-ocaml-error-handler
+                buffer
+                (lambda (s)
+                  (funcall-interactively
+                   callback (json-read-from-string s)))))))
+
+(cl-defun learn-ocaml-download-server-file-cmd (&key token server id directory callback)
+  "Download from the SERVER the last version of exercise ID in DIRECTORY."
+  (learn-ocaml-print-time-stamp)
+  (let ((old (learn-ocaml-cd directory)))
+  (learn-ocaml-make-process-wrapper
+   :name (concat "download-" id)
+   :command (learn-ocaml-command-constructor
+             :token token
+             :server server
+             :param1 id
+             :command "fetch")
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback))
+  (cd old)))
+
+;; TODO/Fixme: bug ?
+(cl-defun learn-ocaml-grade-file-cmd (&key id token server dont-submit file callback)
+  "Grade a .ml file, optionally submitting the code and the note to the server."
+  (learn-ocaml-print-time-stamp)
+  (let ((html (learn-ocaml-temp-html-file id)))
+    (write-region "" nil html nil)      ; erase the html file
+  (learn-ocaml-make-process-wrapper
+   :name (concat "upload-" id)
+   :command (learn-ocaml-command-constructor
+             :token token
+             :server server
+             :id id
+             :dont-submit dont-submit
+             :param1 file
+             :html t)
+   :stderr (learn-ocaml-log-buffer)
+   :filter (apply-partially
+            #'learn-ocaml-file-writter-filter
+            html)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              (lambda (_arg)
+                (funcall-interactively
+                 callback
+                 html))))))
+
+(cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
+  "Run \"learn-ocaml-client init\" with options."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "init"
+   :command (learn-ocaml-command-constructor
+             :token token
+             :server server
+             :param1 nickname
+             :param2 secret
+             :command "init")
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback)))
+
+(defun learn-ocaml-give-server-cmd (callback)
+  "Give the current server url to the CALLBACK."
+  (learn-ocaml-print-time-stamp)
+  (let ((buffer (generate-new-buffer "give-server")))
+    (learn-ocaml-make-process-wrapper
+     :name "give-server"
+     :command (learn-ocaml-command-constructor
+               :command "print-server")
+     :stderr (learn-ocaml-log-buffer)
+     :buffer buffer
+     :sentinel (apply-partially
+                #'learn-ocaml-error-handler
+                buffer
+                (lambda (s)
+                  (funcall-interactively
+                   callback
+
+                   (learn-ocaml--rstrip s)))))))
+
+(defun learn-ocaml-give-token-cmd (callback)
+  "Gives the current token to the CALLBACK."
+  (learn-ocaml-print-time-stamp)
+  (let ((buffer (generate-new-buffer "give-token")))
+    (learn-ocaml-make-process-wrapper
+     :name "give-token"
+     :command (learn-ocaml-command-constructor
+               :command "print-token")
+     :stderr (learn-ocaml-log-buffer)
+     :buffer buffer
+     :sentinel (apply-partially
+                #'learn-ocaml-error-handler
+                buffer
+                (lambda (s)
+                  (funcall-interactively
+                   callback
+                   (learn-ocaml--rstrip s)))))))
+
+(defun learn-ocaml-use-metadata-cmd (token server callback)
+  "Set TOKEN, SERVER, and run CALLBACK."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "use-metadata"
+   :command (learn-ocaml-command-constructor
+             :token token
+             :server server
+             :command "set-options")
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback)))
+
+(cl-defun learn-ocaml-download-template-cmd (&key token server id local directory callback)
+  "Download from the SERVER the template code for exercise ID in DIRECTORY."
+  ;; TODO: argument LOCAL is not taken into account in the mode
+  (learn-ocaml-print-time-stamp)
+  (let ((old (learn-ocaml-cd directory)))
+  (learn-ocaml-make-process-wrapper
+   :name (concat "template-" id)
+   :command (learn-ocaml-command-constructor
+             :command "template"
+             :token token
+             :server server
+             :local local
+             :param1 id)
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback))
+  (cd old)))
+
+;;
+;; Low-level functions 0.15
+;;
+
+;; TODO: Refine
+
+(defun learn-ocaml-client-exercise-score-cmd ()
+  "Run \"learn-ocaml-client exercise-score\"."
+  (let* ((cmd "exercise-score")
+         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
+    (if (car result) (json-read-from-string (cdr result))
+      ;; FIXME: Use learn-ocaml-log-buffer
+      (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
+             (string-trim (cdr result))))))
+
+(cl-defun learn-ocaml-init-server-cmd (&key server callback)
+  "Run \"learn-ocaml-client init\" with options."
+  (learn-ocaml-print-time-stamp)
+  (learn-ocaml-make-process-wrapper
+   :name "init-server"
+   :command (learn-ocaml-command-constructor
+             :server server
+             :command "init-server")
+   :stderr (learn-ocaml-log-buffer)
+   :sentinel (apply-partially
+              #'learn-ocaml-error-handler
+              nil
+              callback)))
 
 (cl-defun learn-ocaml-client-sign-in-cmd (&key server login password callback-ok callback-err)
   "Run \"learn-ocaml-client init-user\" with SERVER LOGIN PASSWORD to login an user."
@@ -492,209 +724,13 @@ To be used as a `make-process' sentinel, using args PROC and STRING."
       ;; FIXME: Use learn-ocaml-log-buffer
       (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd (string-trim (cdr result))))))
 
-(cl-defun learn-ocaml-init-server-cmd (&key server callback)
-  "Run \"learn-ocaml-client init\" with options."
-  (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "init-server"
-   :command (learn-ocaml-command-constructor
-             :server server
-             :command "init-server")
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback)))
-
-(defun learn-ocaml-client-exercise-score-cmd ()
-  "Run \"learn-ocaml-client exercise-score\"."
-  (let* ((cmd "exercise-score")
-         (result (learn-ocaml-command-to-string-await-cmd (list cmd))))
-    (if (car result) (json-read-from-string (cdr result))
-      ;; FIXME: Use learn-ocaml-log-buffer
-      (error "%s %s: failed with [%s]." learn-ocaml-command-name cmd
-             (string-trim (cdr result))))))
-
-(cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
-  "Run \"learn-ocaml-client init\" with options."
-  (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "init"
-   :command (learn-ocaml-command-constructor
-             :token token
-             :server server
-             :param1 nickname
-             :param2 secret
-             :command "init")
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback)))
-
-(cl-defun learn-ocaml-download-server-file-cmd (&key token server id directory callback)
-  "Download from the SERVER the last version of exercise ID in DIRECTORY."
-  (learn-ocaml-print-time-stamp)
-  (let ((old (learn-ocaml-cd directory)))
-  (learn-ocaml-make-process-wrapper
-   :name (concat "download-" id)
-   :command (learn-ocaml-command-constructor
-             :token token
-             :server server
-             :param1 id
-             :command "fetch")
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback))
-  (cd old)))
-
-(cl-defun learn-ocaml-download-template-cmd (&key token server id local directory callback)
-  "Download from the SERVER the template code for exercise ID in DIRECTORY."
-  ;; TODO: argument LOCAL is not taken into account in the mode
-  (learn-ocaml-print-time-stamp)
-  (let ((old (learn-ocaml-cd directory)))
-  (learn-ocaml-make-process-wrapper
-   :name (concat "template-" id)
-   :command (learn-ocaml-command-constructor
-             :command "template"
-             :token token
-             :server server
-             :local local
-             :param1 id)
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback))
-  (cd old)))
-
-(cl-defun learn-ocaml-grade-file-cmd (&key id token server dont-submit file callback)
-  "Grade a .ml file, optionally submitting the code and the note to the server."
-  (learn-ocaml-print-time-stamp)
-  (let ((html (learn-ocaml-temp-html-file id)))
-    (write-region "" nil html nil)      ; erase the html file
-  (learn-ocaml-make-process-wrapper
-   :name (concat "upload-" id)
-   :command (learn-ocaml-command-constructor
-             :token token
-             :server server
-             :id id
-             :dont-submit dont-submit
-             :param1 file
-             :html t)
-   :stderr (learn-ocaml-log-buffer)
-   :filter (apply-partially
-            #'learn-ocaml-file-writter-filter
-            html)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              (lambda (_arg)
-                (funcall-interactively
-                 callback
-                 html))))))
-
-(defun learn-ocaml-give-token-cmd (callback)
-  "Gives the current token to the CALLBACK."
-  (learn-ocaml-print-time-stamp)
-  (let ((buffer (generate-new-buffer "give-token")))
-    (learn-ocaml-make-process-wrapper
-     :name "give-token"
-     :command (learn-ocaml-command-constructor
-               :command "print-token")
-     :stderr (learn-ocaml-log-buffer)
-     :buffer buffer
-     :sentinel (apply-partially
-                #'learn-ocaml-error-handler
-                buffer
-                (lambda (s)
-                  (funcall-interactively
-                   callback
-                   (learn-ocaml--rstrip s)))))))
-
-(defun learn-ocaml-give-server-cmd (callback)
-  "Give the current server url to the CALLBACK."
-  (learn-ocaml-print-time-stamp)
-  (let ((buffer (generate-new-buffer "give-server")))
-    (learn-ocaml-make-process-wrapper
-     :name "give-server"
-     :command (learn-ocaml-command-constructor
-               :command "print-server")
-     :stderr (learn-ocaml-log-buffer)
-     :buffer buffer
-     :sentinel (apply-partially
-                #'learn-ocaml-error-handler
-                buffer
-                (lambda (s)
-                  (funcall-interactively
-                   callback
-
-                   (learn-ocaml--rstrip s)))))))
-
-(defun learn-ocaml-use-metadata-cmd (token server callback)
-  "Set TOKEN, SERVER, and run CALLBACK."
-  (learn-ocaml-print-time-stamp)
-  (learn-ocaml-make-process-wrapper
-   :name "use-metadata"
-   :command (learn-ocaml-command-constructor
-             :token token
-             :server server
-             :command "set-options")
-   :stderr (learn-ocaml-log-buffer)
-   :sentinel (apply-partially
-              #'learn-ocaml-error-handler
-              nil
-              callback)))
-
-;; TODO: Use cl-defun
-(defun learn-ocaml-create-token-cmd (nickname secret callback)
-  "Create a new token for NICKNAME.
-Argument SECRET may be needed by the server.
-Argument CALLBACK will receive the token."
-  (learn-ocaml-print-time-stamp)
-  (let ((buffer (generate-new-buffer "create-token")))
-    (learn-ocaml-make-process-wrapper
-     :name "create-token"
-     :command (learn-ocaml-command-constructor
-               :command "create-token"
-               :param1 nickname
-               :param2 secret)
-     :stderr (learn-ocaml-log-buffer)
-     :buffer buffer
-     :sentinel (apply-partially
-                #'learn-ocaml-error-handler
-                buffer
-                (lambda (s)
-                  (funcall-interactively
-                   callback
-                   (replace-regexp-in-string "\n\\'" "" s)))))))
-
-(defun learn-ocaml-give-exercise-list-cmd (callback)
-  "Give to the CALLBACK a json containing the exercise list."
-  (learn-ocaml-print-time-stamp)
-  (let ((buffer (generate-new-buffer "exercise-list")))
-    (learn-ocaml-make-process-wrapper
-     :name "exercise-list"
-     :command (learn-ocaml-command-constructor
-               :command "exercise-list")
-     :stderr (learn-ocaml-log-buffer)
-     :buffer buffer
-     :sentinel (apply-partially
-                #'learn-ocaml-error-handler
-                buffer
-                (lambda (s)
-                  (funcall-interactively
-                   callback (json-read-from-string s)))))))
+;;
+;; Wrappers
+;;
 
 (defun learn-ocaml-compute-questions-url (server id token)
   "Get subject url for SERVER, exercise ID and user TOKEN."
   (concat server "/description/" id "#token=" token))
-
-;;
-;; Wrappers
-;;
 
 (defun learn-ocaml-show-questions (id)
   "Open the questions for exercise ID in the default browser."
@@ -894,7 +930,9 @@ Argument SECRET may be needed by the server."
 
 (defun learn-ocaml-print-groups (indent json)
   "Render an exercise group with leading INDENT from the data in JSON."
-  (let ((json-progression (learn-ocaml-client-exercise-score-cmd))
+  (let ((json-progression
+         () ;; TODO (learn-ocaml-client-exercise-score-cmd)
+         )
         (head (car json))
         (queue (cdr json)))
     (if (eq 'groups head)
@@ -1103,16 +1141,19 @@ If TOKEN is \"\", interactively ask a token."
                                      (progn (message-box "No server found. Please enter the server url.")
                                             (read-string "Enter server URL: " "https://"))
                                    server)))
-          (progn (learn-ocaml-init-server-cmd :server new-server-value
-                                                  :callback
-                                                  (lambda(_)
-          (if (version-list-<=
-              (version-to-list "0.13") (version-to-list (learn-ocaml-client-version)))
-              (progn (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
-                     (if learn-ocaml-use-passwd
-                         (learn-ocaml-login-possibly-with-passwd new-server-value callback)
-                       (learn-ocaml-login-with-token token new-server-value callback)))
-            (learn-ocaml-login-with-token token new-server-value callback)))))))))))
+          (if (version-list-<
+               ;; https://github.com/pfitaxel/learn-ocaml.el/pull/26#pullrequestreview-758063532
+               (version-to-list (learn-ocaml-client-server-min-version))
+               (version-to-list "0.15.0"))
+              (learn-ocaml-login-with-token token new-server-value callback)
+            (progn (learn-ocaml-init-server-cmd
+                    :server new-server-value
+                    :callback
+                    (lambda(_)
+                      (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
+                      (if learn-ocaml-use-passwd
+                          (learn-ocaml-login-possibly-with-passwd new-server-value callback)
+                        (learn-ocaml-login-with-token token new-server-value callback))))))))))))
 
 (defun learn-ocaml-logout ()
   "Logout the user from the server by removing the token from the file client.json"

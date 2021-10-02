@@ -32,9 +32,8 @@
 (defun learn-ocaml-test-use-passwd-auto ()
   "Sets `learn-ocaml-test-use-passwd' automatically."
   (let ((cur-version
-         ;; TODO: check the server version, not the client one
-         (version-to-list (learn-ocaml-client-version))))
-    (if (version-list-<= cur-version (version-to-list "0.13"))
+         (version-to-list (learn-ocaml-client-server-min-version))))
+    (if (version-list-< cur-version (version-to-list "0.15.0"))
         (setq learn-ocaml-test-use-passwd nil)
       (progn
         ;; (learn-ocaml-init-server-cmd
