@@ -169,4 +169,13 @@
     (should (string-equal (learn-ocaml-file-path dir file) path))
     (should (string-equal (learn-ocaml-file-path "/dummy" path) path))))
 
+(ert-deftest a14_learn-ocaml-compat ()
+  (let ((v (version-to-list "0.13.0")))
+    (should (learn-ocaml-compat (learn-ocaml-since-upto "0.12" nil) v))
+    (should (learn-ocaml-compat (learn-ocaml-since-upto "0.12" "0.13.1") v))
+    (should (learn-ocaml-compat (learn-ocaml-since-upto "0.12" "0.14.0") v))
+    (should (learn-ocaml-compat (learn-ocaml-since-upto nil "0.13.1") v))
+    (should (learn-ocaml-compat (learn-ocaml-since-upto nil "0.14.0") v))
+    (should (not (learn-ocaml-compat (learn-ocaml-since-upto "0.15.0" nil) v)))))
+
 ;;; runtests.el ends here

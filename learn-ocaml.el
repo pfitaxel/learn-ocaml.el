@@ -202,6 +202,23 @@ to the boolean contained in the json returned by the client"
     (setq learn-ocaml-use-passwd t)
   (setq learn-ocaml-use-passwd nil)))
 
+(defun learn-ocaml-since-upto (since upto)
+  "Return (SINCE . UPTO) with args possibly nil, denoting (SINCE <= v < UPTO).
+Both SINCE and UPTO should be valid version strings."
+  (unless (or (stringp since) (null since))
+    (error "SINCE must be a string"))
+  (unless (or (stringp upto) (null upto))
+    (error "UPTO must be a string"))
+  (cons since upto))
+
+(defun learn-ocaml-compat (pred-pair version)
+  "If PRED-PAIR is (since . upto), return (since <= VERSION < upto).
+VERSION should be a list-based version, use `version-to-list' if need be.
+See also `learn-ocaml-since-upto'."
+  (let ((since (car pred-pair)) (upto (cdr pred-pair)))
+    (and (if since (version-list-<= (version-to-list since) version) t)
+         (if upto (version-list-< version (version-to-list upto)) t))))
+
 ;;
 ;; package.el shortcut
 ;;
@@ -360,15 +377,27 @@ Raise (error \"learn-ocaml-await-for...\") if `learn-ocaml-timeout' exceeded."
   (string-trim
    (cdr (learn-ocaml-command-to-string-await-cmd (list "--version")))))
 
-(defun learn-ocaml-client-server-version ()
-  "Run \"learn-ocaml-client server-version\"."
-  ;; TODO/FIXME: Update when possible
-  (learn-ocaml-client-version))
+(defconst learn-ocaml-client-server-min-version-compat
+  (learn-ocaml-since-upto "0.13.0" nil))
 
-(defun learn-ocaml-client-server-min-version ()
+;; (learn-ocaml-client-server-min-version
+;; (learn-ocaml-client-server-min-version "http://localhost:8080")
+(defun learn-ocaml-client-server-min-version (&optional server)
   "Return the min of the learn-ocaml server and learn-ocaml-client versions."
-  ;; TODO/FIXME: Update when possible, "learn-ocaml-client server-version --min"
-  (learn-ocaml-client-version))
+  (let* ((client (learn-ocaml-client-version))
+         (command (list "server-version" "--min"))
+         (version-string
+          (if (learn-ocaml-compat learn-ocaml-client-server-min-version-compat
+                                  (version-to-list client))
+              ;; TODO: Take errors into account in a better way,
+              ;; instead of waiting that `version-to-list' fails
+              (string-trim (cdr (learn-ocaml-command-to-string-await-cmd
+                                 (if server (append command
+                                                    (list "-s" server))
+                                   command))))
+            client))
+         (_check (version-to-list version-string)))
+    version-string))
 
 ;;
 ;; Higher-order functions, sentinels of the make-process wrapper
@@ -1130,6 +1159,9 @@ If TOKEN is \"\", interactively ask a token."
               :secret secret
               :callback rich-callback)))))))
 
+(defconst learn-ocaml-feature-passwd-compat
+  (learn-ocaml-since-upto "0.15.0" nil))
+
 (defun learn-ocaml-on-load (callback)
   "Call `learn-ocaml-login-with-token' and CALLBACK when loading mode."
   (learn-ocaml-give-server-cmd
@@ -1141,19 +1173,19 @@ If TOKEN is \"\", interactively ask a token."
                                      (progn (message-box "No server found. Please enter the server url.")
                                             (read-string "Enter server URL: " "https://"))
                                    server)))
-          (if (version-list-<
-               ;; https://github.com/pfitaxel/learn-ocaml.el/pull/26#pullrequestreview-758063532
-               (version-to-list (learn-ocaml-client-server-min-version))
-               (version-to-list "0.15.0"))
-              (learn-ocaml-login-with-token token new-server-value callback)
-            (progn (learn-ocaml-init-server-cmd
-                    :server new-server-value
-                    :callback
-                    (lambda(_)
-                      (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
-                      (if learn-ocaml-use-passwd
-                          (learn-ocaml-login-possibly-with-passwd new-server-value callback)
-                        (learn-ocaml-login-with-token token new-server-value callback))))))))))))
+          ;; https://github.com/pfitaxel/learn-ocaml.el/pull/26#pullrequestreview-758063532
+          (if (learn-ocaml-compat learn-ocaml-feature-passwd-compat
+                                  (version-to-list
+                                   (learn-ocaml-client-server-min-version new-server-value)))
+              (progn (learn-ocaml-init-server-cmd
+                      :server new-server-value
+                      :callback
+                      (lambda(_)
+                        (learn-ocaml-server-config (learn-ocaml-client-config-cmd))
+                        (if learn-ocaml-use-passwd
+                            (learn-ocaml-login-possibly-with-passwd new-server-value callback)
+                          (learn-ocaml-login-with-token token new-server-value callback)))))
+            (learn-ocaml-login-with-token token new-server-value callback))))))))
 
 (defun learn-ocaml-logout ()
   "Logout the user from the server by removing the token from the file client.json"
