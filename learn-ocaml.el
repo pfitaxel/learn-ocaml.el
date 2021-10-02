@@ -1156,13 +1156,6 @@ If TOKEN is \"\", interactively ask a token."
     (define-key map [menu-bar] nil)
     map))
 
-(defvar learn-ocaml-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-m C-l") #'learn-ocaml-display-exercise-list)
-    (define-key map (kbd "C-c C-m l") #'learn-ocaml-display-exercise-list)
-    (define-key map (kbd "C-c C-m C-m") #'learn-ocaml-grade)
-    (define-key map [menu-bar] nil)
-    map))
 (easy-menu-define learn-ocaml-mode-menu
   learn-ocaml-mode-map
   "LearnOCaml Mode Menu."
