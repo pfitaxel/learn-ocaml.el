@@ -31,27 +31,26 @@
 
 (defun learn-ocaml-test-use-passwd-auto ()
   "Sets `learn-ocaml-test-use-passwd' automatically."
-  (let ((cur-version
-         ;; TODO: check the server version, not the client one
-         (version-to-list (learn-ocaml-client-version))))
-    (if (version-list-<= cur-version (version-to-list "0.13"))
-        (setq learn-ocaml-test-use-passwd nil)
-      (progn
-        ;; (learn-ocaml-init-server-cmd
-        ;; :server learn-ocaml-test-url
-        ;; :callback (lambda (_) ...))
-        ;; COMMENTED-OUT: needs a synchronous version
-        (let ((init-server
-               (learn-ocaml-command-to-string-await-cmd
-                (list "init-server" "-s" learn-ocaml-test-url))))
-          (if (car init-server)
-              (let ((json (learn-ocaml-client-config-cmd)))
-                (setq learn-ocaml-test-use-passwd
-                      (string-equal
-                       (cdr (assoc 'use_passwd (json-read-from-string json)))
-                       "true"))
-                learn-ocaml-test-use-passwd)
-            (error "learn-ocaml-test-use-passwd-auto: init-server failed with [%s]." (cdr init-server))))))))
+  (if (not (learn-ocaml-compat learn-ocaml-feature-passwd-compat
+                               (version-to-list
+                                (learn-ocaml-client-server-min-version learn-ocaml-test-url))))
+      (setq learn-ocaml-test-use-passwd nil)
+    (progn
+      ;; (learn-ocaml-init-server-cmd
+      ;; :server learn-ocaml-test-url
+      ;; :callback (lambda (_) ...))
+      ;; COMMENTED-OUT: needs a synchronous version
+      (let ((init-server
+             (learn-ocaml-command-to-string-await-cmd
+              (list "init-server" "-s" learn-ocaml-test-url))))
+        (if (car init-server)
+            (let ((json (learn-ocaml-client-config-cmd)))
+              (setq learn-ocaml-test-use-passwd
+                    (string-equal
+                     (cdr (assoc 'use_passwd (json-read-from-string json)))
+                     "true"))
+              learn-ocaml-test-use-passwd)
+          (error "learn-ocaml-test-use-passwd-auto: init-server failed with [%s]." (cdr init-server)))))))
 
 (defvar learn-ocaml-test-user-num 0
   "Numerical id of the last-created user by `learn-ocaml-test-user-email'.

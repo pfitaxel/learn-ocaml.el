@@ -52,6 +52,9 @@ To test learn-ocaml.el w.r.t. another version of learn-ocaml-client:
   * Check ex == `learn-ocaml-file-path(dir,file)`
   * Check ex == `learn-ocaml-file-path("/dummy",file)`
 
+* `a14_learn-ocaml-compat` (`ert-deftest`)__
+  * Test several predicates using `learn-ocaml-since-upto`
+
 ## Integration tests (`ert-deftest-async`)
 
 **BEWARE** all tests do `rm -f ~/.config/learnocaml/client.json`
