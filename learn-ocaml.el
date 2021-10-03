@@ -758,10 +758,18 @@ Argument CALLBACK will receive the token."
 ;; Wrappers
 ;;
 
+(defconst learn-ocaml-compute-questions-url-token1-compat
+  (learn-ocaml-since-upto "0.13.0" nil))
+
 (defun learn-ocaml-compute-questions-url (server id token)
   "Get subject url for SERVER, exercise ID and user TOKEN."
-  ;; TODO: Use token1=
-  (concat server "/description/" id "#token=" token))
+  (let ((token-param
+         (if (learn-ocaml-compat
+              learn-ocaml-compute-questions-url-token1-compat
+              (version-to-list (learn-ocaml-client-server-min-version server)))
+             (concat "#token1=" (base64-encode-string (format "%192s" token) t))
+           (concat "#token=" token))))
+    (concat server "/description/" id token-param)))
 
 (defun learn-ocaml-show-questions (id)
   "Open the questions for exercise ID in the default browser."
