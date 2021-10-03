@@ -566,7 +566,6 @@ Argument CALLBACK will receive the token."
               callback))
   (cd old)))
 
-;; TODO/Fixme: bug ?
 (cl-defun learn-ocaml-grade-file-cmd (&key id token server dont-submit file callback)
   "Grade a .ml file, optionally submitting the code and the note to the server."
   (learn-ocaml-print-time-stamp)
@@ -580,7 +579,8 @@ Argument CALLBACK will receive the token."
              :id id
              :dont-submit dont-submit
              :param1 file
-             :html t)
+             :html t
+             :command "grade")
    :stderr (learn-ocaml-log-buffer)
    :filter (apply-partially
             #'learn-ocaml-file-writter-filter
