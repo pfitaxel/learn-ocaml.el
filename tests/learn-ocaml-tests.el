@@ -107,7 +107,7 @@ See also `learn-ocaml-client-sign-up-cmd'.")
     (shell-command (concat "rm -f " file))))
 
 (defun learn-ocaml-test-collapse-whitespace (str)
-  (replace-regexp-in-string "[[:space:]\n]+" " " str))
+  (string-trim (replace-regexp-in-string "[[:space:]\n]+" " " str)))
 
 (defun learn-ocaml-test-client-expected-path ()
   "Return ../../../learn-ocaml/_opam/bin
