@@ -593,6 +593,7 @@ Argument CALLBACK will receive the token."
                  callback
                  html))))))
 
+;; TODO: Handle --local?
 (cl-defun learn-ocaml-init-cmd (&key token server nickname secret callback)
   "Run \"learn-ocaml-client init\" with options."
   (learn-ocaml-print-time-stamp)
@@ -759,6 +760,7 @@ Argument CALLBACK will receive the token."
 
 (defun learn-ocaml-compute-questions-url (server id token)
   "Get subject url for SERVER, exercise ID and user TOKEN."
+  ;; TODO: Use token1=
   (concat server "/description/" id "#token=" token))
 
 (defun learn-ocaml-show-questions (id)
@@ -1248,15 +1250,16 @@ If TOKEN is \"\", interactively ask a token."
     ["Change token" learn-ocaml-change-token]
     ["Create token" learn-ocaml-create-token]
     "---"
-    ["Upgrade Emacs packages..." learn-ocaml-upgrade-packages]
-    "---"
     ["Show exercise list" learn-ocaml-display-exercise-list]
     ["Download template" learn-ocaml-download-template]
     ["Download server version" learn-ocaml-download-server-file]
     ["Grade" learn-ocaml-grade]
     "---"
-    ["Logout" learn-ocaml-logout]
-    ["Logout & Forget server" learn-ocaml-deinit]))
+    ["Logout" learn-ocaml-logout nil];TODO support >= 0.14
+    ["Logout & Forget server" learn-ocaml-deinit nil];TODO support >= 0.12
+    "---"
+    ["Upgrade Emacs packages..." learn-ocaml-upgrade-packages]
+    ))
 ;;
 ;; id management
 ;;
