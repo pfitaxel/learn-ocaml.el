@@ -18,15 +18,8 @@ jobs:
           - learnocaml_image: "ocamlsf/learn-ocaml"
             learnocaml_version: "0.12"
             use_passwd: "false"
-            client_version: "0.12"
-            allow_failures: false
-            # may be removed at some point, when the following test will pass:
-          - learnocaml_image: "ocamlsf/learn-ocaml"
-            learnocaml_version: "0.12"
-            use_passwd: "false"
             client_version: "oauth-moodle-dev"
-            # NOTE: currently fails because of an API version mismatch
-            allow_failures: true
+            allow_failures: false
           - learnocaml_image: "pfitaxel/learn-ocaml"
             learnocaml_version: "oauth-moodle-dev"
             use_passwd: "false"
