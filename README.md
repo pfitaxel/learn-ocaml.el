@@ -14,24 +14,15 @@
 
 (version `25.1` or later)
 
-### [learn-ocaml-client](https://opam.ocaml.org/packages/learn-ocaml-client/)
+### `learn-ocaml-client`
 
-(version `0.12` or later)
-
-It can be installed with opam (the OCaml package manager) in a `4.05.0` switch:
-
-* If you already have a `.opam` folder, you should just need to type:
-
-        opam update -y
-        opam switch create 4.05.0 ocaml-base-compiler.4.05.0
-        eval $(opam env)
-        opam install -y learn-ocaml-client
-
-* otherwise, make sure you have [opam 2.0](https://opam.ocaml.org/), then run:
-
-        opam init --auto-setup --yes --compiler=ocaml-base-compiler.4.05.0
-        eval $(opam env)
-        opam install -y learn-ocaml-client
+* Browse the [Releases page of learn-ocaml](https://github.com/ocaml-sf/learn-ocaml/releases/).
+* Download the latest version (≥ 0.13.0) of `learn-ocaml-client` from the Release Assets.
+* For Windows 10, the Linux binary should be compatible with WSL.
+* Rename the binary to just `learn-ocaml-client`
+  (instead of e.g. `learn-ocaml-client-linux-x86_64`)
+* Add the executable bit to the binary (`chmod a+x learn-ocaml-client`)
+* (Optional) Put the `learn-ocaml-client` binary in your `PATH`.
 
 **Note:** beyond `learn-ocaml-client`, you may want to install a
 comprehensive OCaml/Emacs environment (with Tuareg, Merlin, Company):
