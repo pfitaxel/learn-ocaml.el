@@ -96,7 +96,7 @@ Bug reports and suggestions are very welcome: feel free to open a new
 ## Developer docs
 
 * **Setup the `learn-ocaml.el` dev environment** by following these refs:
-  * [GH: erikmd/tapfa-init.el](https://github.com/erikmd/tapfa-init.el) (opam (2.x) + OCaml (≥ 4.05.0) + GNU Emacs (≥ 25.1) + Tuareg + Merlin)
+  * [GH: erikmd/tapfa-init.el](https://github.com/erikmd/tapfa-init.el) (opam (2.x) + OCaml (4.12.0) + GNU Emacs (≥ 25.1) + Tuareg + Merlin)
   * [git-scm.com/download](https://git-scm.com/download) (Git)
   * [Gist: Magit](https://gist.github.com/erikmd/82c4b2a50a77c98e8fe6318530c531b7) (Magit)
   * [Gist: Resources for elisp dev](https://gist.github.com/erikmd/35251ac083e7433f3e780f7eb8856782) (which-key + helpful + edebug-x + Tutorials)
